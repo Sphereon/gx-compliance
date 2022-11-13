@@ -15,19 +15,21 @@ import {
 } from '../dto'
 import DatasetExt from 'rdf-ext/lib/Dataset'
 import { SelfDescriptionTypes } from '../enums'
-import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../constants'
+import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE, getSdContext } from '../constants'
 import { validationResultWithoutContent } from '../@types'
 import { lastValueFrom } from 'rxjs'
 
 @Injectable()
 export class SelfDescriptionService {
-  static readonly SHAPE_PATHS = {
-    PARTICIPANT: '/api/shape/files?file=participant&type=ttl',
-    SERVICE_OFFERING: '/api/shape/files?file=service-offering&type=ttl'
-  }
+  private SHAPE_PATHS: any
   private readonly logger = new Logger(SelfDescriptionService.name)
 
-  constructor(private readonly httpService: HttpService, private readonly shaclService: ShaclService, private readonly proofService: ProofService) {}
+  constructor(private readonly httpService: HttpService, private readonly shaclService: ShaclService, private readonly proofService: ProofService) {
+    this.SHAPE_PATHS = {
+      PARTICIPANT: `${process.env.SHACL_SHAPE_BASE_PATH}/gax-trust-framework/gax-participant/legal-personShape.ttl`,
+      SERVICE_OFFERING: `${process.env.SHACL_SHAPE_BASE_PATH}/gax-trust-framework/gax-service/service-offeringShape.ttl`
+    }
+  }
 
   public async validate(signedSelfDescription: SignedSelfDescriptionDto<CredentialSubjectDto>): Promise<validationResultWithoutContent> {
     const { selfDescriptionCredential: selfDescription, raw, rawCredentialSubject, complianceCredential, proof } = signedSelfDescription
@@ -96,7 +98,8 @@ export class SelfDescriptionService {
 
       const rawPrepared: any = {
         ...JSON.parse(rawCredentialSubject),
-        ...(type === 'LegalPerson' ? EXPECTED_PARTICIPANT_CONTEXT_TYPE : EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE)
+        ...(type === 'LegalPerson' ? EXPECTED_PARTICIPANT_CONTEXT_TYPE : EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE),
+        '@context': getSdContext()
       }
 
       const selfDescriptionDataset: DatasetExt = await this.shaclService.loadFromJsonLD(JSON.stringify(rawPrepared))
@@ -191,7 +194,7 @@ export class SelfDescriptionService {
       [SelfDescriptionTypes.SERVICE_OFFERING]: 'SERVICE_OFFERING'
     }
 
-    return SelfDescriptionService.SHAPE_PATHS[shapePathType[type]] || undefined
+    return this.SHAPE_PATHS[shapePathType[type]] || undefined
   }
 
   private async checkParticipantCredential(selfDescription, jws: string): Promise<boolean> {

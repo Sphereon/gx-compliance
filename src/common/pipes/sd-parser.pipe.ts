@@ -74,8 +74,8 @@ export class SDParserPipe
   }
 
   private getAddressValues(address: any): AddressDto {
-    const code = this.getValueFromShacl(address['gx-participant:addressCode'], 'code', SelfDescriptionTypes.PARTICIPANT)
-    const country_code = this.getValueFromShacl(address['gx-participant:addressCountryCode'], 'country_code', SelfDescriptionTypes.PARTICIPANT)
+    const code = this.getValueFromShacl(address['gax-trust-framework:addressCode'], 'code', SelfDescriptionTypes.PARTICIPANT)
+    const country_code = this.getValueFromShacl(address['gax-trust-framework:addressCountryCode'], 'country_code', SelfDescriptionTypes.PARTICIPANT)
 
     return { code, country_code }
   }
@@ -85,8 +85,8 @@ export class SDParserPipe
 
     const values = []
     for (const num of registrationNumber) {
-      const rType = this.getValueFromShacl(num['gx-participant:registrationNumberType'], 'type', SelfDescriptionTypes.PARTICIPANT)
-      const rNumber = this.getValueFromShacl(num['gx-participant:registrationNumberNumber'], 'number', SelfDescriptionTypes.PARTICIPANT)
+      const rType = this.getValueFromShacl(num['gax-trust-framework:registrationNumberType'], 'type', SelfDescriptionTypes.PARTICIPANT)
+      const rNumber = this.getValueFromShacl(num['gax-trust-framework:registrationNumberNumber'], 'number', SelfDescriptionTypes.PARTICIPANT)
       values.push({ type: rType, number: rNumber })
     }
     return values

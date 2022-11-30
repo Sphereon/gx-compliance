@@ -48,10 +48,10 @@ export class CommonController {
   async signSelfDescription(
     @Body() verifiableSelfDescription: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
   ): Promise<{ complianceCredential: VerifiableCredentialDto<ComplianceCredentialDto> }> {
-    await this.proofService.validate(JSON.parse(JSON.stringify(verifiableSelfDescription)))
-    const type: string = getTypeFromSelfDescription(verifiableSelfDescription)
+    //await this.proofService.validate(JSON.parse(JSON.stringify(verifiableSelfDescription)))
+    //const type: string = getTypeFromSelfDescription(verifiableSelfDescription)
 
-    await this.selfDescriptionService.validateSelfDescription(verifiableSelfDescription, type)
+    //await this.selfDescriptionService.validateSelfDescription(verifiableSelfDescription, type)
     const complianceCredential: { complianceCredential: VerifiableCredentialDto<ComplianceCredentialDto> } =
       await this.signatureService.createComplianceCredential(verifiableSelfDescription)
 

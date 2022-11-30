@@ -43,12 +43,12 @@ spec:
           valueFrom:
             secretKeyRef:
               key: tls.crt
-              name: gx-compliance-server-tls-secret
+              name: gx-compliance-secrets
         - name: REGISTRY_URL
-          value: https://registry.lab.gaia-x.eu
+          value: http://20.71.17.107
         - name: BASE_URL
-          value: https://compliance.lab.gaia-x.eu
-        image: registry.gitlab.com/gaia-x/lab/compliance/gx-compliance:2206-development
+          value: http://20.23.55.213
+        image: maasmai/gx-compliance:v1.0.3
         imagePullPolicy: Always
         name: gx-compliance-server-2206-development
         ports:
@@ -78,3 +78,4 @@ spec:
     targetPort: http-api
   selector:
     app: gx-compliance-server-2206-development
+  type: LoadBalancer

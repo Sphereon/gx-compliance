@@ -16,4 +16,4 @@ spec:
   selector:
     app: gx-compliance-live-server-2206-main
   sessionAffinity: None
-  type: ClusterIP
+  type: LoadBalancer

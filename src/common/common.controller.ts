@@ -48,6 +48,7 @@ export class CommonController {
   async signSelfDescription(
     @Body() verifiableSelfDescription: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
   ): Promise<{ complianceCredential: VerifiableCredentialDto<ComplianceCredentialDto> }> {
+    //TODO enable checks again, see FMA-11
     //await this.proofService.validate(JSON.parse(JSON.stringify(verifiableSelfDescription)))
     //const type: string = getTypeFromSelfDescription(verifiableSelfDescription)
 

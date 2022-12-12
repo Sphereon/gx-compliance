@@ -39,6 +39,7 @@ export class SignatureService {
       const canonized: string = await jsonld.canonize(doc, {
         algorithm: 'URDNA2015',
         format: 'application/n-quads',
+        //TODO FMA-23
         documentLoader: new DocumentLoader().getLoader()
       })
 

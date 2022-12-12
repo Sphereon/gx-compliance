@@ -38,6 +38,8 @@ describe('ProofService', () => {
     const mockData = MockData.getMockData()
     nock('https://www.w3.org/2018/credentials/v1').get(/.*/).reply(200, mockData.w3credentialSchema)
     nock('https://registry.gaia-x.eu/v2206/api/shape').get(/.*/).reply(200, mockData.gxRegistryShape)
+    // This is a mocked url and you don't need ngrok for this
+    // TODO: create a VC with a simple issuer url in order to make these two lines easier to understand
     nock('https://0c1b-2001-1c04-2b34-bb00-c366-4d7b-3320-824b.eu.ngrok.io')
       .get('/.well-known/x509CertificateChain.pem')
       .reply(200, mockData.certificateChain)

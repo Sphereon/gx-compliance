@@ -1,6 +1,6 @@
 import fetch from 'cross-fetch'
 
-import { extendContextLoader } from '@digitalcredentials/jsonld-signatures'
+import { extendContextLoader } from 'jsonld-signatures'
 import jsonld from 'jsonld'
 
 export class DocumentLoader {

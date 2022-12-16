@@ -1,5 +1,12 @@
 import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common'
-import { AddressDto, CredentialSubjectDto, SignedSelfDescriptionDto, VerifiableSelfDescriptionDto } from '../dto'
+import {
+  AddressDto,
+  CredentialSubjectDto,
+  SignatureDto,
+  SignedSelfDescriptionDto,
+  VerifiableCredentialDto,
+  VerifiableSelfDescriptionDto
+} from '../dto'
 import { SelfDescriptionTypes } from '../enums'
 import { getTypeFromSelfDescription } from '../utils'
 import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../constants'
@@ -44,8 +51,8 @@ export class SDParserPipe
         selfDescriptionCredential: {
           ...flatten.sd,
           credentialSubject: { ...flatten.cs }
-        },
-        proof: selfDescriptionCredential.proof,
+        } as VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>,
+        proof: selfDescriptionCredential.proof as SignatureDto,
         raw: JSON.stringify({ ...selfDescriptionCredential, credentialSubject: { ...credentialSubject } }),
         rawCredentialSubject: JSON.stringify({ ...credentialSubject }),
         complianceCredential

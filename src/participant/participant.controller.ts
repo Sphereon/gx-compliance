@@ -73,7 +73,9 @@ export class ParticipantController {
   ): Promise<ValidationResultDto> {
     const validationResult = await this.selfDescriptionService.validate(participantSelfDescription)
 
-    const content = await this.participantContentValidationService.validate(participantSelfDescription.selfDescriptionCredential.credentialSubject)
+    const content = await this.participantContentValidationService.validate(
+      (participantSelfDescription.selfDescriptionCredential as VerifiableCredentialDto<ParticipantSelfDescriptionDto>).credentialSubject
+    )
     validationResult.conforms = validationResult.conforms && content.conforms
 
     if (!validationResult.conforms)

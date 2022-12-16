@@ -9,6 +9,7 @@ import * as jose from 'jose'
 import { METHOD_IDS } from '../constants'
 import { Resolver, DIDDocument } from 'did-resolver'
 import web from 'web-did-resolver'
+import {IVerifiablePresentation} from "@sphereon/ssi-types";
 
 @Injectable()
 export class ProofService {
@@ -19,7 +20,7 @@ export class ProofService {
   ) {}
 
   public async validate(
-    selfDescriptionCredential: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>,
+    selfDescriptionCredential: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto> | IVerifiablePresentation,
     isValidityCheck?: boolean,
     jws?: string
   ): Promise<boolean> {

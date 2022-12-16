@@ -18,6 +18,8 @@ import { SelfDescriptionTypes } from '../enums'
 import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../constants'
 import { validationResultWithoutContent } from '../@types'
 import { lastValueFrom } from 'rxjs'
+import { IVerifiableCredential, IVerifiablePresentation } from '@sphereon/ssi-types'
+import { VerifiablePresentationDto } from '../dto/presentation-meta.dto'
 
 @Injectable()
 export class SelfDescriptionService {
@@ -68,14 +70,53 @@ export class SelfDescriptionService {
       isValidSignature
     }
   }
+  public async validateVP(signedSelfDescription: VerifiablePresentationDto): Promise<validationResultWithoutContent> {
+    const serviceOfferingVC = signedSelfDescription.verifiableCredential.filter(vc => vc.type.includes('ServiceOfferingExperimental'))[0]
+    const participantVC = signedSelfDescription.verifiableCredential.filter(vc => vc.type.includes('ParticipantCredential'))[0]
+    /**
+     * I will not change the following lines for now
+     */
+    const type: string = serviceOfferingVC.type.find(t => t !== 'VerifiableCredential')
+    const shapePath: string = this.getShapePath(type)
+    if (!shapePath) throw new BadRequestException('Provided Type does not exist for Self Descriptions')
+    const expectedContexts = {
+      [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE,
+      [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
+    }
+
+    if (!(type in expectedContexts)) throw new ConflictException('Provided Type is not supported')
+    /**
+     * end of unchanged lines
+     */
+    const isValidVP = await this.proofService.validate(signedSelfDescription)
+    if (!isValidVP) {
+      throw new BadRequestException('ServiceOffering VP is not valid')
+    }
+    if (participantVC.credentialSubject.id === serviceOfferingVC.issuer) {
+      return {
+        shape: undefined,
+        conforms: true
+      }
+    } else {
+      return {
+        shape: undefined,
+        conforms: false
+      }
+    }
+  }
 
   //TODO: Could be potentially merged with validate()
   public async validateSelfDescription(
-    participantSelfDescription: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>,
+    participantSelfDescription: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto> | IVerifiablePresentation,
     sdType: string
   ): Promise<validationResultWithoutContent> {
+    let participantVC: IVerifiableCredential | VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
     const _SDParserPipe = new SDParserPipe(sdType)
-
+    if (participantSelfDescription.type.includes('VerifiablePresentation')) {
+      participantVC = (participantSelfDescription as IVerifiablePresentation).verifiableCredential[0]
+    } else {
+      participantVC = participantSelfDescription as VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
+    }
     const verifableSelfDescription: VerifiableSelfDescriptionDto<CredentialSubjectDto> = {
       complianceCredential: {
         proof: {} as SignatureDto,
@@ -86,7 +127,7 @@ export class SelfDescriptionService {
         issuer: '',
         issuanceDate: new Date().toISOString()
       },
-      selfDescriptionCredential: { ...participantSelfDescription }
+      selfDescriptionCredential: { ...participantVC }
     }
 
     const { selfDescriptionCredential: selfDescription, rawCredentialSubject } = _SDParserPipe.transform(verifableSelfDescription)
@@ -135,15 +176,11 @@ export class SelfDescriptionService {
   }
 
   public async storeSelfDescription(
-    sd: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
+    sd: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto> | VerifiablePresentationDto
   ): Promise<string> {
     try {
-      const signedSelfDescriptionJson = {
-        selfDescriptionCredential: sd.selfDescriptionCredential,
-        complianceCredential: sd.complianceCredential
-      }
       const storageServiceResponse = await lastValueFrom(
-        this.httpService.post(`${process.env.SD_STORAGE_BASE_URL}/self-descriptions/`, signedSelfDescriptionJson, {
+        this.httpService.post(`${process.env.SD_STORAGE_BASE_URL}/self-descriptions/`, sd, {
           timeout: 5000,
           headers: { 'X-API-KEY': process.env.SD_STORAGE_API_KEY }
         }),

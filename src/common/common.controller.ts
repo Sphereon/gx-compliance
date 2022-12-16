@@ -10,6 +10,8 @@ import { JoiValidationPipe } from './pipes'
 import { ParticipantSelfDescriptionSchema } from './schema/selfDescription.schema'
 import { CredentialTypes } from './enums'
 import { getTypeFromSelfDescription } from './utils'
+import { VerifiablePresentationDto } from './dto/presentation-meta.dto'
+import { IVerifiableCredential } from '@sphereon/ssi-types'
 
 const credentialType = CredentialTypes.common
 
@@ -57,6 +59,34 @@ export class CommonController {
 
     return complianceCredential
   }
+
+  @ApiResponse({
+    status: 201,
+    description: 'Succesfully signed posted content. Will return the posted JSON with an additional "proof" property added.'
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid JSON request body.'
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Invalid Participant Self Description.'
+  })
+  @ApiBody({
+    type: VerifiablePresentationDto,
+    examples: commonSDExamples
+  })
+  @ApiOperation({ summary: 'Gets a selfDescribed VP and returns a Compliance VC in response' })
+  @UsePipes(new JoiValidationPipe(ParticipantSelfDescriptionSchema))
+  @Post('compliance')
+  async createComplianceCredential(@Body() verifiableSelfDescription: VerifiablePresentationDto): Promise<IVerifiableCredential> {
+    await this.proofService.validate(JSON.parse(JSON.stringify(verifiableSelfDescription)))
+    const type: string = getTypeFromSelfDescription(verifiableSelfDescription.verifiableCredential[0])
+
+    await this.selfDescriptionService.validateSelfDescription(verifiableSelfDescription, type)
+    return await this.signatureService.createComplianceCredentialFromSelfDescription(verifiableSelfDescription)
+  }
+
   @Post('normalize')
   @ApiResponse({
     status: 201,

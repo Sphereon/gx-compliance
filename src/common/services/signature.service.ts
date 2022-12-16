@@ -7,6 +7,8 @@ import * as jose from 'jose'
 import * as jsonld from 'jsonld'
 import { SelfDescriptionTypes } from '../enums'
 import { DocumentLoader } from './DocumentLoader'
+import { ICredential, IVerifiableCredential, IVerifiablePresentation } from '@sphereon/ssi-types'
+import { readFileSync } from 'fs'
 
 export interface Verification {
   protectedHeader: jose.CompactJWSHeaderParameters | undefined
@@ -99,5 +101,44 @@ export class SignatureService {
     }
 
     return { complianceCredential }
+  }
+
+  async createComplianceCredentialFromSelfDescription(selfDescription: IVerifiablePresentation): Promise<IVerifiableCredential> {
+    const selfDescribedVC = selfDescription.verifiableCredential[0]
+    const sd_jws = selfDescribedVC.proof['jws']
+    if (!sd_jws) {
+      throw new BadRequestException('selfDescription does not contain jws property')
+    }
+    delete selfDescription.proof
+    const normalizedSD: string = await this.normalize(selfDescribedVC)
+    const hash: string = this.sha256(normalizedSD + sd_jws)
+
+    const type: string = selfDescribedVC.type.find(t => t !== 'VerifiableCredential')
+    const complianceCredentialType: string =
+      SelfDescriptionTypes.PARTICIPANT === type ? SelfDescriptionTypes.PARTICIPANT_CREDENTIAL : SelfDescriptionTypes.SERVICE_OFFERING_CREDENTIAL
+    const unsignedCredential: ICredential = {
+      '@context': ['https://www.w3.org/2018/credentials/v1'],
+      type: ['VerifiableCredential', complianceCredentialType],
+      id: `https://catalogue.gaia-x.eu/credentials/${complianceCredentialType}/${new Date().getTime()}`,
+      issuer: getDidWeb(),
+      issuanceDate: new Date().toISOString(),
+      credentialSubject: {
+        id: selfDescribedVC.credentialSubject.id,
+        hash
+      }
+    }
+    const normalizedComplianceCredential: string = await this.normalize(unsignedCredential)
+    const complianceCredentialHash: string = this.sha256(normalizedComplianceCredential)
+    const jws = await this.sign(complianceCredentialHash)
+    return {
+      ...unsignedCredential,
+      proof: {
+        type: 'JsonWebSignature2020',
+        created: new Date().toISOString(),
+        proofPurpose: 'assertionMethod',
+        jws,
+        verificationMethod: getDidWeb()
+      }
+    }
   }
 }

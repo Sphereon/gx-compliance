@@ -23,9 +23,14 @@ export class SDParserPipe
   // TODO extract to common const
   private readonly addressFields = ['legalAddress', 'headquarterAddress']
 
-  transform(verifiableSelfDescriptionDto: VerifiableSelfDescriptionDto<CredentialSubjectDto>): SignedSelfDescriptionDto<CredentialSubjectDto> {
+  transform(
+    verifiableSelfDescriptionDto: VerifiableSelfDescriptionDto<CredentialSubjectDto> | VerifiableCredentialDto<any>
+  ): SignedSelfDescriptionDto<CredentialSubjectDto> {
+    if (this.sdType === SelfDescriptionTypes.VC) {
+      return this.transformVerifiableCredential(verifiableSelfDescriptionDto as VerifiableCredentialDto<any>)
+    }
     try {
-      const { complianceCredential, selfDescriptionCredential } = verifiableSelfDescriptionDto
+      const { complianceCredential, selfDescriptionCredential } = verifiableSelfDescriptionDto as VerifiableSelfDescriptionDto<CredentialSubjectDto>
 
       const type = getTypeFromSelfDescription(selfDescriptionCredential)
       if (this.sdType !== type) throw new BadRequestException(`Expected @type of ${this.sdType}`)
@@ -120,5 +125,40 @@ export class SDParserPipe
     const keyType = sdType.substring(0, sdType.lastIndexOf(':') + 1)
 
     return key.replace(keyType, '')
+  }
+
+  private transformVerifiableCredential(verifiableSelfDescriptionDto: VerifiableCredentialDto<any>) {
+    try {
+      const type = getTypeFromSelfDescription(verifiableSelfDescriptionDto)
+      const { credentialSubject } = verifiableSelfDescriptionDto
+      delete verifiableSelfDescriptionDto.credentialSubject
+
+      const flatten = {
+        sd: { ...verifiableSelfDescriptionDto },
+        cs: { ...credentialSubject }
+      }
+
+      for (const key of Object.keys(flatten)) {
+        const keys = Object.keys(flatten[key])
+        const cred = flatten[key]
+        keys.forEach(key => {
+          const strippedKey = this.replacePlaceholderInKey(key, type)
+          cred[strippedKey] = this.getValueFromShacl(cred[key], strippedKey, type)
+        })
+      }
+
+      return {
+        type: SelfDescriptionTypes.VC,
+        selfDescriptionCredential: {
+          ...flatten.sd,
+          credentialSubject: { ...flatten.cs }
+        } as VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>,
+        proof: verifiableSelfDescriptionDto.proof as SignatureDto,
+        raw: JSON.stringify({ ...verifiableSelfDescriptionDto, credentialSubject: { ...credentialSubject } }),
+        rawCredentialSubject: JSON.stringify({ ...credentialSubject })
+      }
+    } catch (error) {
+      throw new BadRequestException(`Transformation failed: ${error.message}`)
+    }
   }
 }

@@ -5,12 +5,14 @@ import { getApiVerifyBodySchema } from '../common/utils/api-verify-raw-body-sche
 import { SignedSelfDescriptionDto, ValidationResultDto, VerifiableCredentialDto, VerifiableSelfDescriptionDto } from '../common/dto'
 import { VerifyParticipantDto, ParticipantSelfDescriptionDto } from './dto'
 import { UrlSDParserPipe, SDParserPipe, JoiValidationPipe, BooleanQueryValidationPipe } from '../common/pipes'
-import { SignedSelfDescriptionSchema, VerifySdSchema } from '../common/schema/selfDescription.schema'
+import { SignedSelfDescriptionSchema, vcSchema, VerifySdSchema } from '../common/schema/selfDescription.schema'
 import ParticipantSD from '../tests/fixtures/participant-sd.json'
 import { CredentialTypes, SelfDescriptionTypes } from '../common/enums'
 import { HttpService } from '@nestjs/axios'
 import { ParticipantContentValidationService } from './services/content-validation.service'
 import { SelfDescriptionService } from '../common/services'
+import ParticipantVC from '../tests/fixtures/sphereon-LegalPerson.json'
+import { validationResultWithoutContent } from '../common/@types'
 
 const credentialType = CredentialTypes.participant
 @ApiTags(credentialType)
@@ -67,7 +69,23 @@ export class ParticipantController {
     const validationResult: ValidationResultDto = await this.verifyAndStoreSignedParticipantSD(participantSelfDescription, storeSD)
     return validationResult
   }
-
+  @ApiVerifyResponse(credentialType)
+  @Post('validate/vc')
+  @ApiOperation({ summary: 'Validate a Participant VerifiableCredential' })
+  @ApiExtraModels(VerifiableCredentialDto)
+  @ApiBody(
+    getApiVerifyBodySchema('Participant', {
+      service: { summary: 'Participant VC Example', value: ParticipantVC }
+    })
+  )
+  @HttpCode(HttpStatus.OK)
+  async validateParticipantVC(
+    @Body(new JoiValidationPipe(vcSchema), new SDParserPipe(SelfDescriptionTypes.VC))
+    participantVC: ParticipantSelfDescriptionDto
+  ): Promise<ValidationResultDto> {
+    const validationResult: ValidationResultDto = await this.validateSignedParticipantVC(participantVC)
+    return validationResult
+  }
   private async verifySignedParticipantSD(
     participantSelfDescription: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>
   ): Promise<ValidationResultDto> {
@@ -77,7 +95,6 @@ export class ParticipantController {
       (participantSelfDescription.selfDescriptionCredential as VerifiableCredentialDto<ParticipantSelfDescriptionDto>).credentialSubject
     )
     validationResult.conforms = validationResult.conforms && content.conforms
-
     if (!validationResult.conforms)
       throw new ConflictException({ statusCode: HttpStatus.CONFLICT, message: { ...validationResult, content }, error: 'Conflict' })
 
@@ -92,5 +109,24 @@ export class ParticipantController {
     if (result?.conforms && storeSD) result.storedSdUrl = await this.selfDescriptionService.storeSelfDescription(participantSelfDescription)
 
     return result
+  }
+
+  private async validateSignedParticipantVC(participantVC: ParticipantSelfDescriptionDto) {
+    const validationResult: validationResultWithoutContent = await this.selfDescriptionService.validateVC(participantVC['selfDescriptionCredential'])
+    const content = await this.participantContentValidationService.validate(participantVC['selfDescriptionCredential'].credentialSubject)
+    if (!validationResult.conforms)
+      throw new ConflictException({
+        statusCode: HttpStatus.CONFLICT,
+        message: {
+          ...validationResult,
+          content
+        },
+        error: 'Conflict'
+      })
+
+    return {
+      ...validationResult,
+      content
+    }
   }
 }

@@ -240,4 +240,35 @@ export class SelfDescriptionService {
       return false
     }
   }
+
+  async validateVC(selfDescriptionDto: ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto | VerifiableCredentialDto<any>) {
+    let isValidVC: boolean
+    if (selfDescriptionDto['selfDescriptionCredential']) {
+      isValidVC = await this.proofService.validate(selfDescriptionDto['selfDescriptionCredential'] as VerifiableCredentialDto<any>)
+    } else {
+      isValidVC = await this.proofService.validate(selfDescriptionDto as VerifiableCredentialDto<any>)
+    }
+    if (!isValidVC) {
+      throw new BadRequestException('VC is not valid')
+    }
+    if (
+      selfDescriptionDto['selfDescriptionCredential'] &&
+      selfDescriptionDto['selfDescriptionCredential'].credentialSubject.id === selfDescriptionDto['selfDescriptionCredential'].issuer
+    ) {
+      return {
+        shape: undefined,
+        conforms: true
+      }
+    } else if (selfDescriptionDto['credentialSubject'] && selfDescriptionDto['credentialSubject'].id === selfDescriptionDto['issuer']) {
+      return {
+        shape: undefined,
+        conforms: true
+      }
+    } else {
+      return {
+        shape: undefined,
+        conforms: false
+      }
+    }
+  }
 }

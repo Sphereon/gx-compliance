@@ -202,9 +202,7 @@ describe('SignatureService', () => {
           verificationMethod: vc.issuer + '#JWK2020-RSA'
         }
       }
-      console.log(vp)
       const complianceCredential = await signatureService.createComplianceCredentialFromSelfDescription(vp)
-      console.log(complianceCredential)
       expect(complianceCredential.proof[jws]).toBeDefined()
     })
   })

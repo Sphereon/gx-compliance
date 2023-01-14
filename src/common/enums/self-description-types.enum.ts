@@ -8,5 +8,6 @@ export enum SelfDescriptionTypes {
   PARTICIPANT = 'LegalPerson',
   PARTICIPANT_CREDENTIAL = 'ParticipantCredential',
   SERVICE_OFFERING = 'ServiceOfferingExperimental',
-  SERVICE_OFFERING_CREDENTIAL = 'ServiceOfferingCredentialExperimental'
+  SERVICE_OFFERING_CREDENTIAL = 'ServiceOfferingCredentialExperimental',
+  VC = 'VC'
 }

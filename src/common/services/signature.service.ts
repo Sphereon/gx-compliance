@@ -38,12 +38,22 @@ export class SignatureService {
 
   async normalize(doc: object): Promise<string> {
     try {
-      const canonized: string = await jsonld.canonize(doc, {
-        algorithm: 'URDNA2015',
-        format: 'application/n-quads',
-        //TODO FMA-23
-        documentLoader: new DocumentLoader().getLoader()
-      })
+      let canonized
+      if (doc['type'] === SelfDescriptionTypes.VC) {
+        canonized = await jsonld.canonize(doc['selfDescriptionCredential'], {
+          algorithm: 'URDNA2015',
+          format: 'application/n-quads',
+          //TODO FMA-23
+          documentLoader: new DocumentLoader().getLoader()
+        })
+      } else {
+        canonized = await jsonld.canonize(doc, {
+          algorithm: 'URDNA2015',
+          format: 'application/n-quads',
+          //TODO FMA-23
+          documentLoader: new DocumentLoader().getLoader()
+        })
+      }
 
       if (canonized === '') throw new Error()
 

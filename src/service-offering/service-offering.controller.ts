@@ -5,8 +5,9 @@ import { SignedSelfDescriptionDto, ValidationResultDto, VerifiableCredentialDto,
 import { VerifyServiceOfferingDto, ServiceOfferingSelfDescriptionDto } from './dto'
 import { ApiVerifyResponse } from '../common/decorators'
 import { getApiVerifyBodySchema } from '../common/utils/api-verify-raw-body-schema.util'
-import { SignedSelfDescriptionSchema, VerifySdSchema } from '../common/schema/selfDescription.schema'
+import { SignedSelfDescriptionSchema, vcSchema, VerifySdSchema } from '../common/schema/selfDescription.schema'
 import ServiceOfferingExperimentalSD from '../tests/fixtures/service-offering-sd.json'
+import ServiceOfferingVC from '../tests/fixtures/sphereon-service-offering-vc.json'
 import SphereonServiceOfferingVP from '../tests/fixtures/sphereon-service-offering.json'
 import { CredentialTypes } from '../common/enums'
 import { UrlSDParserPipe, SDParserPipe, JoiValidationPipe, BooleanQueryValidationPipe } from '../common/pipes'
@@ -15,6 +16,7 @@ import { HttpService } from '@nestjs/axios'
 import { validationResultWithoutContent } from '../common/@types'
 import { ServiceOfferingContentValidationService } from './services/content-validation.service'
 import { VerifiablePresentationDto } from '../common/dto/presentation-meta.dto'
+import { ParticipantSelfDescriptionDto } from '../participant/dto'
 
 const credentialType = CredentialTypes.service_offering
 @ApiTags(credentialType)
@@ -125,6 +127,24 @@ export class ServiceOfferingController {
     return validationResult
   }
 
+  @ApiVerifyResponse(credentialType)
+  @Post('validate/vc')
+  @ApiOperation({ summary: 'Validate a Service Offering VerifiableCredential' })
+  @ApiExtraModels(VerifiableCredentialDto)
+  @ApiBody(
+    getApiVerifyBodySchema(SelfDescriptionTypes.SERVICE_OFFERING, {
+      service: { summary: 'Service Offering VC Example', value: ServiceOfferingVC }
+    })
+  )
+  @HttpCode(HttpStatus.OK)
+  async validateServiceOfferingVC(
+    @Body(new JoiValidationPipe(vcSchema), new SDParserPipe(SelfDescriptionTypes.VC))
+    serviceOfferingVC: ServiceOfferingSelfDescriptionDto
+  ): Promise<ValidationResultDto> {
+    const validationResult: ValidationResultDto = await this.validateSignedServiceOfferingVC(serviceOfferingVC)
+    return validationResult
+  }
+
   private async verifySignedServiceOfferingSD(
     serviceOfferingSelfDescription: SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>,
     verifyParticipant = true
@@ -224,6 +244,30 @@ export class ServiceOfferingController {
         isValidSignature: true
       }
     )
+
+    if (!validationResult.conforms)
+      throw new ConflictException({
+        statusCode: HttpStatus.CONFLICT,
+        message: {
+          ...validationResult,
+          content
+        },
+        error: 'Conflict'
+      })
+
+    return {
+      ...validationResult,
+      content
+    }
+  }
+  private async validateSignedServiceOfferingVC(serviceOfferingVC: ServiceOfferingSelfDescriptionDto): Promise<ValidationResultDto> {
+    const validationResult: validationResultWithoutContent = await this.selfDescriptionService.validateVC(serviceOfferingVC)
+    const content = await this.serviceOfferingContentValidationService.validate(serviceOfferingVC['selfDescriptionCredential'].credentialSubject, {
+      conforms: true,
+      shape: { conforms: true, results: [] },
+      content: { conforms: true, results: [] },
+      isValidSignature: true
+    })
 
     if (!validationResult.conforms)
       throw new ConflictException({

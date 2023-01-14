@@ -1,8 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { SignatureDto } from './signature.dto'
 import { IProof, IVerifiableCredential, IVerifiablePresentation, PresentationSubmission } from '@sphereon/ssi-types'
 
-//TODO: refactor togi use for all credentials (compliance, sd)
 export class VerifiablePresentationDto implements IVerifiablePresentation {
   @ApiProperty({
     description: 'The context to be used for the self description.'
@@ -34,4 +32,9 @@ export class VerifiablePresentationDto implements IVerifiablePresentation {
     description: 'The proof of the credential.'
   })
   public proof: IProof
+
+  @ApiProperty({
+    description: 'Presentation Submission object for this presentation'
+  })
+  public presentation_submission?: PresentationSubmission
 }

@@ -12,10 +12,10 @@ const proofSchema = {
   creator: Joi.string()
 }
 
-const verifiableCredentialSchema = {
+export const verifiableCredentialSchema = {
   '@context': Joi.array().ordered(Joi.string().valid('https://www.w3.org/2018/credentials/v1').required()).items(Joi.string()).required(),
   type: Joi.array().min(1).required(),
-  id: Joi.string().uri(),
+  id: Joi.string(),
   issuer: Joi.alternatives([
     Joi.string().uri().required(),
     Joi.object({
@@ -47,6 +47,7 @@ export const VerifySdSchema = Joi.object({
   abortEarly: false
 })
 
+export const vcSchema = Joi.object(verifiableCredentialSchema)
 export const SignedSelfDescriptionSchema = Joi.object({
   selfDescriptionCredential: Joi.object(verifiableCredentialSchema).required(),
   complianceCredential: Joi.object(verifiableCredentialSchema).required()

@@ -6,9 +6,9 @@ import typer from 'media-typer'
 export class ServiceOfferingContentValidationService {
   async validate(data: ServiceOfferingSelfDescriptionDto, providedByResult?: ValidationResultDto): Promise<ValidationResult> {
     const results = []
-
     results.push(this.checkDataProtectionRegime(data?.dataProtectionRegime))
-    results.push(this.checkDataExport(data?.dataExport))
+    const dataExport = data?.dataExport ? data.dataExport : data['gx-service-offering:dataExport']
+    results.push(this.checkDataExport(dataExport))
 
     const mergedResults: ValidationResult = this.mergeResults(...results)
 
@@ -59,7 +59,6 @@ export class ServiceOfferingContentValidationService {
       result.conforms = false
       result.results.push(`formatType: ${dataExport['gx-service-offering:formatType']} is not a valid formatType`)
     }
-
     return result
   }
 

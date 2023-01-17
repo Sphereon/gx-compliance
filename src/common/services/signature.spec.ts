@@ -5,9 +5,7 @@ import participantSd from '../../tests/fixtures/participant-sd.json'
 import participantMinimalSd from '../../tests/fixtures/participant-sd.json'
 import serviceOfferingSd from '../../tests/fixtures/service-offering-sd.json'
 import * as jose from 'jose'
-import { readFileSync } from 'fs'
-import { IVerifiableCredential, IVerifiablePresentation } from '@sphereon/ssi-types'
-import { getDidWeb } from '../utils'
+import { IVerifiableCredential, IVerifiablePresentation } from '../@types'
 
 describe('SignatureService', () => {
   const algorithm = 'PS256'

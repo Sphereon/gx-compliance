@@ -9,7 +9,17 @@ const proofSchema = {
   verificationMethod: Joi.string().uri().regex(DID_WEB_PATTERN).required(), // TODO: allow general uri https://w3c-ccg.github.io/security-vocab/#JsonWebSignature2020
   domain: Joi.string(),
   nonce: Joi.string(),
-  creator: Joi.string()
+  creator: Joi.string(),
+  challenge: Joi.string()
+}
+
+const verifiablePresentationSchema = {
+  '@context': Joi.array().ordered(Joi.string().valid('https://www.w3.org/2018/credentials/v1').required()).items(Joi.string()).required(),
+  type: Joi.array().min(1).required(),
+  id: Joi.string(),
+  verifiableCredential: Joi.array().min(1), // assert type of verifiableCredentials here
+  holder: Joi.string().required(),
+  proof: Joi.object(proofSchema).required()
 }
 
 export const verifiableCredentialSchema = {
@@ -40,7 +50,9 @@ export const verifiableCredentialSchema = {
 export const ParticipantSelfDescriptionSchema = Joi.object(verifiableCredentialSchema).options({
   abortEarly: false
 })
-
+export const VerifiablePresentationSchema = Joi.object(verifiablePresentationSchema).options({
+  abortEarly: false
+})
 export const VerifySdSchema = Joi.object({
   url: Joi.string().uri().required()
 }).options({

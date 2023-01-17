@@ -7,12 +7,17 @@ import * as jose from 'jose'
 import * as jsonld from 'jsonld'
 import { SelfDescriptionTypes } from '../enums'
 import { DocumentLoader } from './DocumentLoader'
-import { ICredential, IVerifiableCredential, IVerifiablePresentation } from '@sphereon/ssi-types'
-import { readFileSync } from 'fs'
+import { subtle } from '@transmute/web-crypto-key-pair'
+import { ICredential, IVerifiableCredential, IVerifiablePresentation } from '../@types'
 
 export interface Verification {
   protectedHeader: jose.CompactJWSHeaderParameters | undefined
   content: string | undefined
+}
+function expansionMap(info) {
+  if (info.unmappedProperty) {
+    console.log('The property "' + info.unmappedProperty + '" in the input ' + 'was not defined in the context.')
+  }
 }
 
 @Injectable()
@@ -25,7 +30,7 @@ export class SignatureService {
         e: jwk.e,
         x5u: jwk.x5u
       }
-      const algorithm = jwk.alg || 'PS256'
+      const algorithm = jwk.alg || 'RS256'
       const rsaPublicKey = await jose.importJWK(cleanJwk, algorithm)
 
       const result = await jose.compactVerify(jws, rsaPublicKey)
@@ -150,5 +155,70 @@ export class SignatureService {
         verificationMethod: getDidWeb()
       }
     }
+  }
+
+  async verifySignature({ verifyData, jwk, proof }: any): Promise<boolean> {
+    const key = await subtle.importKey('jwk', jwk, { hash: 'SHA-256', name: 'RSASSA-PKCS1-V1_5' }, true, ['verify'])
+    return await subtle.verify(
+      {
+        name: key.algorithm?.name ? key.algorithm.name : 'RSASSA-PKCS1-V1_5',
+        hash: 'SHA-256'
+      },
+      key,
+      typeof proof.jws === 'string' ? Buffer.from(proof.jws, 'base64url') : proof.jws,
+      verifyData
+    )
+  }
+
+  async checkVcSignature(verifiableCredential: IVerifiableCredential, jwk: JsonWebKey): Promise<boolean> {
+    const proof = verifiableCredential.proof
+    const document = { ...verifiableCredential }
+    delete document.proof
+    const verifyData = await this.createVerifyData({ document, proof, documentLoader: new DocumentLoader().getLoader(), expansionMap })
+    return await this.verifySignature({ verifyData, jwk, proof })
+  }
+
+  async checkVpSignature(verifiablePresentation: IVerifiablePresentation, jwk: JsonWebKey): Promise<boolean> {
+    const proof = verifiablePresentation.proof
+    const document = { ...verifiablePresentation }
+    delete document.proof
+    const verifyData = await this.createVerifyData({ document, proof, documentLoader: new DocumentLoader().getLoader(), expansionMap })
+    return await this.verifySignature({ verifyData, jwk, proof })
+  }
+
+  async createVerifyData({ document, proof, documentLoader, expansionMap }: any) {
+    // concatenate hash of c14n proof options and hash of c14n document
+    const c14nProofOptions = await this.canonizeProof(proof, {
+      documentLoader,
+      expansionMap
+    })
+    const c14nDocument = await this.canonize(document, {
+      documentLoader,
+      expansionMap
+    })
+    return Buffer.from(this.sha256(c14nProofOptions) + this.sha256(c14nDocument), 'utf-8')
+  }
+
+  async canonize(input: any, { documentLoader, expansionMap, skipExpansion }: any) {
+    return jsonld.canonize(input, {
+      algorithm: 'URDNA2015',
+      format: 'application/n-quads',
+      documentLoader,
+      expansionMap,
+      skipExpansion,
+      useNative: false
+    })
+  }
+
+  async canonizeProof(proof: any, { documentLoader, expansionMap }: any) {
+    // `jws`,`signatureValue`,`proofValue` must not be included in the proof
+    // options
+    proof = { ...proof }
+    delete proof.jws
+    return this.canonize(proof, {
+      documentLoader,
+      expansionMap,
+      skipExpansion: false
+    })
   }
 }

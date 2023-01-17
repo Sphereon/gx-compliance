@@ -12,7 +12,7 @@ import ServiceOfferingSDFaultyFixture from '../../tests/fixtures/service-offerin
 import { expectedErrorResult, expectedValidResult } from './shacl.spec'
 import { ParticipantModule } from '../../participant/participant.module'
 import { AppModule } from '../../app.module'
-import { IVerifiablePresentation } from '@sphereon/ssi-types'
+import { IVerifiablePresentation } from '../@types'
 
 describe('ParticipantService', () => {
   let selfDescriptionService: SelfDescriptionService

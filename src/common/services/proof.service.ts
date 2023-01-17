@@ -9,14 +9,17 @@ import * as jose from 'jose'
 import { METHOD_IDS } from '../constants'
 import { Resolver, DIDDocument } from 'did-resolver'
 import web from 'web-did-resolver'
-import { IVerifiablePresentation } from '@sphereon/ssi-types'
+import { IVerifiablePresentation } from '../@types'
+import { GxSignatureSuite } from './suits/gx-signature-suite'
+import { CERT_CHAIN } from './suits/mockData'
 
 @Injectable()
 export class ProofService {
   constructor(
     private readonly httpService: HttpService,
     private readonly registryService: RegistryService,
-    private readonly signatureService: SignatureService
+    private readonly signatureService: SignatureService,
+    private readonly gxSignatureSuite: GxSignatureSuite
   ) {}
 
   public async validate(
@@ -37,7 +40,12 @@ export class ProofService {
     if (!this.publicKeyMatchesCertificate(publicKeyJwk, certificatesRaw)) throw new ConflictException(`Public Key does not match certificate chain.`)
 
     const input = (selfDescriptionCredential as any).selfDescription ? (selfDescriptionCredential as any)?.selfDescription : selfDescriptionCredential
-    const isValidSignature: boolean = await this.checkSignature(input, isValidityCheck, jws, selfDescriptionCredential.proof, publicKeyJwk)
+    let isValidSignature: boolean
+    if (ProofService.isVcOrVp(input)) {
+      isValidSignature = await this.gxSignatureSuite.checkVerifiableDataProof(input, publicKeyJwk)
+    } else {
+      isValidSignature = await this.checkSignature(input, isValidityCheck, jws, selfDescriptionCredential.proof, publicKeyJwk)
+    }
 
     if (!isValidSignature) throw new ConflictException(`Provided signature does not match Self Description.`)
 
@@ -61,6 +69,14 @@ export class ProofService {
   }
 
   private async checkSignature(selfDescription, isValidityCheck: boolean, jws: string, proof, jwk: any): Promise<boolean> {
+    /**
+     * These two branches are temporarily disabled. Re-enable them later
+     */
+    if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiableCredential') !== -1) {
+      return await this.signatureService.checkVcSignature(selfDescription, jwk)
+    } else if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiablePresentation') !== -1) {
+      return await this.signatureService.checkVpSignature(selfDescription, jwk)
+    }
     delete selfDescription.proof
 
     const normalizedSD: string = await this.signatureService.normalize(selfDescription)
@@ -73,9 +89,9 @@ export class ProofService {
 
   private async publicKeyMatchesCertificate(publicKeyJwk: any, certificatePem: string): Promise<boolean> {
     try {
-      const pk = await jose.importJWK(publicKeyJwk)
+      const pk = await jose.importJWK(publicKeyJwk, 'RS256')
       const spki = await jose.exportSPKI(pk as jose.KeyLike)
-      const x509 = await jose.importX509(certificatePem, 'PS256')
+      const x509 = await jose.importX509(certificatePem, 'RS256')
       const spkiX509 = await jose.exportSPKI(x509 as jose.KeyLike)
 
       return spki === spkiX509
@@ -97,6 +113,10 @@ export class ProofService {
   }
 
   private async loadCertificatesRaw(url: string): Promise<string> {
+    //todo: removed this
+    if (url === 'https://f825-87-213-241-251.eu.ngrok.io/.well-known/ca-chain.pem') {
+      return CERT_CHAIN
+    }
     try {
       const response = await this.httpService.get(url).toPromise()
       return response.data.replace(/\n/gm, '') || undefined
@@ -111,5 +131,13 @@ export class ProofService {
     const doc = await resolver.resolve(did)
 
     return doc.didDocument
+  }
+
+  private static isVcOrVp(input: unknown): boolean {
+    return !(
+      !input['type'] ||
+      ((input['type'] as string[]).lastIndexOf('VerifiableCredential') === -1 &&
+        (input['type'] as string[]).lastIndexOf('VerifiablePresentation') === -1)
+    )
   }
 }

@@ -1,7 +1,7 @@
 import { CredentialSubjectDto, VerifiableCredentialDto } from '../dto'
 import { SUPPORTED_TYPES } from '../constants'
 import { BadRequestException, ConflictException } from '@nestjs/common'
-import { IVerifiableCredential } from '@sphereon/ssi-types'
+import { IVerifiableCredential } from '../@types'
 
 export function getTypeFromSelfDescription(selfDescription: VerifiableCredentialDto<CredentialSubjectDto> | IVerifiableCredential): string {
   const types = selfDescription.type

@@ -5,13 +5,16 @@ import { ParticipantSelfDescriptionDto } from '../participant/dto'
 import { ServiceOfferingSelfDescriptionDto } from '../service-offering/dto'
 import { ComplianceCredentialDto, VerifiableCredentialDto } from './dto'
 import ParticipantSD from '../tests/fixtures/participant-sd.json'
+import PresentationExample from '../tests/fixtures/sphereon-presentation.json'
+import CredentialExample from '../tests/fixtures/sphereon-credential.json'
 import ServiceOfferingExperimentalSD from '../tests/fixtures/service-offering-sd.json'
 import { JoiValidationPipe } from './pipes'
-import { ParticipantSelfDescriptionSchema } from './schema/selfDescription.schema'
+import { ParticipantSelfDescriptionSchema, VerifiablePresentationSchema } from './schema/selfDescription.schema'
 import { CredentialTypes } from './enums'
 import { getTypeFromSelfDescription } from './utils'
 import { VerifiablePresentationDto } from './dto/presentation-meta.dto'
-import { IVerifiableCredential } from '@sphereon/ssi-types'
+import { IVerifiableCredential, IVerifiablePresentation } from './@types'
+import { GxSignatureSuite } from './services/suits/gx-signature-suite'
 
 const credentialType = CredentialTypes.common
 
@@ -19,13 +22,20 @@ const commonSDExamples = {
   participant: { summary: 'Participant SD Example', value: ParticipantSD.selfDescriptionCredential },
   service: { summary: 'Service Offering Experimental SD Example', value: ServiceOfferingExperimentalSD.selfDescriptionCredential }
 }
+const credentialExample = {
+  participant: { summary: 'A sample participant credential ready to be signed', value: CredentialExample }
+}
+const presentationExample = {
+  participant: { summary: 'A sample participant presentation ready to be signed', value: PresentationExample }
+}
 @ApiTags(credentialType)
 @Controller({ path: '' })
 export class CommonController {
   constructor(
     private readonly selfDescriptionService: SelfDescriptionService,
     private readonly signatureService: SignatureService,
-    private readonly proofService: ProofService
+    private readonly proofService: ProofService,
+    private readonly gxSignatureSuite: GxSignatureSuite
   ) {}
 
   @ApiResponse({
@@ -77,7 +87,7 @@ export class CommonController {
     examples: commonSDExamples
   })
   @ApiOperation({ summary: 'Gets a selfDescribed VP and returns a Compliance VC in response' })
-  @UsePipes(new JoiValidationPipe(ParticipantSelfDescriptionSchema))
+  @UsePipes(new JoiValidationPipe(VerifiablePresentationSchema))
   @Post('compliance')
   async createComplianceCredential(@Body() verifiableSelfDescription: VerifiablePresentationDto): Promise<IVerifiableCredential> {
     await this.proofService.validate(JSON.parse(JSON.stringify(verifiableSelfDescription)))
@@ -107,5 +117,51 @@ export class CommonController {
     const normalizedSD: string = await this.signatureService.normalize(selfDescription)
 
     return normalizedSD
+  }
+
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully signed posted content. Will return the posted JSON with an additional "proof" property added.'
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid JSON request body.'
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Invalid Participant Self Description.'
+  })
+  @ApiBody({
+    type: VerifiableCredentialDto,
+    examples: credentialExample
+  })
+  @ApiOperation({ summary: 'Canonize, hash and sign a valid Credential' })
+  @UsePipes()
+  @Post('vc/sign')
+  async signVC(@Body() verifiableCredentialDto: any): Promise<IVerifiableCredential> {
+    return this.gxSignatureSuite.signCredential(verifiableCredentialDto)
+  }
+
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully signed posted content. Will return the posted JSON with an additional "proof" property added.'
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid JSON request body.'
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Invalid Participant Self Description.'
+  })
+  @ApiBody({
+    type: VerifiablePresentationDto,
+    examples: presentationExample
+  })
+  @ApiOperation({ summary: 'Canonize, hash and sign a valid Credential' })
+  @UsePipes()
+  @Post('vp/sign')
+  async signVP(@Body() presentation: any): Promise<IVerifiablePresentation> {
+    return this.gxSignatureSuite.signPresentation(presentation)
   }
 }

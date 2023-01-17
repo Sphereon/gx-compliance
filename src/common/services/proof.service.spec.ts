@@ -8,7 +8,7 @@ import { SDParserPipe } from '../pipes'
 import nock from 'nock'
 import ParticipantSD from '../../tests/fixtures/participant-sd.json'
 import { MockData } from './mockData'
-import { IVerifiablePresentation } from '@sphereon/ssi-types'
+import { IVerifiablePresentation } from '../@types'
 
 describe('ProofService', () => {
   let proofService: ProofService

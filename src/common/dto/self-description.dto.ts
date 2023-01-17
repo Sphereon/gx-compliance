@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { ComplianceCredentialDto, CredentialSubjectDto, VerifiableCredentialDto } from '.'
 import { SignatureDto } from './signature.dto'
-import { IVerifiableCredential } from '@sphereon/ssi-types'
+import { IVerifiableCredential } from '../@types'
 
 export class VerifySdDto {
   @ApiProperty({

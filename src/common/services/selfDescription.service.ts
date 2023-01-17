@@ -16,9 +16,8 @@ import {
 import DatasetExt from 'rdf-ext/lib/Dataset'
 import { SelfDescriptionTypes } from '../enums'
 import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../constants'
-import { validationResultWithoutContent } from '../@types'
+import { IVerifiableCredential, IVerifiablePresentation, validationResultWithoutContent } from '../@types'
 import { lastValueFrom } from 'rxjs'
-import { IVerifiableCredential, IVerifiablePresentation } from '@sphereon/ssi-types'
 import { VerifiablePresentationDto } from '../dto/presentation-meta.dto'
 
 @Injectable()

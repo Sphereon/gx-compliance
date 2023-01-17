@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IProof, IVerifiableCredential, IVerifiablePresentation, PresentationSubmission } from '@sphereon/ssi-types'
+import { IProof, IVerifiableCredential, IVerifiablePresentation, PresentationSubmission } from '../@types'
 
 export class VerifiablePresentationDto implements IVerifiablePresentation {
   @ApiProperty({

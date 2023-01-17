@@ -8,6 +8,7 @@ import { DID_DOC, PEM_PRIV_KEY } from './mockData'
 import { METHOD_IDS } from '../../constants'
 import { DIDDocument, Resolver } from 'did-resolver'
 import web from 'web-did-resolver'
+import { DocumentLoader } from '../DocumentLoader'
 
 @Injectable()
 export class GxSignatureSuite {
@@ -23,7 +24,7 @@ export class GxSignatureSuite {
 
   public async signPresentation(presentation: IPresentation): Promise<IVerifiablePresentation> {
     // first we check if the VCs in the presentation are correct or not
-    const { publicKeyJwk } = await this.getPublicKeys(presentation.holder)
+    const publicKeyJwk = await this.getPublicKeys(presentation.holder)
     for (const vc of presentation.verifiableCredential) {
       if (!(await this.checkVcProof(vc, publicKeyJwk))) {
         throw new Error('VC is not verified')
@@ -38,7 +39,7 @@ export class GxSignatureSuite {
     } as IVerifiablePresentation
   }
 
-  public async checkVerifiableDataProof(verifiableData: IVerifiableCredential | IVerifiablePresentation, publicKeyJwk: any): Promise<boolean> {
+  public async checkVerifiableDataProof(verifiableData: IVerifiableCredential | IVerifiablePresentation, publicKeyJwk?: any): Promise<boolean> {
     if (
       !verifiableData['type'] ||
       ((verifiableData['type'] as string[]).lastIndexOf('VerifiableCredential') === -1 &&
@@ -53,7 +54,8 @@ export class GxSignatureSuite {
     }
   }
 
-  private async checkVcProof(vc: IVerifiableCredential, jwk): Promise<boolean> {
+  private async checkVcProof(vc: IVerifiableCredential, jwk?: any): Promise<boolean> {
+    jwk = await this.getPublicKeys(vc.credentialSubject.id)
     return this.checkSignature(vc, jwk)
   }
 
@@ -107,7 +109,8 @@ export class GxSignatureSuite {
     try {
       const canonized: string = await jsonld.canonize(doc, {
         algorithm: 'URDNA2015',
-        format: 'application/n-quads'
+        format: 'application/n-quads',
+        documentLoader: new DocumentLoader().getLoader()
       })
 
       if (canonized === '') throw new Error()
@@ -168,7 +171,7 @@ export class GxSignatureSuite {
     const { publicKeyJwk } = jwk
     if (!publicKeyJwk) throw new ConflictException(`Could not load JWK for ${verificationMethod}`)
 
-    return { publicKeyJwk }
+    return publicKeyJwk
   }
 
   //todo this is duplicated, should be deleted in refactor

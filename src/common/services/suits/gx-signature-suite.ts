@@ -76,7 +76,7 @@ export class GxSignatureSuite {
     delete verifiableData.proof
 
     const normalizedVerifiableData: string = await this.normalize(verifiableData)
-    const hashInput: string = normalizedVerifiableData + proof.jws
+    const hashInput: string = normalizedVerifiableData
     const hash: string = this.sha256(hashInput)
     try {
       const verificationResult: Verification = await this.verify(proof.jws.replace('..', `.${hash}.`), jwk)

@@ -41,7 +41,7 @@ export class ProofService {
 
     const input = (selfDescriptionCredential as any).selfDescription ? (selfDescriptionCredential as any)?.selfDescription : selfDescriptionCredential
     let isValidSignature: boolean
-    if (ProofService.isVcOrVp(input)) {
+    if (false && ProofService.isVcOrVp(input)) {
       isValidSignature = await this.gxSignatureSuite.checkVerifiableDataProof(input, publicKeyJwk)
     } else {
       isValidSignature = await this.checkSignature(input, isValidityCheck, jws, selfDescriptionCredential.proof, publicKeyJwk)
@@ -69,14 +69,14 @@ export class ProofService {
   }
 
   private async checkSignature(selfDescription, isValidityCheck: boolean, jws: string, proof, jwk: any): Promise<boolean> {
-    /**
+   /* /!**
      * These two branches are temporarily disabled. Re-enable them later
-     */
+     *!/
     if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiableCredential') !== -1) {
       return await this.signatureService.checkVcSignature(selfDescription, jwk)
     } else if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiablePresentation') !== -1) {
       return await this.signatureService.checkVpSignature(selfDescription, jwk)
-    }
+    }*/
     delete selfDescription.proof
 
     const normalizedSD: string = await this.signatureService.normalize(selfDescription)

@@ -32,7 +32,7 @@ describe('ShaclService', () => {
     [Symbol.iterator]: expect.any(Object)
   }
 
-  const participantShaclShapeRaw = readFileSync(path.join(__dirname, '../../static/schemas/participant.ttl')).toString()
+  const participantShaclShapeRaw = readFileSync(path.join(__dirname, '../../utils/static/schemas/participant.ttl')).toString()
 
   const participantSDRaw = JSON.stringify(ParticipantSDFixture)
   const participantMinimalSDRaw = JSON.stringify(ParticipantMinimalSDFixture)

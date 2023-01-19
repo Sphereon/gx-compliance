@@ -7,6 +7,7 @@ import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant/part
 import { AddressDto } from '../../@types/dto/common'
 import { RegistryService } from '../common'
 import { RegistrationNumberDto } from '../../@types/dto/participant/registration-number.dto'
+import { _ } from 'lodash'
 
 @Injectable()
 export class ParticipantContentValidationService {

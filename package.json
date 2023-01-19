@@ -17,7 +17,7 @@
     "prebuild": "rimraf dist",
     "clean": "rimraf dist/",
     "copy-docs": "cp -r docs/src/.vuepress/dist/* dist/src/static/",
-    "copy-files": "cp -r src/static/.well-known dist/src/static",
+    "copy-files": "cp -r src/utils/static/.well-known dist/src/static/.well-known",
     "build": "nest build && npm run clean && nest build && tsc && npm install --prefix ./docs/ && npm run build --prefix ./docs/ && npm run copy-files && npm run copy-docs",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

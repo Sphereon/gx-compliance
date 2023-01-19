@@ -1,6 +1,6 @@
-import { ApiBody, ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { Body, Controller, Post, UsePipes } from '@nestjs/common'
-import { SignatureService, SelfDescriptionService, ProofService } from './services'
+import { ProofService, SelfDescriptionService, SignatureService } from './services'
 import { ParticipantSelfDescriptionDto } from '../participant/dto'
 import { ServiceOfferingSelfDescriptionDto } from '../service-offering/dto'
 import { ComplianceCredentialDto, VerifiableCredentialDto } from './dto'
@@ -13,8 +13,7 @@ import { ParticipantSelfDescriptionSchema, VerifiablePresentationSchema } from '
 import { CredentialTypes } from './enums'
 import { getTypeFromSelfDescription } from './utils'
 import { VerifiablePresentationDto } from './dto/presentation-meta.dto'
-import { IVerifiableCredential, IVerifiablePresentation } from './@types'
-import { GxSignatureSuite } from './services/suits/gx-signature-suite'
+import { IVerifiableCredential } from './@types'
 
 const credentialType = CredentialTypes.common
 
@@ -34,8 +33,7 @@ export class CommonController {
   constructor(
     private readonly selfDescriptionService: SelfDescriptionService,
     private readonly signatureService: SignatureService,
-    private readonly proofService: ProofService,
-    private readonly gxSignatureSuite: GxSignatureSuite
+    private readonly proofService: ProofService
   ) {}
 
   @ApiResponse({
@@ -117,51 +115,5 @@ export class CommonController {
     const normalizedSD: string = await this.signatureService.normalize(selfDescription)
 
     return normalizedSD
-  }
-
-  @ApiResponse({
-    status: 200,
-    description: 'Successfully signed posted content. Will return the posted JSON with an additional "proof" property added.'
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid JSON request body.'
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Invalid Participant Self Description.'
-  })
-  @ApiBody({
-    type: VerifiableCredentialDto,
-    examples: credentialExample
-  })
-  @ApiOperation({ summary: 'Canonize, hash and sign a valid Credential' })
-  @UsePipes()
-  @Post('vc/sign')
-  async signVC(@Body() verifiableCredentialDto: any): Promise<IVerifiableCredential> {
-    return this.gxSignatureSuite.signCredential(verifiableCredentialDto)
-  }
-
-  @ApiResponse({
-    status: 200,
-    description: 'Successfully signed posted content. Will return the posted JSON with an additional "proof" property added.'
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid JSON request body.'
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Invalid Participant Self Description.'
-  })
-  @ApiBody({
-    type: VerifiablePresentationDto,
-    examples: presentationExample
-  })
-  @ApiOperation({ summary: 'Canonize, hash and sign a valid Credential' })
-  @UsePipes()
-  @Post('vp/sign')
-  async signVP(@Body() presentation: any): Promise<IVerifiablePresentation> {
-    return this.gxSignatureSuite.signPresentation(presentation)
   }
 }

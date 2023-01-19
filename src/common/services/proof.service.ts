@@ -7,10 +7,9 @@ import { SignatureService, Verification } from './signature.service'
 import { VerifiableCredentialDto } from '../dto/credential-meta.dto'
 import * as jose from 'jose'
 import { METHOD_IDS } from '../constants'
-import { Resolver, DIDDocument } from 'did-resolver'
+import { DIDDocument, Resolver } from 'did-resolver'
 import web from 'web-did-resolver'
 import { IVerifiablePresentation } from '../@types'
-import { GxSignatureSuite } from './suits/gx-signature-suite'
 import { CERT_CHAIN } from './suits/mockData'
 
 @Injectable()
@@ -18,8 +17,7 @@ export class ProofService {
   constructor(
     private readonly httpService: HttpService,
     private readonly registryService: RegistryService,
-    private readonly signatureService: SignatureService,
-    private readonly gxSignatureSuite: GxSignatureSuite
+    private readonly signatureService: SignatureService
   ) {}
 
   public async validate(
@@ -40,12 +38,8 @@ export class ProofService {
     if (!this.publicKeyMatchesCertificate(publicKeyJwk, certificatesRaw)) throw new ConflictException(`Public Key does not match certificate chain.`)
 
     const input = (selfDescriptionCredential as any).selfDescription ? (selfDescriptionCredential as any)?.selfDescription : selfDescriptionCredential
-    let isValidSignature: boolean
-    if (false && ProofService.isVcOrVp(input)) {
-      isValidSignature = await this.gxSignatureSuite.checkVerifiableDataProof(input, publicKeyJwk)
-    } else {
-      isValidSignature = await this.checkSignature(input, isValidityCheck, jws, selfDescriptionCredential.proof, publicKeyJwk)
-    }
+
+    const isValidSignature = await this.checkSignature(input, isValidityCheck, jws, selfDescriptionCredential.proof, publicKeyJwk)
 
     if (!isValidSignature) throw new ConflictException(`Provided signature does not match Self Description.`)
 
@@ -69,14 +63,14 @@ export class ProofService {
   }
 
   private async checkSignature(selfDescription, isValidityCheck: boolean, jws: string, proof, jwk: any): Promise<boolean> {
-   /* /!**
-     * These two branches are temporarily disabled. Re-enable them later
-     *!/
-    if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiableCredential') !== -1) {
-      return await this.signatureService.checkVcSignature(selfDescription, jwk)
-    } else if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiablePresentation') !== -1) {
-      return await this.signatureService.checkVpSignature(selfDescription, jwk)
-    }*/
+    /* /!**
+      * These two branches are temporarily disabled. Re-enable them later
+      *!/
+     if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiableCredential') !== -1) {
+       return await this.signatureService.checkVcSignature(selfDescription, jwk)
+     } else if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiablePresentation') !== -1) {
+       return await this.signatureService.checkVpSignature(selfDescription, jwk)
+     }*/
     delete selfDescription.proof
 
     const normalizedSD: string = await this.signatureService.normalize(selfDescription)

@@ -48,7 +48,7 @@ export class ProofService {
     return true
   }
 
-  private async getPublicKeys(selfDescriptionCredential) {
+  public async getPublicKeys(selfDescriptionCredential) {
     const { verificationMethod, id } = await this.loadDDO(selfDescriptionCredential.proof.verificationMethod)
 
     const jwk = verificationMethod.find(method => METHOD_IDS.includes(method.id) || method.id.startsWith(id))

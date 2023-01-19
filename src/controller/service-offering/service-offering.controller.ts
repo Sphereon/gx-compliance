@@ -111,7 +111,6 @@ export class ServiceOfferingController {
           },
           error: 'Conflict'
         })
-  
       return validationResult
       
       } catch (error) {

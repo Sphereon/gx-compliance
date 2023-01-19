@@ -1,15 +1,23 @@
 import { Injectable } from '@nestjs/common'
 import { ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
-import { ValidationResult, ValidationResultDto } from '../../@types/dto/common'
+import { SignedSelfDescriptionDto, ValidationResult, ValidationResultDto, VerifiableCredentialDto } from '../../@types/dto/common'
+import { ProofService } from '../common/proof.service'
+
 import typer from 'media-typer'
+import { ParticipantSelfDescriptionDto, SignedParticipantSelfDescriptionDto } from 'src/@types/dto/participant'
 @Injectable()
 export class ServiceOfferingContentValidationService {
-  async validate(data: ServiceOfferingSelfDescriptionDto, providedByResult?: ValidationResultDto): Promise<ValidationResult> {
-    const results = []
+  constructor(
+    private readonly proofService: ProofService
+    ) {}
 
+  async validate(Service_offering_SD: SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>, Provided_by_SD:SignedSelfDescriptionDto<ParticipantSelfDescriptionDto> , providedByResult?: ValidationResultDto): Promise<ValidationResult> {
+    const results = []
+    let data = Service_offering_SD.selfDescriptionCredential.credentialSubject
     results.push(this.checkDataProtectionRegime(data?.dataProtectionRegime))
     results.push(this.checkDataExport(data?.dataExport))
-
+    results.push(this.checkVcprovider(Provided_by_SD))
+    results.push(await this.checkKeyChainProvider(Provided_by_SD.selfDescriptionCredential, Service_offering_SD.selfDescriptionCredential))
     const mergedResults: ValidationResult = this.mergeResults(...results)
 
     if (!providedByResult || !providedByResult.conforms) {
@@ -24,6 +32,29 @@ export class ServiceOfferingContentValidationService {
     return mergedResults
   }
 
+  private checkVcprovider(Participant_SD: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>): ValidationResult {
+    const result = { conforms: true, results: [] }
+      if(!Participant_SD.complianceCredential) {
+      result.conforms = false
+      result.results.push('Provider does not have a Compliance Credential')
+    }
+    return result
+  }
+  private async checkKeyChainProvider(Participant_SDCredential: any, Service_offering_SDCredential: any): Promise<ValidationResult> { //Only key comparison for now
+    const result = { conforms: true, results: [] }
+    const key_Participant = await this.proofService.getPublicKeys(Participant_SDCredential)
+    let key_Service = await this.proofService.getPublicKeys(Service_offering_SDCredential)
+    if( !key_Participant.publicKeyJwk || !key_Service.publicKeyJwk) {
+      result.conforms = false
+      result.results.push('KeychainCheck: Key cannot be retrieved')
+    }
+    if(JSON.stringify(key_Participant.publicKeyJwk) !== JSON.stringify(key_Service.publicKeyJwk) ) {
+      result.conforms = false
+      result.results.push('KeychainCheck: Service-offering self-description was not issued by provider')
+    }
+    return result
+  }
+
   private checkDataProtectionRegime(dataProtectionRegime: any): ValidationResult {
     const dataProtectionRegimeList = ['GDPR2016', 'LGPD2019', 'PDPA2012', 'CCPA2018', 'VCDPA2021']
     const result = { conforms: true, results: [] }
@@ -35,6 +66,7 @@ export class ServiceOfferingContentValidationService {
 
     return result
   }
+
 
   private checkDataExport(dataExport: any): ValidationResult {
     const requestTypes = ['API', 'email', 'webform', 'unregisteredLetter', 'registeredLetter', 'supportCenter']

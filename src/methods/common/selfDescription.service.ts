@@ -138,15 +138,13 @@ export class SelfDescriptionService {
   public async validate(signedSelfDescription: any ): Promise<ValidationResultDto> {
     try {
     let participantContentValidationService = new ParticipantContentValidationService(this.httpService, new RegistryService(this.httpService))
-    let serviceOfferingContentValidationService = new ServiceOfferingContentValidationService()
+    let serviceOfferingContentValidationService = new ServiceOfferingContentValidationService(this.proofService)
     const { selfDescriptionCredential: selfDescription, raw, rawCredentialSubject, complianceCredential, proof } = signedSelfDescription
     const type: string = selfDescription.type.find(t => t !== 'VerifiableCredential')
     const shape:ValidationResult = await this.ShapeVerification(selfDescription,rawCredentialSubject,type)
     const parsedRaw = JSON.parse(raw)
-    const isValidSignature: boolean = await this.checkParticipantCredential(
-            { selfDescription: parsedRaw, proof: complianceCredential?.proof },
-             proof?.jws )
-    // const isValidSignature = true //test-purpose
+    const isValidSignature: boolean = await this.checkParticipantCredential({ selfDescription: parsedRaw, proof: complianceCredential?.proof },proof?.jws )
+    //const isValidSignature = true //test-purpose
     const validationFns: { [key: string]: () => Promise<ValidationResultDto> } = {
       [SelfDescriptionTypes.PARTICIPANT]: async () =>  {
         const content:ValidationResult = await participantContentValidationService.validate(selfDescription.credentialSubject as ParticipantSelfDescriptionDto)
@@ -156,8 +154,20 @@ export class SelfDescriptionService {
       },
       [SelfDescriptionTypes.SERVICE_OFFERING]: async () => {
         console.log("Provided by verification has started")
-        const participant_verif: ValidationResultDto = await this.validateProvidedByParticipantSelfDescriptions(selfDescription.credentialSubject.providedBy)
-        const content = await serviceOfferingContentValidationService.validate(selfDescription.credentialSubject as ServiceOfferingSelfDescriptionDto, participant_verif)
+        //const participant_verif: ValidationResultDto = await this.validateProvidedByParticipantSelfDescriptions(selfDescription.credentialSubject.providedBy)
+        const get_SD:SignedSelfDescriptionDto<ParticipantSelfDescriptionDto> = await new Promise(async(resolve, reject) => 
+        {
+          try  {
+            const response = await this.httpService.get(selfDescription.credentialSubject.providedBy).toPromise()
+            const { data } = response
+            const participantSD = new SDParserPipe(SelfDescriptionTypes.PARTICIPANT).transform(data)
+            resolve(participantSD as SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>)
+          } catch(e) {
+            reject(e)
+          }
+        })
+        const participant_verif = await this.validate(get_SD)
+        const content = await serviceOfferingContentValidationService.validate(signedSelfDescription as SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>, get_SD as SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>, participant_verif)
         const conforms: boolean = shape.conforms && isValidSignature && content.conforms
         return {conforms, isValidSignature, content, shape}
       }
@@ -171,15 +181,6 @@ export class SelfDescriptionService {
 
   }
 
-  private async validateProvidedByParticipantSelfDescriptions(
-    providedBy: ServiceOfferingSelfDescriptionDto['providedBy']
-  ): Promise<ValidationResultDto> {
-    const response = await this.httpService.get(providedBy).toPromise()
-    const { data } = response
-
-    const participantSD = new SDParserPipe(SelfDescriptionTypes.PARTICIPANT).transform(data)
-    return await this.validate(participantSD)
-  }
 
   private getShapePath(type: string): string | undefined {
     const shapePathType = {

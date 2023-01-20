@@ -138,7 +138,7 @@ export class SelfDescriptionService {
   public async validate(signedSelfDescription: any ): Promise<ValidationResultDto> {
     try {
     let participantContentValidationService = new ParticipantContentValidationService(this.httpService, new RegistryService(this.httpService))
-    let serviceOfferingContentValidationService = new ServiceOfferingContentValidationService(this.proofService)
+    let serviceOfferingContentValidationService = new ServiceOfferingContentValidationService(this.proofService, this.httpService)
     const { selfDescriptionCredential: selfDescription, raw, rawCredentialSubject, complianceCredential, proof } = signedSelfDescription
     const type: string = selfDescription.type.find(t => t !== 'VerifiableCredential')
     const shape:ValidationResult = await this.ShapeVerification(selfDescription,rawCredentialSubject,type)
@@ -163,7 +163,7 @@ export class SelfDescriptionService {
             const participantSD = new SDParserPipe(SelfDescriptionTypes.PARTICIPANT).transform(data)
             resolve(participantSD as SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>)
           } catch(e) {
-            reject(e)
+            reject(new ConflictException("Participant SD not found"))
           }
         })
         const participant_verif = await this.validate(get_SD)

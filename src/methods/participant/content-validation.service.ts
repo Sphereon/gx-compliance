@@ -289,8 +289,5 @@ export class ParticipantContentValidationService {
     //return { ruleName: "CPR-08_CheckDid", status: isValid, invalidUrls: invalidUrls }
     return { conforms: isValid, results: invalidUrls }
   }
-  async checkDid(arr) {
-    let resp = await this.checkDid(arr)
-    console.log(resp)
-  }
+
 }

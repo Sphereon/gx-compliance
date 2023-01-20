@@ -16,7 +16,7 @@
     "postinstall": "[ \"$NODE_ENV\" = production ] && exit 0; husky install",
     "prebuild": "rimraf dist",
     "clean": "rimraf dist/",
-    "copy-docs": "cp -r docs/src/.vuepress/dist/* dist/src/static/",
+    "copy-docs": "cp -r docs/src/.vuepress/dist/* dist/src/utils/static/",
     "copy-files": "cp -r src/utils/static/.well-known dist/src/utils/static/.well-known",
     "build": "nest build && npm run clean && nest build && tsc && npm install --prefix ./docs/ && npm run build --prefix ./docs/ && npm run copy-files && npm run copy-docs",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

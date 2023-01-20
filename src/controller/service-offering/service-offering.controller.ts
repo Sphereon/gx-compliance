@@ -117,9 +117,7 @@ export class ServiceOfferingController {
         if (error.status == 409) {
           throw new ConflictException({
             statusCode: HttpStatus.CONFLICT,
-            message: {
-              ...error.response.message
-            },
+            message: error.response.message,
             error: 'Conflict'
           })
         }

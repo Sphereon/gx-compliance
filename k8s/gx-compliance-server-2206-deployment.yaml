@@ -44,14 +44,14 @@ spec:
               key: tls.crt
               name: gx-compliance-server-tls-secret
         - name: REGISTRY_URL
-          value: http://20.71.17.107
+          value: http://20.76.5.229
         - name: BASE_URL
-          value: http://20.23.55.213
+          value: http://20.238.163.4
         - name: SD_STORAGE_BASE_URL
-          value: http://20.8.57.173/
+          value: http://20.4.152.212
         - name: SD_STORAGE_API_KEY
           value: test123
-        image: registry.gitlab.com/gaia-x/lab/compliance/gx-compliance:2206-unreleased
+        image: vdxcontainerregistry2022051200.azurecr.io/gx-compliance:v2.0.0
         imagePullPolicy: Always
         name: gx-compliance-live-server-2206-main
         ports:

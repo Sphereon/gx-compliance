@@ -5,6 +5,7 @@ import { ProofService } from '../common/proof.service'
 import { HttpService } from '@nestjs/axios'
 import typer from 'media-typer'
 import { ParticipantSelfDescriptionDto, SignedParticipantSelfDescriptionDto } from 'src/@types/dto/participant'
+import { cp } from 'fs'
 @Injectable()
 export class ServiceOfferingContentValidationService {
   constructor(
@@ -51,13 +52,28 @@ export class ServiceOfferingContentValidationService {
       result.conforms = false
       result.results.push('KeychainCheck: Key cannot be retrieved')
     }
-    if(JSON.stringify(key_Participant.publicKeyJwk) !== JSON.stringify(key_Service.publicKeyJwk) ) {
+    const raw_participant = await this.proofService.loadCertificatesRaw(key_Participant.x5u)
+    let raw_SO = await this.proofService.loadCertificatesRaw(key_Service.x5u)
+    let SO_certificate_chain = raw_SO.split('-----END CERTIFICATE-----')
+    let Participant_certificate_chain = raw_participant.split('-----END CERTIFICATE-----')
+    SO_certificate_chain.pop()
+    Participant_certificate_chain.pop()
+    if(this.compare(SO_certificate_chain, Participant_certificate_chain) == false){
       result.conforms = false
-      result.results.push('KeychainCheck: Service-offering self-description was not issued by provider')
+      result.results.push('KeychainCheck: Keys are not from the same keychain')
     }
     return result
   }
 
+  private compare(certchain1, certchain2):boolean {
+    let includes = false
+    for(var i=0;i<certchain1.length; i++){
+      if(certchain2.includes(certchain1[i])) {
+        includes = true
+      }
+    }
+    return includes
+  }
   private checkDataProtectionRegime(dataProtectionRegime: any): ValidationResult {
     const dataProtectionRegimeList = ['GDPR2016', 'LGPD2019', 'PDPA2012', 'CCPA2018', 'VCDPA2021']
     const result = { conforms: true, results: [] }

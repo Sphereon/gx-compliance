@@ -100,7 +100,7 @@ export class ProofService {
     }
   }
 
-  private async loadCertificatesRaw(url: string): Promise<string> {
+  public async loadCertificatesRaw(url: string): Promise<string> {
     try {
       const response = await this.httpService.get(url).toPromise()
       return response.data.replace(/\n/gm, '') || undefined

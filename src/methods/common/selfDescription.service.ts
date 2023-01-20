@@ -143,8 +143,8 @@ export class SelfDescriptionService {
     const type: string = selfDescription.type.find(t => t !== 'VerifiableCredential')
     const shape:ValidationResult = await this.ShapeVerification(selfDescription,rawCredentialSubject,type)
     const parsedRaw = JSON.parse(raw)
-    //const isValidSignature: boolean = await this.checkParticipantCredential({ selfDescription: parsedRaw, proof: complianceCredential?.proof },proof?.jws )
-    const isValidSignature = true //test-purpose
+    const isValidSignature: boolean = await this.checkParticipantCredential({ selfDescription: parsedRaw, proof: complianceCredential?.proof },proof?.jws )
+    //const isValidSignature = true //test-purpose
     const validationFns: { [key: string]: () => Promise<ValidationResultDto> } = {
       [SelfDescriptionTypes.PARTICIPANT]: async () =>  {
         const content:ValidationResult = await participantContentValidationService.validate(selfDescription.credentialSubject as ParticipantSelfDescriptionDto)

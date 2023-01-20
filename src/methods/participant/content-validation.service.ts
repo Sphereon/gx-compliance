@@ -8,7 +8,8 @@ import { AddressDto } from '../../@types/dto/common'
 import { RegistryService } from '../common'
 import { RegistrationNumberDto } from '../../@types/dto/participant/registration-number.dto'
 import { _ } from 'lodash'
-
+import { Axios } from 'axios'
+const axios = new Axios
 @Injectable()
 export class ParticipantContentValidationService {
   constructor(
@@ -24,7 +25,7 @@ export class ParticipantContentValidationService {
     validationPromises.push(this.checkRegistrationNumbers(registrationNumber, data))
     validationPromises.push(this.checkValidLeiCode(leiCode, data))
     validationPromises.push(this.checkTermsAndConditions(termsAndConditions))
-
+    validationPromises.push(this.CPR08_CheckDid(this.parseJSONLD(data)))
     const results = await Promise.all(validationPromises)
 
     return this.mergeResults(...results, checkUSAAndValidStateAbbreviation)
@@ -249,5 +250,49 @@ export class ParticipantContentValidationService {
     const countryMatches = leiCountryISO && sdCountryISO ? leiCountryISO?.alpha2 === sdCountryISO?.country_code : false
 
     return countryMatches
+  }
+
+  parseJSONLD(jsonLD, values = [], tab = []) {
+    for (const key in jsonLD) {
+      if (jsonLD.hasOwnProperty(key)) {
+        const element = jsonLD[key];
+        if (typeof element === 'object') {
+          this.parseJSONLD(element, values);
+        } else {
+          values.push(element);
+        }
+      }
+    }
+    for (let i = 0; i < values.length; i++) {
+      if (values[i].includes("did:web")) {
+        tab.push(values[i])
+      }
+    }
+    return tab.filter((item, index) => tab.indexOf(item) === index);
+  }
+  async checkDidUrls(arrayDids, invalidUrls = []) {
+    const promises = []
+    for (let i = 0; i < arrayDids.length; i++) {
+      const url = arrayDids[i].replace("did:web:", "https://")
+      promises.push(axios.head(url) //check HTTP CODE 200 < 399
+        .then(response => {
+          console.log("Valid URL: " + url);
+        })
+        .catch(error => {
+          console.error("Invalid URL: " + url);
+          invalidUrls.push(url)
+        }));
+    }
+    return Promise.all(promises).then(() => invalidUrls)
+  }
+  async CPR08_CheckDid(arr) {
+    let invalidUrls = await this.checkDidUrls(arr)
+    let isValid = invalidUrls.length == 0 ? true : false
+    //return { ruleName: "CPR-08_CheckDid", status: isValid, invalidUrls: invalidUrls }
+    return { conforms: isValid, results: invalidUrls }
+  }
+  async checkDid(arr) {
+    let resp = await this.checkDid(arr)
+    console.log(resp)
   }
 }

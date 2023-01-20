@@ -70,6 +70,7 @@ export class ServiceOfferingContentValidationService {
     for(var i=0;i<certchain1.length; i++){
       if(certchain2.includes(certchain1[i])) {
         includes = true
+        break;
       }
     }
     return includes

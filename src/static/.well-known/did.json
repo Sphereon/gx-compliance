@@ -2,23 +2,23 @@
   "@context": [
     "https://www.w3.org/ns/did/v1"
   ],
-  "id": "did:web:20.23.55.213",
+  "id": "did:web:20.238.163.4",
   "verificationMethod": [
     {
       "@context": "https://w3c-ccg.github.io/lds-jws2020/contexts/v1/",
-      "id": "did:web:20.23.55.213",
+      "id": "did:web:20.238.163.4",
       "type": "JsonWebKey2020",
-      "controller": "did:web:20.23.55.213#JWK2020-RSA",
+      "controller": "did:web:20.238.163.4#JWK2020-RSA",
       "publicKeyJwk": {
         "kty": "RSA",
-        "n": "ulmXEa0nehbR338h6QaWLjMqfXE7mKA9PXoC_6_8d26xKQuBKAXa5k0uHhzQfNlAlxO-IpCDgf9cVzxIP-tkkefsjrXc8uvkdKNK6TY9kUxgUnOviiOLpHe88FB5dMTH6KUUGkjiPfq3P0F9fXHDEoQkGSpWui7eD897qSEdXFre_086ns3I8hSVCxoxlW9guXa_sRISIawCKT4UA3ZUKYyjtu0xRy7mRxNFh2wH0iSTQfqf4DWUUThX3S-jeRCRxqOGQdQlZoHym2pynJ1IYiiIOMO9L2IQrQl35kx94LGHiF8r8CRpLrgYXTVd9U17-nglrUmJmryECxW-555ppQ",
+        "n": "2Gpow1xodk0Ux92hfkbFDyvMWrTsPP9ElskWpON3iuMULFzu9ChK3dw0oFGTpYM_rEyah5cFTNk8ZNcqUk6aTV_TdZFQ-nxn5tE0woYJNgUN4F16JePuOXzai2UN2VCXO9LVlcSVcaL2RVPP59Q24CbSUS_vrzwaOa2we9zRX7l9lt8XbGgHc6ZAXoy5xH-9oHSq82ntB7pizFVvoQ4Ifn-xfEKKUA-KJ5zON97j2kIwP8siTVsmIhXAnwGbEkmuHMhzC5aAA2mb2lTJ2D3R-KKJvA0Uk-h6bBEifGRBvXm5_i8ci_ZPfCGym63AQTtoEm6nwfcfoYOio1Stj4lX-Ak9vLtX7MfcBmRbwsR5aK8cBSWjsJpqacGVACrOmbvJg_Qwswg113UZbwdFY2d_8PCqwFAHkypPy8ZoyQavlaGSkboFzpWJ1qz5BfOOokm5EYFEgEy_S3xYDrpKOEbSBLgc8I_YIk27wmsjFR4v0Km1ueUBKvRzmd8XyV7ERnHaifWtFDLIxpxFKAtcrKL49appZSGZrBgss67LKR2_s8JgzRi7kgMMEZ8-kZtryTtDCDYbsA13Lcfvy-45Yoq-aUeHij4KNSu6cNfxlzyOZBxQwMoV03FwPEHPXBVJrjQ4vSskVFB30095Js0K-1VJSQ8bJNYsX7X6khynyrJHHec",
         "e": "AQAB",
         "alg": "PS256",
-        "x5u": "https://20.23.55.213/.well-known/x509CertificateChain.pem"
+        "x5u": "https://20.238.163.4/.well-known/x509CertificateChain.pem"
       }
     }
   ],
   "assertionMethod": [
-    "did:web:20.23.55.213#JWK2020-RSA"
+    "did:web:20.238.163.4#JWK2020-RSA"
   ]
 }

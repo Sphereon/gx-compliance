@@ -8,8 +8,7 @@ import { AddressDto } from '../../@types/dto/common'
 import { RegistryService } from '../common'
 import { RegistrationNumberDto } from '../../@types/dto/participant/registration-number.dto'
 import { _ } from 'lodash'
-import { Axios } from 'axios'
-const axios = new Axios
+import axios from 'axios'
 @Injectable()
 export class ParticipantContentValidationService {
   constructor(
@@ -285,8 +284,9 @@ export class ParticipantContentValidationService {
     }
     return Promise.all(promises).then(() => invalidUrls)
   }
-  async CPR08_CheckDid(arr) {
+  async CPR08_CheckDid(arr):Promise<ValidationResult> {
     let invalidUrls = await this.checkDidUrls(arr)
+    console.log(invalidUrls)
     let isValid = invalidUrls.length == 0 ? true : false
     //return { ruleName: "CPR-08_CheckDid", status: isValid, invalidUrls: invalidUrls }
     return { conforms: isValid, results: invalidUrls }

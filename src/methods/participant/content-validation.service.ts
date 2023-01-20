@@ -269,6 +269,7 @@ export class ParticipantContentValidationService {
     }
     return tab.filter((item, index) => tab.indexOf(item) === index);
   }
+
   async checkDidUrls(arrayDids, invalidUrls = []) {
     for (let i = 0; i < arrayDids.length; i++) {
       const url = arrayDids[i].replace("did:web:", "https://")
@@ -282,6 +283,7 @@ export class ParticipantContentValidationService {
     }
     return invalidUrls
   }
+
   async CPR08_CheckDid(arr):Promise<ValidationResult> {
     let invalidUrls = await this.checkDidUrls(arr)
     console.log("invalid",invalidUrls)
@@ -289,8 +291,5 @@ export class ParticipantContentValidationService {
     //return { ruleName: "CPR-08_CheckDid", status: isValid, invalidUrls: invalidUrls }
     return { conforms: isValid, results: invalidUrls }
   }
-  async checkDid(arr) {
-    let resp = await this.checkDid(arr)
-    console.log(resp)
-  }
+
 }

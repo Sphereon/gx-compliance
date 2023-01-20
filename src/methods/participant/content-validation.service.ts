@@ -8,13 +8,15 @@ import { AddressDto } from '../../@types/dto/common'
 import { RegistryService } from '../common'
 import { RegistrationNumberDto } from '../../@types/dto/participant/registration-number.dto'
 import { _ } from 'lodash'
-import axios from 'axios'
+import { AxiosInstance } from 'axios'
 @Injectable()
 export class ParticipantContentValidationService {
   constructor(
     private readonly httpService: HttpService,
     private readonly registryService: RegistryService
   ) {}
+
+  private readonly axios: AxiosInstance
 
   async validate(data: ParticipantSelfDescriptionDto): Promise<ValidationResult> {
     const { legalAddress, leiCode, registrationNumber, termsAndConditions } = data
@@ -273,7 +275,7 @@ export class ParticipantContentValidationService {
     const promises = []
     for (let i = 0; i < arrayDids.length; i++) {
       const url = arrayDids[i].replace("did:web:", "https://")
-      promises.push(axios.head(url) //check HTTP CODE 200 < 399
+      promises.push(this.axios.head(url) //check HTTP CODE 200 < 399
         .then(response => {
           console.log("Valid URL: " + url);
         })

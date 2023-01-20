@@ -110,7 +110,7 @@ export class ServiceOfferingContentValidationService {
       }
     }
     for (let i = 0; i < values.length; i++) {
-      if (values[i].includes(type)) {
+      if (values[i].startsWith(type)) {
         tab.push(values[i])
       }
     }
@@ -147,21 +147,19 @@ export class ServiceOfferingContentValidationService {
   async checkUrls(array, invalidUrls = []) {
     for (let i = 0; i < array.length; i++) {
       const url = array[i]
+      console.log(url)
       try {
         await this.httpService.get(url).toPromise()
+        console.log((await this.httpService.get(url).toPromise()).status)
       } 
         catch(e) {
           console.log(url)
           invalidUrls.push(url)
         }
+        console.log(invalidUrls)
       
     }
     return invalidUrls
-  }
-
-  async checkDid(arr) {
-    let resp = await this.checkDid(arr)
-    console.log(resp)
   }
 
   private mergeResults(...results: ValidationResult[]): ValidationResult {

@@ -24,7 +24,7 @@ export class ParticipantContentValidationService {
     validationPromises.push(this.checkRegistrationNumbers(registrationNumber, data))
     validationPromises.push(this.checkValidLeiCode(leiCode, data))
     validationPromises.push(this.checkTermsAndConditions(termsAndConditions))
-    validationPromises.push(this.CPR08_CheckDid(this.parseJSONLD(data)))
+    validationPromises.push(this.CPR08_CheckDid(this.parseDid(data)))
     const results = await Promise.all(validationPromises)
 
     return this.mergeResults(...results, checkUSAAndValidStateAbbreviation)
@@ -251,7 +251,7 @@ export class ParticipantContentValidationService {
     return countryMatches
   }
 
-  parseJSONLD(jsonLD, values = [], tab = []) {
+  parseJSONLD(jsonLD, values = []) {
     for (const key in jsonLD) {
       if (jsonLD.hasOwnProperty(key)) {
         const element = jsonLD[key];
@@ -259,16 +259,25 @@ export class ParticipantContentValidationService {
           this.parseJSONLD(element, values);
         } else {
           values.push(element);
+          console.log(values)
         }
       }
     }
+    return values
+  }
+
+  parseDid(jsonLD, tab = []) {
+    const values = this.parseJSONLD(jsonLD)
     for (let i = 0; i < values.length; i++) {
-      if (values[i].includes("did:web")) {
+      if (values[i].startsWith("did:web:")) {
         tab.push(values[i])
       }
     }
+    console.log(tab.filter((item, index) => tab.indexOf(item) === index))
     return tab.filter((item, index) => tab.indexOf(item) === index);
   }
+  
+    
 
   async checkDidUrls(arrayDids, invalidUrls = []) {
     for (let i = 0; i < arrayDids.length; i++) {
@@ -283,7 +292,6 @@ export class ParticipantContentValidationService {
     }
     return invalidUrls
   }
-
   async CPR08_CheckDid(arr):Promise<ValidationResult> {
     let invalidUrls = await this.checkDidUrls(arr)
     console.log("invalid",invalidUrls)

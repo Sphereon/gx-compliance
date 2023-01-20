@@ -70,7 +70,7 @@ export class CommonController {
 
   @ApiResponse({
     status: 201,
-    description: 'Succesfully signed posted content. Will return the posted JSON with an additional "proof" property added.'
+    description: 'Successfully signed posted content. Will return the posted JSON with an additional "proof" property added.'
   })
   @ApiResponse({
     status: 400,

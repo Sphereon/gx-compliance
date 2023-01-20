@@ -8,7 +8,6 @@ import { AddressDto } from '../../@types/dto/common'
 import { RegistryService } from '../common'
 import { RegistrationNumberDto } from '../../@types/dto/participant/registration-number.dto'
 import { _ } from 'lodash'
-import { AxiosInstance } from 'axios'
 @Injectable()
 export class ParticipantContentValidationService {
   constructor(
@@ -16,7 +15,6 @@ export class ParticipantContentValidationService {
     private readonly registryService: RegistryService
   ) {}
 
-  private readonly axios: AxiosInstance
 
   async validate(data: ParticipantSelfDescriptionDto): Promise<ValidationResult> {
     const { legalAddress, leiCode, registrationNumber, termsAndConditions } = data
@@ -272,23 +270,21 @@ export class ParticipantContentValidationService {
     return tab.filter((item, index) => tab.indexOf(item) === index);
   }
   async checkDidUrls(arrayDids, invalidUrls = []) {
-    const promises = []
     for (let i = 0; i < arrayDids.length; i++) {
       const url = arrayDids[i].replace("did:web:", "https://")
-      promises.push(this.axios.head(url) //check HTTP CODE 200 < 399
-        .then(response => {
-          console.log("Valid URL: " + url);
-        })
-        .catch(error => {
-          console.error("Invalid URL: " + url);
+      try {
+        await this.httpService.get(url).toPromise()
+      } 
+        catch(e) {
           invalidUrls.push(url)
-        }));
+        }
+      
     }
-    return Promise.all(promises).then(() => invalidUrls)
+    return invalidUrls
   }
   async CPR08_CheckDid(arr):Promise<ValidationResult> {
     let invalidUrls = await this.checkDidUrls(arr)
-    console.log(invalidUrls)
+    console.log("invalid",invalidUrls)
     let isValid = invalidUrls.length == 0 ? true : false
     //return { ruleName: "CPR-08_CheckDid", status: isValid, invalidUrls: invalidUrls }
     return { conforms: isValid, results: invalidUrls }

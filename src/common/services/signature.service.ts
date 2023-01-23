@@ -1,6 +1,6 @@
 import { ComplianceCredentialDto } from '../dto'
 import { createHash } from 'crypto'
-import { getDidWeb } from '../utils'
+import { getDidWeb, getDidWebVerificationMethodIdentifier } from '../utils'
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common'
 import { VerifiableCredentialDto } from '../dto'
 import * as jose from 'jose'
@@ -111,7 +111,7 @@ export class SignatureService {
         created: new Date().toISOString(),
         proofPurpose: 'assertionMethod',
         jws,
-        verificationMethod: getDidWeb()
+        verificationMethod: getDidWebVerificationMethodIdentifier()
       }
     }
 
@@ -152,7 +152,7 @@ export class SignatureService {
         created: new Date().toISOString(),
         proofPurpose: 'assertionMethod',
         jws,
-        verificationMethod: getDidWeb()
+        verificationMethod: getDidWebVerificationMethodIdentifier()
       }
     }
   }

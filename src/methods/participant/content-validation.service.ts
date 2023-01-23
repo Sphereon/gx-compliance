@@ -26,7 +26,6 @@ export class ParticipantContentValidationService {
     validationPromises.push(this.checkTermsAndConditions(termsAndConditions))
     validationPromises.push(this.CPR08_CheckDid(this.parseDid(data)))
     const results = await Promise.all(validationPromises)
-
     return this.mergeResults(...results, checkUSAAndValidStateAbbreviation)
   }
 
@@ -55,7 +54,6 @@ export class ParticipantContentValidationService {
 
     if (leiData) leiResult = this.checkValidLeiCountries(leiData, selfDescription)
     else leiResult = { conforms: false, results: ['leiCode: the given leiCode is invalid or does not exist'] }
-
     return leiResult
   }
 
@@ -98,7 +96,6 @@ export class ParticipantContentValidationService {
     try {
       const checkPromises = registrationNumber.map(number => this.checkRegistrationNumber(number, participantSD))
       const checks = await Promise.all(checkPromises)
-
       return this.mergeResults(...checks)
     } catch (error) {
       console.error(error)
@@ -218,7 +215,6 @@ export class ParticipantContentValidationService {
   private mergeResults(...results: ValidationResult[]): ValidationResult {
     const resultArray = results.map(res => res.results)
     const res = resultArray.reduce((p, c) => c.concat(p))
-
     return {
       conforms: results.filter(r => !r.conforms).length == 0,
       results: res
@@ -259,7 +255,6 @@ export class ParticipantContentValidationService {
           this.parseJSONLD(element, values);
         } else {
           values.push(element);
-          console.log(values)
         }
       }
     }
@@ -273,28 +268,25 @@ export class ParticipantContentValidationService {
         tab.push(values[i])
       }
     }
-    console.log(tab.filter((item, index) => tab.indexOf(item) === index))
+    console.log("did ",tab.filter((item, index) => tab.indexOf(item) === index))
     return tab.filter((item, index) => tab.indexOf(item) === index);
   }
   
     
 
   async checkDidUrls(arrayDids, invalidUrls = []) {
-    for (let i = 0; i < arrayDids.length; i++) {
-      const url = arrayDids[i].replace("did:web:", "https://")
+    await Promise.all(arrayDids.map(async(element) => {
       try {
-        await this.httpService.get(url).toPromise()
-      } 
-        catch(e) {
-          invalidUrls.push(url)
-        }
+        await this.httpService.get(element.replace("did:web:", "https://")).toPromise()
+      } catch(e) {
+        invalidUrls.push(element)
+      }
       
-    }
+    }))
     return invalidUrls
   }
   async CPR08_CheckDid(arr):Promise<ValidationResult> {
     let invalidUrls = await this.checkDidUrls(arr)
-    console.log("invalid",invalidUrls)
     let isValid = invalidUrls.length == 0 ? true : false
     //return { ruleName: "CPR-08_CheckDid", status: isValid, invalidUrls: invalidUrls }
     return { conforms: isValid, results: invalidUrls }

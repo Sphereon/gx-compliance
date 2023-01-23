@@ -6,6 +6,7 @@ import { HttpService } from '@nestjs/axios'
 import typer from 'media-typer'
 import { ParticipantSelfDescriptionDto, SignedParticipantSelfDescriptionDto } from 'src/@types/dto/participant'
 import { cp } from 'fs'
+import { resolve } from 'path'
 @Injectable()
 export class ServiceOfferingContentValidationService {
   constructor(
@@ -23,7 +24,6 @@ export class ServiceOfferingContentValidationService {
     results.push(await this.CSR06_CheckDid(this.parseJSONLD(Service_offering_SD.selfDescriptionCredential, "did:web")))
     results.push(await this.CSR04_Checkhttp(this.parseJSONLD(Service_offering_SD.selfDescriptionCredential , "https://")))
     const mergedResults: ValidationResult = this.mergeResults(...results)
-
     if (!providedByResult || !providedByResult.conforms) {
       mergedResults.conforms = false
       mergedResults.results.push(
@@ -127,28 +127,25 @@ export class ServiceOfferingContentValidationService {
       }
     }
     for (let i = 0; i < values.length; i++) {
-      if (values[i].startsWith(type)) {
+      if (values[i].includes(type)) {
         tab.push(values[i])
       }
     }
     return tab.filter((item, index) => tab.indexOf(item) === index);
   }
   async checkDidUrls(arrayDids, invalidUrls = []) {
-    for (let i = 0; i < arrayDids.length; i++) {
-      const url = arrayDids[i].replace("did:web:", "https://")
+    await Promise.all(arrayDids.map(async(element) => {
       try {
-        await this.httpService.get(url).toPromise()
-      } 
-        catch(e) {
-          invalidUrls.push(url)
-        }
+        await this.httpService.get(element.replace("did:web:", "https://")).toPromise()
+      } catch(e) {
+        invalidUrls.push(element)
+      }
       
-    }
+    }))
     return invalidUrls
   }
   async CSR06_CheckDid(arr):Promise<ValidationResult> {
     let invalidUrls = await this.checkDidUrls(arr)
-    console.log("invalid",invalidUrls)
     let isValid = invalidUrls.length == 0 ? true : false
     //return { ruleName: "CPR-08_CheckDid", status: isValid, invalidUrls: invalidUrls }
     return { conforms: isValid, results: invalidUrls }
@@ -156,28 +153,21 @@ export class ServiceOfferingContentValidationService {
 
   async CSR04_Checkhttp(arr):Promise<ValidationResult> {
     let invalidUrls = await this.checkUrls(arr)
-    console.log("invalid",invalidUrls)
     let isValid = invalidUrls.length == 0 ? true : false
     return { conforms: isValid, results: invalidUrls }
   }
 
   async checkUrls(array, invalidUrls = []) {
-    for (let i = 0; i < array.length; i++) {
-      const url = array[i]
-      console.log(url)
-      try {
-        await this.httpService.get(url).toPromise()
-        console.log((await this.httpService.get(url).toPromise()).status)
-      } 
-        catch(e) {
-          console.log(url)
-          invalidUrls.push(url)
+    await Promise.all(array.map(async (element) => {
+        try {
+          await this.httpService.get(element).toPromise()
+        } catch(e) {
+          invalidUrls.push(element)
         }
-        console.log(invalidUrls)
-      
-    }
+    }));
     return invalidUrls
   }
+
 
   private mergeResults(...results: ValidationResult[]): ValidationResult {
     const resultArray = results.map(res => res.results)

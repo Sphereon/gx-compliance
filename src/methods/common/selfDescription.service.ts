@@ -9,6 +9,7 @@ import { ParticipantContentValidationService } from '../participant/content-vali
 import { ServiceOfferingContentValidationService } from '../service-offering/content-validation.service'
 import {
   CredentialSubjectDto,
+  Schema_caching,
   SignatureDto,
   SignedSelfDescriptionDto,
   ValidationResult,
@@ -27,6 +28,16 @@ import { Console } from 'console'
 const expectedContexts = {
   [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE,
   [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
+}
+
+
+let cache: Schema_caching = {
+  LegalPerson:{
+
+  },
+  ServiceOfferingExperimental:{
+
+  }
 }
 
 
@@ -154,7 +165,6 @@ export class SelfDescriptionService {
       },
       [SelfDescriptionTypes.SERVICE_OFFERING]: async () => {
         console.log("Provided by verification has started")
-        //const participant_verif: ValidationResultDto = await this.validateProvidedByParticipantSelfDescriptions(selfDescription.credentialSubject.providedBy)
         const get_SD:SignedSelfDescriptionDto<ParticipantSelfDescriptionDto> = await new Promise(async(resolve, reject) => 
         {
           try  {
@@ -203,25 +213,41 @@ export class SelfDescriptionService {
 
   private async ShapeVerification(selfDescription:VerifiableCredentialDto<CredentialSubjectDto>, rawCredentialSubject:string, type:string):Promise<ValidationResult> {
       try {
-        const shapePath = await new Promise<string>((resolve,reject) =>{
-          if (!(type in expectedContexts)) reject(new ConflictException('Provided Type is not supported'))
-          if(!this.getShapePath(type)) {
-            reject(new BadRequestException('Provided Type does not exist for Self Descriptions'))
-          } else {
-            resolve(this.getShapePath(type))
-          }
-        })
         const rawPrepared = {
           ...JSON.parse(rawCredentialSubject), 
           ...expectedContexts[type]
         }
         const selfDescriptionDataset: DatasetExt = await this.shaclService.loadFromJsonLD(JSON.stringify(rawPrepared))
-        const shape: ValidationResult = await this.shaclService.validate(await this.getShaclShape(shapePath), selfDescriptionDataset)
-        return shape
-    
+        if(this.Cache_check(type) == true) {
+          console.log("Cache items detected")
+          const shape: ValidationResult = await this.shaclService.validate(cache[type].shape, selfDescriptionDataset)
+          return shape
+        } else {
+          const shapePath = await new Promise<string>((resolve,reject) =>{
+            if (!(type in expectedContexts)) reject(new ConflictException('Provided Type is not supported'))
+            if(!this.getShapePath(type)) {
+              reject(new BadRequestException('Provided Type does not exist for Self Descriptions'))
+            } else {
+              resolve(this.getShapePath(type))
+            }
+          })
+          let schema = await this.getShaclShape(shapePath)
+          console.log("saving schema to cache")
+          cache[type].shape = schema
+          const shape: ValidationResult = await this.shaclService.validate(schema, selfDescriptionDataset)
+          return shape
+        }
       } catch (e) {
         throw(e)
       }
+  }
+
+  private Cache_check(type:string):boolean {
+    let cached = false
+    if(cache[type].shape) {
+      cached = true
+    } 
+    return cached
   }
   
 }

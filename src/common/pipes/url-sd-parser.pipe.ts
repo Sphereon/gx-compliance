@@ -5,7 +5,10 @@ import { CredentialSubjectDto, SignedSelfDescriptionDto, VerifiableSelfDescripti
 import { VerifyParticipantDto } from '../../participant/dto/verify-participant.dto'
 @Injectable()
 export class UrlSDParserPipe implements PipeTransform<VerifyParticipantDto, Promise<SignedSelfDescriptionDto<CredentialSubjectDto>>> {
-  constructor(private readonly sdType: 'LegalPerson' | 'ServiceOfferingExperimental', private readonly httpService: HttpService) {}
+  constructor(
+    private readonly sdType: 'LegalPerson' | 'ServiceOfferingExperimental' | 'ServiceOffering',
+    private readonly httpService: HttpService
+  ) {}
 
   private readonly sdParser = new SDParserPipe(this.sdType)
 

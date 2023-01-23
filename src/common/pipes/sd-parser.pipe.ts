@@ -129,12 +129,12 @@ export class SDParserPipe
 
   private transformVerifiableCredential(verifiableSelfDescriptionDto: VerifiableCredentialDto<any>) {
     try {
-      const type = getTypeFromSelfDescription(verifiableSelfDescriptionDto)
-      const { credentialSubject } = verifiableSelfDescriptionDto
-      delete verifiableSelfDescriptionDto.credentialSubject
+      const type = getTypeFromSelfDescription(verifiableSelfDescriptionDto['selfDescriptionCredential'])
+      const { credentialSubject } = verifiableSelfDescriptionDto['selfDescriptionCredential']
+      delete verifiableSelfDescriptionDto['selfDescriptionCredential'].credentialSubject
 
       const flatten = {
-        sd: { ...verifiableSelfDescriptionDto },
+        sd: { ...verifiableSelfDescriptionDto['selfDescriptionCredential'] },
         cs: { ...credentialSubject }
       }
 

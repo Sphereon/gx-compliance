@@ -10,7 +10,7 @@ import CredentialExample from '../tests/fixtures/sphereon-credential.json'
 import ServiceOfferingExperimentalSD from '../tests/fixtures/service-offering-sd.json'
 import { JoiValidationPipe } from './pipes'
 import { ParticipantSelfDescriptionSchema, VerifiablePresentationSchema } from './schema/selfDescription.schema'
-import { CredentialTypes } from './enums'
+import { CredentialTypes, SelfDescriptionTypes } from './enums'
 import { getTypeFromSelfDescription } from './utils'
 import { VerifiablePresentationDto } from './dto/presentation-meta.dto'
 import { IVerifiableCredential } from './@types'
@@ -89,9 +89,10 @@ export class CommonController {
   @Post('compliance')
   async createComplianceCredential(@Body() verifiableSelfDescription: VerifiablePresentationDto): Promise<IVerifiableCredential> {
     await this.proofService.validate(JSON.parse(JSON.stringify(verifiableSelfDescription)))
-    const type: string = getTypeFromSelfDescription(verifiableSelfDescription.verifiableCredential[0])
+    // fixme this should be read from the input itself
+    // const type: string = getTypeFromSelfDescription(verifiableSelfDescription.verifiableCredential[0])
 
-    await this.selfDescriptionService.validateSelfDescription(verifiableSelfDescription, type)
+    await this.selfDescriptionService.validateSelfDescription(verifiableSelfDescription, SelfDescriptionTypes.VC)
     return await this.signatureService.createComplianceCredentialFromSelfDescription(verifiableSelfDescription)
   }
 

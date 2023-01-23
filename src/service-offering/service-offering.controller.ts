@@ -74,7 +74,7 @@ export class ServiceOfferingController {
     required: false
   })
   @ApiBody(
-    getApiVerifyBodySchema(SelfDescriptionTypes.SERVICE_OFFERING, {
+    getApiVerifyBodySchema(SelfDescriptionTypes.SERVICE_OFFERING_EXPERIMENTAL, {
       service: { summary: 'Service Offering Experimental SD Example', value: ServiceOfferingExperimentalSD }
     })
   )
@@ -108,7 +108,7 @@ export class ServiceOfferingController {
     required: false
   })
   @ApiBody(
-    getApiVerifyBodySchema(SelfDescriptionTypes.SERVICE_OFFERING, {
+    getApiVerifyBodySchema(SelfDescriptionTypes.SERVICE_OFFERING_EXPERIMENTAL, {
       service: { summary: 'Service Offering Experimental SD Example', value: SphereonServiceOfferingVP }
     })
   )
@@ -132,7 +132,7 @@ export class ServiceOfferingController {
   @ApiOperation({ summary: 'Validate a Service Offering VerifiableCredential' })
   @ApiExtraModels(VerifiableCredentialDto)
   @ApiBody(
-    getApiVerifyBodySchema(SelfDescriptionTypes.SERVICE_OFFERING, {
+    getApiVerifyBodySchema(SelfDescriptionTypes.SERVICE_OFFERING_EXPERIMENTAL, {
       service: { summary: 'Service Offering VC Example', value: ServiceOfferingVC }
     })
   )

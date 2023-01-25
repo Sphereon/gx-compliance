@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gx-compliance-live-server-2206-main
+  name: gx-compliance-2206-main
   namespace: gx-lab
 spec:
   progressDeadlineSeconds: 600
@@ -9,7 +9,7 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: gx-compliance-live-server-2206-main
+      app: gx-compliance-2206-main
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -19,7 +19,7 @@ spec:
     metadata:
       creationTimestamp: null
       labels:
-        app: gx-compliance-live-server-2206-main
+        app: gx-compliance-2206-main
     spec:
       containers:
       - env:
@@ -36,13 +36,13 @@ spec:
         - name: privateKey
           valueFrom:
             secretKeyRef:
-              key: PRIVATE_KEY
+              key: tls.key
               name: gx-compliance-secrets
         - name: X509_CERT
           valueFrom:
             secretKeyRef:
               key: tls.crt
-              name: gx-compliance-server-tls-secret
+              name: gx-compliance-secrets
         - name: REGISTRY_URL
           value: http://20.76.5.229
         - name: BASE_URL
@@ -53,7 +53,7 @@ spec:
           value: test123
         image: vdxcontainerregistry2022051200.azurecr.io/gx-compliance:v2.0.0
         imagePullPolicy: Always
-        name: gx-compliance-live-server-2206-main
+        name: gx-compliance-2206-main
         ports:
         - containerPort: 3000
           name: http-api

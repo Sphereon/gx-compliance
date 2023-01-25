@@ -132,7 +132,10 @@ export class SignatureService {
     const complianceCredentialType: string =
       SelfDescriptionTypes.PARTICIPANT === type ? SelfDescriptionTypes.PARTICIPANT_CREDENTIAL : SelfDescriptionTypes.SERVICE_OFFERING_CREDENTIAL
     const unsignedCredential: ICredential = {
-      '@context': ['https://www.w3.org/2018/credentials/v1'],
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        'https://github.com/Sphereon/gx-compliance/blob/feature/FMA-7/src/static/schemas/gaia-x'
+      ],
       type: ['VerifiableCredential', complianceCredentialType],
       id: `https://catalogue.gaia-x.eu/credentials/${complianceCredentialType}/${new Date().getTime()}`,
       issuer: getDidWeb(),

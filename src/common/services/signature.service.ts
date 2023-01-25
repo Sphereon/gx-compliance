@@ -132,7 +132,7 @@ export class SignatureService {
     const complianceCredentialType: string =
       SelfDescriptionTypes.PARTICIPANT === type ? SelfDescriptionTypes.PARTICIPANT_CREDENTIAL : SelfDescriptionTypes.SERVICE_OFFERING_CREDENTIAL
     const unsignedCredential: ICredential = {
-      '@context': ['https://www.w3.org/2018/credentials/v1'],
+      '@context': ['https://www.w3.org/2018/credentials/v1', 'https://555d-87-213-241-251.eu.ngrok.io/.well-known/schemas/gaia-x'],
       type: ['VerifiableCredential', complianceCredentialType],
       id: `https://catalogue.gaia-x.eu/credentials/${complianceCredentialType}/${new Date().getTime()}`,
       issuer: getDidWeb(),

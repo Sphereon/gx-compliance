@@ -1,0 +1,26 @@
+{
+    "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "ParticipantCredential": {
+            "@id": "https://555d-87-213-241-251.eu.ngrok.io/.well-known/schemas/gaia-x#ParticipantCredential",
+            "@context": {
+                "@version": 1.1,
+                "@protected": true,
+                "id": "@id",
+                "type": "@type",
+                "hash": "http://schema.org/identifier"
+            }
+        },
+        "ServiceOfferingCredentialExperimental": {
+            "@id": "https://555d-87-213-241-251.eu.ngrok.io/.well-known/schemas/gaia-x#ServiceOfferingCredentialExperimental",
+            "@context": {
+                "@version": 1.1,
+                "@protected": true,
+                "id": "@id",
+                "type": "@type",
+                "hash": "http://schema.org/identifier"
+            }
+        }
+    }
+}

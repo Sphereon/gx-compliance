@@ -1,14 +1,17 @@
-import { CredentialSubjectDto, VerifiableCredentialDto } from '../dto'
+import { VerifiableCredentialDto } from '../dto'
 import { SUPPORTED_TYPES } from '../constants'
 import { BadRequestException, ConflictException } from '@nestjs/common'
-import { IVerifiableCredential } from '../@types'
 
-export function getTypeFromSelfDescription(selfDescription: VerifiableCredentialDto<CredentialSubjectDto> | IVerifiableCredential): string {
-  const types = selfDescription.type
-  if (!types) throw new BadRequestException('Expected type to be defined in Self Description')
+export function getTypeFromSelfDescription(selfDescription: VerifiableCredentialDto<any>): string {
+  const sdTypes = selfDescription.type
+  if (!sdTypes) throw new BadRequestException('Expected type to be defined in Self Description')
 
-  const type: string = types.find(t => t !== 'VerifiableCredential')
-  if (!SUPPORTED_TYPES.includes(type)) throw new ConflictException('Provided type for Self Description is not supported')
+  const types = sdTypes.filter(type => SUPPORTED_TYPES.includes(type))
+  if (types.length === 0) {
+    throw new ConflictException('Provided type for Self Description is not supported')
+  } else if (types.length > 1) {
+    throw new ConflictException('Multiple provided types for for a Self Description are not supported')
+  }
 
-  return type
+  return types[0]
 }

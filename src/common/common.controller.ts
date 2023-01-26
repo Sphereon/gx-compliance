@@ -88,12 +88,12 @@ export class CommonController {
   @UsePipes(new JoiValidationPipe(VerifiablePresentationSchema))
   @Post('compliance')
   async createComplianceCredential(@Body() verifiableSelfDescription: VerifiablePresentationDto): Promise<IVerifiableCredential> {
-    await this.proofService.validate(JSON.parse(JSON.stringify(verifiableSelfDescription)))
-    // fixme this should be read from the input itself
-    // const type: string = getTypeFromSelfDescription(verifiableSelfDescription.verifiableCredential[0])
+    const sd = JSON.parse(JSON.stringify(verifiableSelfDescription))
+    await this.proofService.validate(sd)
+    const type: string = getTypeFromSelfDescription(sd.verifiableCredential[0])
 
-    await this.selfDescriptionService.validateSelfDescription(verifiableSelfDescription, SelfDescriptionTypes.VC)
-    return await this.signatureService.createComplianceCredentialFromSelfDescription(verifiableSelfDescription)
+    await this.selfDescriptionService.validateSelfDescription(sd, type)
+    return await this.signatureService.createComplianceCredentialFromSelfDescription(sd)
   }
 
   @Post('normalize')

@@ -13,6 +13,7 @@ import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TY
 import { RegistrationNumberDto } from '../../participant/dto/registration-number.dto'
 import { ServiceOfferingSelfDescriptionDto } from '../../service-offering/dto'
 import { ParticipantSelfDescriptionDto } from '../../participant/dto'
+import { IVerifiablePresentation } from '../@types'
 
 @Injectable()
 export class SDParserPipe
@@ -24,9 +25,12 @@ export class SDParserPipe
   private readonly addressFields = ['legalAddress', 'headquarterAddress']
 
   transform(
-    verifiableSelfDescriptionDto: VerifiableSelfDescriptionDto<CredentialSubjectDto> | VerifiableCredentialDto<any>
+    verifiableSelfDescriptionDto: VerifiableSelfDescriptionDto<CredentialSubjectDto> | VerifiableCredentialDto<any> | IVerifiablePresentation
   ): SignedSelfDescriptionDto<CredentialSubjectDto> {
-    if (this.sdType === SelfDescriptionTypes.VC) {
+    if (
+      this.sdType === SelfDescriptionTypes.VC ||
+      verifiableSelfDescriptionDto['selfDescriptionCredential']?.type.includes('VerifiablePresentation')
+    ) {
       return this.transformVerifiableCredential(verifiableSelfDescriptionDto as VerifiableCredentialDto<any>)
     }
     try {
@@ -127,16 +131,17 @@ export class SDParserPipe
     return key.replace(keyType, '')
   }
 
-  private transformVerifiableCredential(verifiableSelfDescriptionDto: VerifiableCredentialDto<any>) {
+  private transformVerifiableCredential(verifiableCredential: VerifiableCredentialDto<any>) {
     try {
-      const type = getTypeFromSelfDescription(verifiableSelfDescriptionDto['selfDescriptionCredential'])
-      const { credentialSubject } = verifiableSelfDescriptionDto['selfDescriptionCredential']
-      delete verifiableSelfDescriptionDto['selfDescriptionCredential'].credentialSubject
+      const type = getTypeFromSelfDescription(verifiableCredential)
+      const { credentialSubject } = verifiableCredential
+      delete verifiableCredential.credentialSubject
 
       const flatten = {
-        sd: { ...verifiableSelfDescriptionDto['selfDescriptionCredential'] },
+        sd: { ...verifiableCredential },
         cs: { ...credentialSubject }
       }
+      delete flatten.sd.credentialSubject
 
       for (const key of Object.keys(flatten)) {
         const keys = Object.keys(flatten[key])
@@ -148,13 +153,13 @@ export class SDParserPipe
       }
 
       return {
-        type: SelfDescriptionTypes.VC,
+        type,
         selfDescriptionCredential: {
           ...flatten.sd,
           credentialSubject: { ...flatten.cs }
         } as VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>,
-        proof: verifiableSelfDescriptionDto.proof as SignatureDto,
-        raw: JSON.stringify({ ...verifiableSelfDescriptionDto, credentialSubject: { ...credentialSubject } }),
+        proof: verifiableCredential.proof as SignatureDto,
+        raw: JSON.stringify({ ...verifiableCredential, credentialSubject: { ...credentialSubject } }),
         rawCredentialSubject: JSON.stringify({ ...credentialSubject })
       }
     } catch (error) {

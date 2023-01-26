@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, ConflictException, HttpStatus, Logger } from '@nestjs/common'
+import { BadRequestException, ConflictException, HttpStatus, Injectable, Logger } from '@nestjs/common'
 import { SDParserPipe } from '../pipes/sd-parser.pipe'
 import { HttpService } from '@nestjs/axios'
 import { ParticipantSelfDescriptionDto } from '../../participant/dto'
@@ -16,7 +16,7 @@ import {
 import DatasetExt from 'rdf-ext/lib/Dataset'
 import { SelfDescriptionTypes } from '../enums'
 import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../constants'
-import { IVerifiableCredential, IVerifiablePresentation, validationResultWithoutContent } from '../@types'
+import { IVerifiablePresentation, validationResultWithoutContent } from '../@types'
 import { lastValueFrom } from 'rxjs'
 import { VerifiablePresentationDto } from '../dto/presentation-meta.dto'
 
@@ -109,14 +109,15 @@ export class SelfDescriptionService {
     participantSelfDescription: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto> | IVerifiablePresentation,
     sdType: string
   ): Promise<validationResultWithoutContent> {
-    let participantVC: IVerifiableCredential | VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
+    let participantVC: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
     const _SDParserPipe = new SDParserPipe(sdType)
     if (participantSelfDescription.type.includes('VerifiablePresentation')) {
-      participantVC = (participantSelfDescription as IVerifiablePresentation).verifiableCredential[0]
+      participantVC = (participantSelfDescription as IVerifiablePresentation)
+        .verifiableCredential[0] as unknown as VerifiableCredentialDto<ParticipantSelfDescriptionDto>
     } else {
       participantVC = participantSelfDescription as VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
     }
-    const verifableSelfDescription: VerifiableSelfDescriptionDto<CredentialSubjectDto> = {
+    const verifiableSelfDescription: VerifiableSelfDescriptionDto<CredentialSubjectDto> = {
       complianceCredential: {
         proof: {} as SignatureDto,
         credentialSubject: { id: '', hash: '' },
@@ -129,7 +130,7 @@ export class SelfDescriptionService {
       selfDescriptionCredential: { ...participantVC }
     }
 
-    const { selfDescriptionCredential: selfDescription, rawCredentialSubject } = _SDParserPipe.transform(verifableSelfDescription)
+    const { selfDescriptionCredential: selfDescription, rawCredentialSubject } = _SDParserPipe.transform(verifiableSelfDescription)
 
     try {
       const type: string = selfDescription.type.find(t => t !== 'VerifiableCredential') // selfDescription.type

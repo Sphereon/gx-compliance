@@ -35,7 +35,8 @@ export class ProofService {
     const isValidChain = true //await this.registryService.isValidCertificateChain(certificatesRaw)
 
     if (!isValidChain) throw new ConflictException(`X509 certificate chain could not be resolved against registry trust anchors.`)
-    if (!this.publicKeyMatchesCertificate(publicKeyJwk, certificatesRaw)) throw new ConflictException(`Public Key does not match certificate chain.`)
+    if (!(await this.publicKeyMatchesCertificate(publicKeyJwk, certificatesRaw)))
+      throw new ConflictException(`Public Key does not match certificate chain.`)
 
     const input = (selfDescriptionCredential as any).selfDescription ? (selfDescriptionCredential as any)?.selfDescription : selfDescriptionCredential
 

@@ -119,42 +119,11 @@ export class SignatureService {
   }
 
   async createComplianceCredentialFromSelfDescription(selfDescription: IVerifiablePresentation): Promise<IVerifiableCredential> {
-    const selfDescribedVC = selfDescription.verifiableCredential[0]
-    const sd_jws = selfDescribedVC.proof['jws']
-    if (!sd_jws) {
-      throw new BadRequestException('selfDescription does not contain jws property')
+    if (SignatureService.hasGxComplianceCredential(selfDescription)) {
+      const ecosystemUrl = process.env.GX_ECOSYSTEM_URL || 'http://20.23.137.224/' //fixme this should be changed to the actual FMA
+      return this.issueComplianceCredential(selfDescription, ecosystemUrl)
     }
-    delete selfDescription.proof
-    const normalizedSD: string = await this.normalize(selfDescribedVC)
-    const hash: string = this.sha256(normalizedSD + sd_jws)
-
-    const type: string = selfDescribedVC.type.find(t => t !== 'VerifiableCredential')
-    const complianceCredentialType: string =
-      SelfDescriptionTypes.PARTICIPANT === type ? SelfDescriptionTypes.PARTICIPANT_CREDENTIAL : SelfDescriptionTypes.SERVICE_OFFERING_CREDENTIAL
-    const unsignedCredential: ICredential = {
-      '@context': ['https://www.w3.org/2018/credentials/v1'],
-      type: ['VerifiableCredential', complianceCredentialType],
-      id: `https://catalogue.gaia-x.eu/credentials/${complianceCredentialType}/${new Date().getTime()}`,
-      issuer: getDidWeb(),
-      issuanceDate: new Date().toISOString(),
-      credentialSubject: {
-        id: selfDescribedVC.credentialSubject.id,
-        hash
-      }
-    }
-    const normalizedComplianceCredential: string = await this.normalize(unsignedCredential)
-    const complianceCredentialHash: string = this.sha256(normalizedComplianceCredential)
-    const jws = await this.sign(complianceCredentialHash)
-    return {
-      ...unsignedCredential,
-      proof: {
-        type: 'JsonWebSignature2020',
-        created: new Date().toISOString(),
-        proofPurpose: 'assertionMethod',
-        jws,
-        verificationMethod: getDidWebVerificationMethodIdentifier()
-      }
-    }
+    return this.issueComplianceCredential(selfDescription, 'https://catalogue.gaia-x.eu/credentials/')
   }
 
   async verifySignature({ verifyData, jwk, proof }: any): Promise<boolean> {
@@ -220,5 +189,64 @@ export class SignatureService {
       expansionMap,
       skipExpansion: false
     })
+  }
+
+  private static hasGxComplianceCredential(selfDescription: IVerifiablePresentation): boolean {
+    const gxComplianceServer = process.env.GX_COMPLIANCE_SERVICE_DID || 'did:web:sphereon-test.ddns.net'
+    //fixme remove following line
+    // const gxComplianceServer = process.env.GX_COMPLIANCE_SERVICE_DID || 'did:web:555d-87-213-241-251.eu.ngrok.io'
+    for (const vc of selfDescription.verifiableCredential) {
+      if (vc.issuer === gxComplianceServer && vc.type.includes(SelfDescriptionTypes.PARTICIPANT_CREDENTIAL.valueOf())) {
+        return true
+      }
+    }
+    return false
+  }
+
+  private async issueComplianceCredential(selfDescription: IVerifiablePresentation, serviceUrl: string): Promise<IVerifiableCredential> {
+    const selfDescribedVC = selfDescription.verifiableCredential.filter(vc => vc.type.includes(SelfDescriptionTypes.PARTICIPANT.valueOf()))[0]
+    const sd_jws = selfDescribedVC.proof['jws']
+    if (!sd_jws) {
+      throw new BadRequestException('selfDescription does not contain jws property')
+    }
+    delete selfDescription.proof
+    const normalizedSD: string = await this.normalize(selfDescribedVC)
+    const hash: string = this.sha256(normalizedSD + sd_jws)
+
+    const type: string = selfDescribedVC.type.find(t => t !== 'VerifiableCredential')
+    const complianceCredentialType: string =
+      SelfDescriptionTypes.PARTICIPANT === type ? SelfDescriptionTypes.PARTICIPANT_CREDENTIAL : SelfDescriptionTypes.SERVICE_OFFERING_CREDENTIAL
+    const unsignedCredential: ICredential = SignatureService.createUnsignedComplianceCredential(
+      complianceCredentialType,
+      serviceUrl,
+      selfDescribedVC.credentialSubject.id,
+      hash
+    )
+    const normalizedComplianceCredential: string = await this.normalize(unsignedCredential)
+    const complianceCredentialHash: string = this.sha256(normalizedComplianceCredential)
+    const jws = await this.sign(complianceCredentialHash)
+    return {
+      ...unsignedCredential,
+      proof: {
+        type: 'JsonWebSignature2020',
+        created: new Date().toISOString(),
+        proofPurpose: 'assertionMethod',
+        jws,
+        verificationMethod: getDidWebVerificationMethodIdentifier()
+      }
+    }
+  }
+  private static createUnsignedComplianceCredential(type: string, url: string, id: string, hash: string): ICredential {
+    return {
+      '@context': ['https://www.w3.org/2018/credentials/v1'],
+      type: ['VerifiableCredential', type],
+      id: `${url}${type}/${new Date().getTime()}`,
+      issuer: getDidWeb(),
+      issuanceDate: new Date().toISOString(),
+      credentialSubject: {
+        id: id,
+        hash
+      }
+    }
   }
 }

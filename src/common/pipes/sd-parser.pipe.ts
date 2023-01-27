@@ -14,6 +14,7 @@ import { RegistrationNumberDto } from '../../participant/dto/registration-number
 import { ServiceOfferingSelfDescriptionDto } from '../../service-offering/dto'
 import { ParticipantSelfDescriptionDto } from '../../participant/dto'
 import { IVerifiablePresentation } from '../@types'
+import { VerifiablePresentationDto } from '../dto/presentation-meta.dto'
 
 @Injectable()
 export class SDParserPipe
@@ -34,8 +35,25 @@ export class SDParserPipe
       return this.transformVerifiableCredential(verifiableSelfDescriptionDto as VerifiableCredentialDto<any>)
     }
     try {
-      const { complianceCredential, selfDescriptionCredential } = verifiableSelfDescriptionDto as VerifiableSelfDescriptionDto<CredentialSubjectDto>
-
+      let complianceCredential, selfDescriptionCredential
+      if (verifiableSelfDescriptionDto['type'] && verifiableSelfDescriptionDto['type'].includes('VerifiablePresentation')) {
+        complianceCredential = (verifiableSelfDescriptionDto as VerifiablePresentationDto).verifiableCredential
+          .filter(
+            vc => vc.type.includes(SelfDescriptionTypes.PARTICIPANT_CREDENTIAL) || vc.type.includes(SelfDescriptionTypes.SERVICE_OFFERING_CREDENTIAL)
+          )
+          .pop()
+        selfDescriptionCredential = (verifiableSelfDescriptionDto as VerifiablePresentationDto).verifiableCredential
+          .filter(
+            vc =>
+              vc.type.includes(SelfDescriptionTypes.PARTICIPANT) ||
+              vc.type.includes(SelfDescriptionTypes.SERVICE_OFFERING_EXPERIMENTAL) ||
+              vc.type.includes(SelfDescriptionTypes.SERVICE_OFFERING)
+          )
+          .pop()
+      } else {
+        complianceCredential = verifiableSelfDescriptionDto['complianceCredential']
+        selfDescriptionCredential = verifiableSelfDescriptionDto['selfDescriptionCredential']
+      }
       const type = getTypeFromSelfDescription(selfDescriptionCredential)
       if (this.sdType !== type) throw new BadRequestException(`Expected @type of ${this.sdType}`)
 

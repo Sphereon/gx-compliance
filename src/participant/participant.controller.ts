@@ -5,7 +5,7 @@ import { getApiVerifyBodySchema } from '../common/utils/api-verify-raw-body-sche
 import { SignedSelfDescriptionDto, ValidationResultDto, VerifiableCredentialDto, VerifiableSelfDescriptionDto } from '../common/dto'
 import { VerifyParticipantDto, ParticipantSelfDescriptionDto } from './dto'
 import { UrlSDParserPipe, SDParserPipe, JoiValidationPipe, BooleanQueryValidationPipe } from '../common/pipes'
-import { SignedSelfDescriptionSchema, vcSchema, VerifySdSchema } from '../common/schema/selfDescription.schema'
+import { SignedSelfDescriptionSchema, vcSchema, VerifiablePresentationSchema, VerifySdSchema } from '../common/schema/selfDescription.schema'
 import ParticipantSD from '../tests/fixtures/participant-sd.json'
 import { CredentialTypes, SelfDescriptionTypes } from '../common/enums'
 import { HttpService } from '@nestjs/axios'
@@ -13,6 +13,8 @@ import { ParticipantContentValidationService } from './services/content-validati
 import { SelfDescriptionService } from '../common/services'
 import ParticipantVC from '../tests/fixtures/sphereon-LegalPerson.json'
 import { validationResultWithoutContent } from '../common/@types'
+import SphereonParticipantVP from '../tests/fixtures/sphereon-participant-vp.json'
+import { VerifiablePresentationDto } from '../common/dto/presentation-meta.dto'
 
 const credentialType = CredentialTypes.participant
 @ApiTags(credentialType)
@@ -69,6 +71,32 @@ export class ParticipantController {
     const validationResult: ValidationResultDto = await this.verifyAndStoreSignedParticipantSD(participantSelfDescription, storeSD)
     return validationResult
   }
+
+  @ApiVerifyResponse(credentialType)
+  @Post('onboard')
+  @ApiOperation({ summary: 'Validate a Participant Self Description VP' })
+  @ApiExtraModels(VerifiablePresentationDto)
+  @ApiQuery({
+    name: 'store',
+    type: Boolean,
+    description: 'Store Self Description for learning purposes for six months in the storage service',
+    required: false
+  })
+  @ApiBody(
+    getApiVerifyBodySchema('Participant', {
+      service: { summary: 'Participant SD Example', value: SphereonParticipantVP }
+    })
+  )
+  @HttpCode(HttpStatus.OK)
+  async verifyParticipantVP(
+    @Body(new JoiValidationPipe(VerifiablePresentationSchema), new SDParserPipe(SelfDescriptionTypes.PARTICIPANT))
+    signedSelfDescriptionDto: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>,
+    @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean
+  ): Promise<ValidationResultDto> {
+    const validationResult: ValidationResultDto = await this.verifyAndStoreSignedParticipantSD(signedSelfDescriptionDto, storeSD)
+    return validationResult
+  }
+
   @ApiVerifyResponse(credentialType)
   @Post('validate/vc')
   @ApiOperation({ summary: 'Validate a Participant VerifiableCredential' })

@@ -1,0 +1,99 @@
+{
+  "id": "3cae2a1f-750f-4346-a8da-8dc1f6e150d0",
+  "type": [
+    "VerifiablePresentation"
+  ],
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "verifiableCredential": [
+    {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://registry.gaia-x.eu/v2206/api/shape"
+      ],
+      "issuer": "did:web:555d-87-213-241-251.eu.ngrok.io",
+      "id": "96c777f0-d284-482e-b05c-95da31c94555",
+      "credentialSubject": {
+        "id": "did:web:555d-87-213-241-251.eu.ngrok.io",
+        "gx-participant:name": "Example Company",
+        "gx-participant:legalName": "Example Company ltd.",
+        "gx-participant:website": "https://participant",
+        "gx-participant:registrationNumber": [
+          {
+            "gx-participant:registrationNumberType": "localCode",
+            "gx-participant:registrationNumberNumber": "NL001234567B01"
+          },
+          {
+            "gx-participant:registrationNumberType": "leiCode",
+            "gx-participant:registrationNumberNumber": "9695007586GCAKPYJ703"
+          },
+          {
+            "gx-participant:registrationNumberType": "EUID",
+            "gx-participant:registrationNumberNumber": "FR5910.424761419"
+          }
+        ],
+        "gx-participant:headquarterAddress": {
+          "gx-participant:addressCountryCode": "FR",
+          "gx-participant:addressCode": "FR-HDF",
+          "gx-participant:streetAddress": "2 rue Kellermann",
+          "gx-participant:postalCode": "59100",
+          "gx-participant:locality": "Roubaix"
+        },
+        "gx-participant:legalAddress": {
+          "gx-participant:addressCountryCode": "FR",
+          "gx-participant:addressCode": "FR-HDF",
+          "gx-participant:streetAddress": "2 rue Kellermann",
+          "gx-participant:postalCode": "59100",
+          "gx-participant:locality": "Roubaix"
+        },
+        "gx-participant:termsAndConditions": "70c1d713215f95191a11d38fe2341faed27d19e083917bc8732ca4fea4976700"
+      },
+      "type": [
+        "VerifiableCredential",
+        "LegalPerson"
+      ],
+      "issuanceDate": "2023-01-23T14:35:59.523Z",
+      "proof": {
+        "type": "JsonWebSignature2020",
+        "created": "2023-01-23T14:35:59Z",
+        "verificationMethod": "did:web:555d-87-213-241-251.eu.ngrok.io#JWK2020-RSA",
+        "proofPurpose": "assertionMethod",
+        "jws": "eyJhbGciOiJSUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..lZA0mDfuovnxh-FGYTgk6hi25AEtYM5OU-MLp92NVCjy7KcQxm3n9q-iSo_cuehrRmIFYsXuBce0STs_mkfqreHQZEhv_retiV2z50xG4pPGTFw6F4VMTEheq7nWJ6isBdCBgVhSWxZE55x3CyH7AM6SHqwt70HEBc-IC1SrhSMsBEEfJZ1tVxEaOTuCPOROWuQCr3vbiFzOSrnajK5CV27Jh3PnaNdbI89nCLVB7oQsvCxF0uKmqwTcA3GK18d1crq7zLVS8olri1D8GEShocdwGudzdK4M1Fl4236oSKispr3WszpM08CCvKJ5wBfLn55rAiHl1HBjiGvO9g5k9Q"
+      }
+    },
+    {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1"
+      ],
+      "type": [
+        "VerifiableCredential",
+        "ParticipantCredential"
+      ],
+      "id": "https://catalogue.gaia-x.eu/credentials/ParticipantCredential/1674740595537",
+      "issuer": "did:web:555d-87-213-241-251.eu.ngrok.io",
+      "issuanceDate": "2023-01-26T13:43:15.537Z",
+      "credentialSubject": {
+        "id": "did:web:555d-87-213-241-251.eu.ngrok.io",
+        "hash": "171d5c1361a93dd0bbbbde9a39dcf71ae0da5dbd12e09505f12d9668cfc116c6"
+      },
+      "proof": {
+        "type": "JsonWebSignature2020",
+        "created": "2023-01-26T13:43:15.954Z",
+        "proofPurpose": "assertionMethod",
+        "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..UB6kuK4SBo2rrhw1luw4Ha0hdmYnThE3DGP2Tolbc5rA9D-9srF0Wa5GX2Evl1r3EgeYZTZTSd6a041t4H8Ed_aXtsjKrMsse-xKb5LXrSL_SR0xuAjSqYODaQkw6pj2uszXCkddhvveCD5GIi5aRFBz6rLu44a9SUYGPeYSKZWOTCMGalMSOKF0IEqpwnrP0ud3z-5CcTjsJH6ZBYHOap4Ri1llXSGK2KkpUErfkB04CH2PAATYzQ5EV6ua0PnL3NEYmAJCj71CbceoMsTIA98QLIy2aKzrPTm_UHdVOZNHRSidkF-Y2QWq00kWY44XdbXg1flbzzZh9Z_-a1N5yA",
+        "verificationMethod": "did:web:555d-87-213-241-251.eu.ngrok.io#X509-JWK2020"
+      }
+    }
+  ],
+  "holder": "did:web:555d-87-213-241-251.eu.ngrok.io",
+  "proof": {
+    "type": "JsonWebSignature2020",
+    "created": "2023-01-26T21:29:56Z",
+    "verificationMethod": "did:web:555d-87-213-241-251.eu.ngrok.io#JWK2020-RSA",
+    "proofPurpose": "authentication",
+    "challenge": "2023-01-26",
+    "domain": "https://nk-gx-compliance.eu.ngrok.io",
+    "jws": "eyJhbGciOiJSUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..CNPIrfyRKG8R7VYRDYvgZH_OZI5Ki1O92GoQ0QgCBYCGYZAONi2He3jFFFDOs6tgCooOng8q6Na_tCPINotxyUiim-UDrDUgz6IbebE98igOOHtl6YYm8weqsZIbz83CrErWljEIEvsU55HaBFWQym-Aco1gh7f13Dh2PPpfelEdRUVH8n2Hx9BMOXPNmW5WJDV0dpvYPCKy0DF50OcOtrHdSSKnlpsi1rOpO6QE-zhmGXF7NSaeGAmkZHVjLsbk7bbGFHfHz_BfVFkUK1xk0fFTQ_LRXnoR_-MJhY-EMGLUSdYl_Y1HIfPqaveTsMuANyWV3T7Iwkdb68vknuqJ-A"
+  }
+}

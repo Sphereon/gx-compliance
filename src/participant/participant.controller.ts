@@ -88,11 +88,10 @@ export class ParticipantController {
     })
   )
   @HttpCode(HttpStatus.OK)
-  async verifyServiceOfferingVP(
+  async verifyParticipantVP(
     @Body(new JoiValidationPipe(VerifiablePresentationSchema), new SDParserPipe(SelfDescriptionTypes.PARTICIPANT))
     signedSelfDescriptionDto: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>,
-    @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean,
-    @Query('verifyParticipant', new BooleanQueryValidationPipe(true)) verifyParticipant: boolean
+    @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean
   ): Promise<ValidationResultDto> {
     const validationResult: ValidationResultDto = await this.verifyAndStoreSignedParticipantSD(signedSelfDescriptionDto, storeSD)
     return validationResult

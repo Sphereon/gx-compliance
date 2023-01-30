@@ -268,7 +268,6 @@ export class ParticipantContentValidationService {
         tab.push(values[i])
       }
     }
-    console.log("did ",tab.filter((item, index) => tab.indexOf(item) === index))
     return tab.filter((item, index) => tab.indexOf(item) === index);
   }
   

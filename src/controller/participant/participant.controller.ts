@@ -63,11 +63,7 @@ export class ParticipantController {
     participantSelfDescription: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>,
     @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean
   ): Promise<ValidationResultDto> {
-    console.log('Participant verification has started')
-    var startTime = performance.now()
     const validationResult: ValidationResultDto = await this.verifyAndStoreSignedParticipantSD(participantSelfDescription, storeSD)
-    var endTime = performance.now()
-    console.log(`Participant verification took ${endTime - startTime} milliseconds`)
     return validationResult
   }
 

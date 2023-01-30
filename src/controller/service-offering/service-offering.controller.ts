@@ -46,14 +46,12 @@ export class ServiceOfferingController {
     @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean,
     @Query('verifyParticipant', new BooleanQueryValidationPipe(true)) verifyParticipant: boolean
   ): Promise<ValidationResultDto> {
-    var startTime = performance.now()
     const validationResult: ValidationResultDto = await this.verifyAndStoreSignedServiceOfferingSD(
       serviceOfferingSelfDescription,
       storeSD,
       verifyParticipant
     )
-    var endTime = performance.now()
-    console.log(`Call to the method took ${endTime - startTime} milliseconds`)
+
     return validationResult
   }
 
@@ -84,14 +82,11 @@ export class ServiceOfferingController {
     @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean,
     @Query('verifyParticipant', new BooleanQueryValidationPipe(true)) verifyParticipant: boolean
   ): Promise<ValidationResultDto> {
-    var startTime = performance.now()
     const validationResult: ValidationResultDto = await this.verifyAndStoreSignedServiceOfferingSD(
       serviceOfferingSelfDescription,
       storeSD,
       verifyParticipant
     )
-    var endTime = performance.now()
-    console.log(`Verification of service offering self-description took ${endTime - startTime} milliseconds`)
     return validationResult
   }
 
@@ -101,7 +96,6 @@ export class ServiceOfferingController {
   ): Promise<ValidationResultDto> {
     if (verifyParticipant) {
       try {
-        console.log("Service-offering validation has started")
         const validationResult: ValidationResultDto = await this.selfDescriptionService.validate(serviceOfferingSelfDescription)
         if (!validationResult.conforms)
         throw new ConflictException({

@@ -28,7 +28,6 @@ export class RegistryService {
 
       return response.data
     } catch (error) {
-      console.log(error)
       this.logger.error(error)
     }
   }

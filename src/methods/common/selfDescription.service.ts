@@ -164,7 +164,6 @@ export class SelfDescriptionService {
         return {conforms, isValidSignature, content, shape}
       },
       [SelfDescriptionTypes.SERVICE_OFFERING]: async () => {
-        console.log("Provided by verification has started")
         const get_SD:SignedSelfDescriptionDto<ParticipantSelfDescriptionDto> = await new Promise(async(resolve, reject) => 
         {
           try  {
@@ -182,7 +181,6 @@ export class SelfDescriptionService {
         return {conforms, isValidSignature, content, shape}
       }
     }
-
     return (await validationFns[type]()) || undefined
 
   } catch(e) {
@@ -219,7 +217,6 @@ export class SelfDescriptionService {
         }
         const selfDescriptionDataset: DatasetExt = await this.shaclService.loadFromJsonLD(JSON.stringify(rawPrepared))
         if(this.Cache_check(type) == true) {
-          console.log("Cache items detected")
           const shape: ValidationResult = await this.shaclService.validate(cache[type].shape, selfDescriptionDataset)
           return shape
         } else {
@@ -232,7 +229,6 @@ export class SelfDescriptionService {
             }
           })
           let schema = await this.getShaclShape(shapePath)
-          console.log("saving schema to cache")
           cache[type].shape = schema
           const shape: ValidationResult = await this.shaclService.validate(schema, selfDescriptionDataset)
           return shape

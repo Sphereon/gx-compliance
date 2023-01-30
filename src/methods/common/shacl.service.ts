@@ -63,7 +63,6 @@ export class ShaclService {
           transformResponse: r => r
         })
         .toPromise()
-
       return this.isJsonString(response.data) ? this.loadFromJsonLD(response.data) : this.loadFromTurtle(response.data)
     } catch (error) {
       console.error(error)

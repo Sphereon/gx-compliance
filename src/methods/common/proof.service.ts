@@ -25,24 +25,13 @@ export class ProofService {
     isValidityCheck?: boolean,
     jws?: string
   ): Promise<boolean> {
-    var start = performance.now()
     const { x5u, publicKeyJwk } = await this.getPublicKeys(selfDescriptionCredential)
-    var ppk = performance.now()
-    console.log(`Call to retrieve public key ${ppk - start} milliseconds`)
     const certificatesRaw: string = await this.loadCertificatesRaw(x5u)
-    var load = performance.now()
-    console.log(`Call to load certificate ${load - ppk} milliseconds`)
     const isValidChain: boolean = await this.registryService.isValidCertificateChain(certificatesRaw)
-    var checkvalid = performance.now()
-    console.log(`Call to verify certificate ${checkvalid - load} milliseconds`)
     if (!isValidChain) throw new ConflictException(`X509 certificate chain could not be resolved against registry trust anchors.`)
-
     if (!this.publicKeyMatchesCertificate(publicKeyJwk, certificatesRaw)) throw new ConflictException(`Public Key does not match certificate chain.`)
-  
     const input = (selfDescriptionCredential as any).selfDescription ? (selfDescriptionCredential as any)?.selfDescription : selfDescriptionCredential
     const isValidSignature: boolean = await this.checkSignature(input, isValidityCheck, jws, selfDescriptionCredential.proof, publicKeyJwk)
-    var sig = performance.now()
-    console.log(`Signature took ${sig - checkvalid} milliseconds`)
     if (!isValidSignature) throw new ConflictException(`Provided signature does not match Self Description.`)
 
     return true

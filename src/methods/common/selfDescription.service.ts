@@ -22,9 +22,7 @@ import { SelfDescriptionTypes } from '../../@types/enums'
 import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../../@types/constants'
 import { validationResultWithoutContent } from '../../@types/type'
 import { lastValueFrom } from 'rxjs'
-import { rejects } from 'assert'
 import { RegistryService } from './registry.service'
-import { Console } from 'console'
 const expectedContexts = {
   [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE,
   [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE

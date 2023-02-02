@@ -18,13 +18,16 @@ export class ParticipantContentValidationService {
 
   async validate(data: ParticipantSelfDescriptionDto): Promise<ValidationResult> {
     const { legalAddress, leiCode, registrationNumber, termsAndConditions } = data
+
     const checkUSAAndValidStateAbbreviation = this.checkUSAAndValidStateAbbreviation(legalAddress)
 
     const validationPromises: Promise<ValidationResult>[] = []
     validationPromises.push(this.checkRegistrationNumbers(registrationNumber, data))
     validationPromises.push(this.checkValidLeiCode(leiCode, data))
     validationPromises.push(this.checkTermsAndConditions(termsAndConditions))
+
     const results = await Promise.all(validationPromises)
+
     return this.mergeResults(...results, checkUSAAndValidStateAbbreviation)
   }
 

@@ -23,8 +23,9 @@ const commonSDExamples = {
 }
 
 @ApiTags(credentialType)
-@Controller({ path: '' })
-export class CommonController {
+//TODO: fix the path at the high level instead of this
+@Controller({ path: '2020VP' })
+export class Common2010VPController {
   constructor(
     private readonly selfDescriptionService: SelfDescriptionService,
     private readonly signatureService: SignatureService,

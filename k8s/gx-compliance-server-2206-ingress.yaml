@@ -1,29 +1,38 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: gx-compliance-2206-main
-  namespace: gx-lab
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-staging"
-    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/ingress.class: nginx
+  name: gx-compliance-live-server
+  namespace: gx-lab
 spec:
-  ingressClassName: nginx
   rules:
-    - host: sphereon-test.ddns.net
-      http:
-        paths:
-        - backend:
-            service:
-              name: gx-compliance-2206-main
-              port:
-                number: 80
-          path: /
-          pathType: Prefix
+  - host: compliance.gaia-x.eu
+    http:
+      paths:
+      - backend:
+          service:
+            name: gx-compliance-main
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+      - backend:
+          service:
+            name: gx-compliance-live-server-2206
+            port:
+              number: 80
+        path: /v2206/
+        pathType: Prefix
+      - backend:
+          service:
+            name: gx-compliance-live-server-2204
+            port:
+              number: 80
+        path: /v2204/
+        pathType: Prefix
   tls:
-    - hosts:
-      - sphereon-test.ddns.net
-      secretName: gx-compliance-secrets
-status:
-  loadBalancer:
-    ingress:
-      - ip: 20.93.222.76
+  - hosts:
+    - compliance.gaia-x.eu
+    secretName: gx-compliance-live-server-tls-secret

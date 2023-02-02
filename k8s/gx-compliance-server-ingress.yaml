@@ -8,31 +8,31 @@ metadata:
   namespace: gx-lab
 spec:
   rules:
-    - host: compliance.lab.gaia-x.eu
-      http:
-        paths:
-          - backend:
-              service:
-                name: gx-compliance-server
-                port:
-                  number: 80
-            path: /
-            pathType: Prefix
-          - backend:
-              service:
-                name: gx-compliance-server-2204-development
-                port:
-                  number: 80
-            path: /v2204/
-            pathType: Prefix
-          - backend:
-              service:
-                name: gx-compliance-server-2206-development
-                port:
-                  number: 80
-            path: /v2206/
-            pathType: Prefix
+  - host: compliance.lab.gaia-x.eu
+    http:
+      paths:
+      - backend:
+          service:
+            name: gx-compliance-server
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+      - backend:
+          service:
+            name: gx-compliance-server-2204-development
+            port:
+              number: 80
+        path: /v2204/
+        pathType: Prefix
+      - backend:
+          service:
+            name: gx-compliance-server-2206-development
+            port:
+              number: 80
+        path: /v2206/
+        pathType: Prefix
   tls:
-    - hosts:
-        - compliance.lab.gaia-x.eu
-      secretName: gx-compliance-server-tls-secret
+  - hosts:
+    - compliance.lab.gaia-x.eu
+    secretName: gx-compliance-server-tls-secret

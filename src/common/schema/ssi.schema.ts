@@ -9,13 +9,25 @@ const proofSchema = {
   verificationMethod: Joi.string().uri().regex(DID_WEB_PATTERN).required(), // TODO: allow general uri https://w3c-ccg.github.io/security-vocab/#JsonWebSignature2020
   domain: Joi.string(),
   nonce: Joi.string(),
-  creator: Joi.string()
+  creator: Joi.string(),
+  challenge: Joi.string()
 }
 
-const verifiableCredentialSchema = {
+const verifiablePresentationSchema = {
   '@context': Joi.array().ordered(Joi.string().valid('https://www.w3.org/2018/credentials/v1').required()).items(Joi.string()).required(),
   type: Joi.array().min(1).required(),
-  id: Joi.string().uri(),
+  id: Joi.string(),
+  verifiableCredential: Joi.array().min(1), // assert type of verifiableCredentials here
+  holder: Joi.string().required(),
+  proof: Joi.object(proofSchema).required()
+}
+
+/* EXPORTS */
+
+export const verifiableCredentialSchema = {
+  '@context': Joi.array().ordered(Joi.string().valid('https://www.w3.org/2018/credentials/v1').required()).items(Joi.string()).required(),
+  type: Joi.array().min(1).required(),
+  id: Joi.string(),
   issuer: Joi.alternatives([
     Joi.string().uri().required(),
     Joi.object({
@@ -36,20 +48,8 @@ const verifiableCredentialSchema = {
   proof: Joi.object(proofSchema).required()
 }
 
-/* EXPORTS */
-export const ParticipantSelfDescriptionSchema = Joi.object(verifiableCredentialSchema).options({
+export const VerifiablePresentationSchema = Joi.object(verifiablePresentationSchema).options({
   abortEarly: false
 })
 
-export const VerifySdSchema = Joi.object({
-  url: Joi.string().uri().required()
-}).options({
-  abortEarly: false
-})
-
-export const SignedSelfDescriptionSchema = Joi.object({
-  selfDescriptionCredential: Joi.object(verifiableCredentialSchema).required(),
-  complianceCredential: Joi.object(verifiableCredentialSchema).required()
-}).options({
-  abortEarly: false
-})
+export const vcSchema = Joi.object(verifiableCredentialSchema)

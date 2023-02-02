@@ -21,9 +21,9 @@ const commonSDExamples = {
 @Controller({ path: '' })
 export class CommonController {
   constructor(
-      private readonly selfDescriptionService: SelfDescriptionService,
-      private readonly signatureService: SignatureService,
-      private readonly proofService: ProofService
+    private readonly selfDescriptionService: SelfDescriptionService,
+    private readonly signatureService: SignatureService,
+    private readonly proofService: ProofService
   ) { }
 
   @ApiResponse({
@@ -46,14 +46,14 @@ export class CommonController {
   @UsePipes(new JoiValidationPipe(ParticipantSelfDescriptionSchema))
   @Post('sign')
   async signSelfDescription(
-      @Body() verifiableSelfDescription: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
+    @Body() verifiableSelfDescription: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
   ): Promise<{ complianceCredential: VerifiableCredentialDto<ComplianceCredentialDto> }> {
     await this.proofService.validate(JSON.parse(JSON.stringify(verifiableSelfDescription)))
     const type: string = getTypeFromSelfDescription(verifiableSelfDescription)
 
     await this.selfDescriptionService.validateSelfDescription(verifiableSelfDescription, type)
     const complianceCredential: { complianceCredential: VerifiableCredentialDto<ComplianceCredentialDto> } =
-        await this.signatureService.createComplianceCredential(verifiableSelfDescription)
+      await this.signatureService.createComplianceCredential(verifiableSelfDescription)
 
     return complianceCredential
   }
@@ -72,7 +72,7 @@ export class CommonController {
     examples: commonSDExamples
   })
   async normalizeSelfDescriptionRaw(
-      @Body() selfDescription: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
+    @Body() selfDescription: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
   ): Promise<string> {
     const normalizedSD: string = await this.signatureService.normalize(selfDescription)
 

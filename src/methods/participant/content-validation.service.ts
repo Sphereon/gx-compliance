@@ -271,8 +271,6 @@ export class ParticipantContentValidationService {
     return tab.filter((item, index) => tab.indexOf(item) === index);
   }
   
-    
-
   async checkDidUrls(arrayDids, invalidUrls = []) {
     await Promise.all(arrayDids.map(async(element) => {
       try {
@@ -284,6 +282,7 @@ export class ParticipantContentValidationService {
     }))
     return invalidUrls
   }
+  
   async CPR08_CheckDid(arr):Promise<ValidationResult> {
     let invalidUrls = await this.checkDidUrls(arr)
     let isValid = invalidUrls.length == 0 ? true : false

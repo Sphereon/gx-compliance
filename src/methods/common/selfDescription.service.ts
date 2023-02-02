@@ -245,5 +245,3 @@ export class SelfDescriptionService {
   }
   
 }
-
-  

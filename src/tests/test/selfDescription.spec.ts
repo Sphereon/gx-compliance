@@ -39,8 +39,8 @@ describe('ParticipantService', () => {
     selfDescriptionService = moduleRef.get<SelfDescriptionService>(SelfDescriptionService)
   })
 
-  describe.skip(`Validation of Participant Self Descriptions`, () => {
-    it('Validates a correct participant self description', async () => {
+  describe(`Validation of Participant Self Descriptions`, () => {
+    it.skip('Validates a correct participant self description', async () => {
       const pipedSelfDescription = transformPipeLegalPerson.transform(ParticipantSDFixture as any)
       const result = await selfDescriptionService.validate(pipedSelfDescription)
 
@@ -64,8 +64,8 @@ describe('ParticipantService', () => {
     })
   })
 
-  describe.skip(`Validation of Service Offering Self Descriptions`, () => {
-    it('Validates a correct Service Offering self description', async () => {
+  describe(`Validation of Service Offering Self Descriptions`, () => {
+    it.skip('Validates a correct Service Offering self description', async () => {
       const pipedSelfDescription = transformPipeServiceOffering.transform(ServiceOfferingSDFixture as any)
       const result = await selfDescriptionService.validate(pipedSelfDescription)
 

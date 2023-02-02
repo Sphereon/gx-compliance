@@ -59,9 +59,9 @@ describe('ShaclService', () => {
     })
 
     it.skip('transforms a dataset correctly from an url with turtle input', async () => {
-      const registryUrl = process.env.REGISTRY_URL || 'https://registry.gaia-x.eu/v2206/api'
-      const datasetParticipant = await shaclService.loadFromUrl(`${registryUrl}/shape/files?file=participant&type=ttl`)
-      const datasetServiceOffering = await shaclService.loadFromUrl(`${registryUrl}/shape/files?file=service-offering&type=ttl`)
+      const registryUrl = process.env.REGISTRY_URL || 'http://localhost:3000//api/trusted-schemas-registry/schemas'
+      const datasetParticipant = await shaclService.loadFromUrl(`${registryUrl}/participant`)
+      const datasetServiceOffering = await shaclService.loadFromUrl(`${registryUrl}/serviceOffering`)
       expectDatasetKeysToExist(datasetParticipant)
       expectDatasetKeysToExist(datasetServiceOffering)
     })

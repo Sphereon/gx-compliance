@@ -36,7 +36,7 @@ export class ServiceOfferingContentValidationService {
     return mergedResults
   }
 
-  private checkVcprovider(Participant_SD: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>): ValidationResult {
+  checkVcprovider(Participant_SD: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>): ValidationResult {
     const result = { conforms: true, results: [] }
       if(!Participant_SD.complianceCredential) {
       result.conforms = false
@@ -44,7 +44,7 @@ export class ServiceOfferingContentValidationService {
     }
     return result
   }
-  private async checkKeyChainProvider(Participant_SDCredential: any, Service_offering_SDCredential: any): Promise<ValidationResult> { //Only key comparison for now
+  async checkKeyChainProvider(Participant_SDCredential: any, Service_offering_SDCredential: any): Promise<ValidationResult> { //Only key comparison for now
     const result = { conforms: true, results: [] }
     const key_Participant = await this.proofService.getPublicKeys(Participant_SDCredential)
     let key_Service = await this.proofService.getPublicKeys(Service_offering_SDCredential)
@@ -65,7 +65,7 @@ export class ServiceOfferingContentValidationService {
     return result
   }
 
-  private compare(certchain1, certchain2):boolean {
+  compare(certchain1, certchain2):boolean {
     let includes = false
     for(var i=0;i<certchain1.length; i++){
       if(certchain2.includes(certchain1[i])) {
@@ -88,7 +88,7 @@ export class ServiceOfferingContentValidationService {
   }
 
 
-  private checkDataExport(dataExport: any): ValidationResult {
+  checkDataExport(dataExport: any): ValidationResult {
     const requestTypes = ['API', 'email', 'webform', 'unregisteredLetter', 'registeredLetter', 'supportCenter']
     const accessTypes = ['digital', 'physical']
     const result = { conforms: true, results: [] }

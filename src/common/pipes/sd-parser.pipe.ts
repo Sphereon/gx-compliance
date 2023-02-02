@@ -1,20 +1,11 @@
 import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common'
-import {
-  AddressDto,
-  CredentialSubjectDto,
-  SignatureDto,
-  SignedSelfDescriptionDto,
-  VerifiableCredentialDto,
-  VerifiableSelfDescriptionDto
-} from '../dto'
+import { AddressDto, CredentialSubjectDto, SignedSelfDescriptionDto, VerifiableSelfDescriptionDto } from '../dto'
 import { SelfDescriptionTypes } from '../enums'
 import { getTypeFromSelfDescription } from '../utils'
 import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../constants'
 import { RegistrationNumberDto } from '../../participant/dto/registration-number.dto'
 import { ServiceOfferingSelfDescriptionDto } from '../../service-offering/dto'
 import { ParticipantSelfDescriptionDto } from '../../participant/dto'
-import { IVerifiablePresentation } from '../@types'
-import { VerifiablePresentationDto } from '../dto/presentation-meta.dto'
 
 @Injectable()
 export class SDParserPipe
@@ -25,35 +16,10 @@ export class SDParserPipe
   // TODO extract to common const
   private readonly addressFields = ['legalAddress', 'headquarterAddress']
 
-  transform(
-    verifiableSelfDescriptionDto: VerifiableSelfDescriptionDto<CredentialSubjectDto> | VerifiableCredentialDto<any> | IVerifiablePresentation
-  ): SignedSelfDescriptionDto<CredentialSubjectDto> {
-    if (
-      this.sdType === SelfDescriptionTypes.VC ||
-      verifiableSelfDescriptionDto['selfDescriptionCredential']?.type.includes('VerifiablePresentation')
-    ) {
-      return this.transformVerifiableCredential(verifiableSelfDescriptionDto as VerifiableCredentialDto<any>)
-    }
+  transform(verifiableSelfDescriptionDto: VerifiableSelfDescriptionDto<CredentialSubjectDto>): SignedSelfDescriptionDto<CredentialSubjectDto> {
     try {
-      let complianceCredential, selfDescriptionCredential
-      if (verifiableSelfDescriptionDto['type'] && verifiableSelfDescriptionDto['type'].includes('VerifiablePresentation')) {
-        complianceCredential = (verifiableSelfDescriptionDto as VerifiablePresentationDto).verifiableCredential
-          .filter(
-            vc => vc.type.includes(SelfDescriptionTypes.PARTICIPANT_CREDENTIAL) || vc.type.includes(SelfDescriptionTypes.SERVICE_OFFERING_CREDENTIAL)
-          )
-          .pop()
-        selfDescriptionCredential = (verifiableSelfDescriptionDto as VerifiablePresentationDto).verifiableCredential
-          .filter(
-            vc =>
-              vc.type.includes(SelfDescriptionTypes.PARTICIPANT) ||
-              vc.type.includes(SelfDescriptionTypes.SERVICE_OFFERING_EXPERIMENTAL) ||
-              vc.type.includes(SelfDescriptionTypes.SERVICE_OFFERING)
-          )
-          .pop()
-      } else {
-        complianceCredential = verifiableSelfDescriptionDto['complianceCredential']
-        selfDescriptionCredential = verifiableSelfDescriptionDto['selfDescriptionCredential']
-      }
+      const { complianceCredential, selfDescriptionCredential } = verifiableSelfDescriptionDto
+
       const type = getTypeFromSelfDescription(selfDescriptionCredential)
       if (this.sdType !== type) throw new BadRequestException(`Expected @type of ${this.sdType}`)
 
@@ -78,8 +44,8 @@ export class SDParserPipe
         selfDescriptionCredential: {
           ...flatten.sd,
           credentialSubject: { ...flatten.cs }
-        } as VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>,
-        proof: selfDescriptionCredential.proof as SignatureDto,
+        },
+        proof: selfDescriptionCredential.proof,
         raw: JSON.stringify({ ...selfDescriptionCredential, credentialSubject: { ...credentialSubject } }),
         rawCredentialSubject: JSON.stringify({ ...credentialSubject }),
         complianceCredential
@@ -147,41 +113,5 @@ export class SDParserPipe
     const keyType = sdType.substring(0, sdType.lastIndexOf(':') + 1)
 
     return key.replace(keyType, '')
-  }
-
-  private transformVerifiableCredential(verifiableCredential: VerifiableCredentialDto<any>) {
-    try {
-      const type = getTypeFromSelfDescription(verifiableCredential)
-      const { credentialSubject } = verifiableCredential
-      delete verifiableCredential.credentialSubject
-
-      const flatten = {
-        sd: { ...verifiableCredential },
-        cs: { ...credentialSubject }
-      }
-      delete flatten.sd.credentialSubject
-
-      for (const key of Object.keys(flatten)) {
-        const keys = Object.keys(flatten[key])
-        const cred = flatten[key]
-        keys.forEach(key => {
-          const strippedKey = this.replacePlaceholderInKey(key, type)
-          cred[strippedKey] = this.getValueFromShacl(cred[key], strippedKey, type)
-        })
-      }
-
-      return {
-        type,
-        selfDescriptionCredential: {
-          ...flatten.sd,
-          credentialSubject: { ...flatten.cs }
-        } as VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>,
-        proof: verifiableCredential.proof as SignatureDto,
-        raw: JSON.stringify({ ...verifiableCredential, credentialSubject: { ...credentialSubject } }),
-        rawCredentialSubject: JSON.stringify({ ...credentialSubject })
-      }
-    } catch (error) {
-      throw new BadRequestException(`Transformation failed: ${error.message}`)
-    }
   }
 }

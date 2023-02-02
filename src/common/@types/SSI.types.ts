@@ -1,3 +1,7 @@
+import {SignatureDto, VerifiableCredentialDto} from "../dto";
+import {ParticipantSelfDescriptionDto} from "../../participant/dto";
+import {ServiceOfferingSelfDescriptionDto} from "../../service-offering/dto";
+
 /**
  * Contents of this file is copied from @sphereon/ssi-types
  */
@@ -115,6 +119,24 @@ export interface Descriptor {
    * The Proof or JWT algorith that the proof is in
    */
   format: string
+}
+
+export interface WrappedVerifiablePresentation {
+  type: string
+  participantCredentials: WrappedVerifiableCredential[]
+  complianceCredentials: WrappedVerifiableCredential[]
+  serviceOfferingCredentials: WrappedVerifiableCredential[]
+  proof: IProof
+  raw: string
+}
+
+export interface WrappedVerifiableCredential {
+  type: string
+  rawVerifiableCredential: IVerifiableCredential
+  transformedCredentialSubject: ICredentialSubject
+  proof: IProof
+  raw: string
+  rawCredentialSubject: string
 }
 
 export enum IProofPurpose {

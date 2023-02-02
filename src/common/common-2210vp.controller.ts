@@ -1,12 +1,10 @@
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { Body, Controller, Post, UsePipes } from '@nestjs/common'
-import { ProofService, SelfDescriptionService, SignatureService } from './services'
+import { Proof2210vpService, SelfDescription2210vpService } from './services'
 import { ParticipantSelfDescriptionDto } from '../participant/dto'
 import { ServiceOfferingSelfDescriptionDto } from '../service-offering/dto'
 import { VerifiableCredentialDto } from './dto'
 import ParticipantSD from '../tests/fixtures/participant-sd.json'
-import PresentationExample from '../tests/fixtures/sphereon-presentation.json'
-import CredentialExample from '../tests/fixtures/sphereon-credential.json'
 import ServiceOfferingExperimentalSD from '../tests/fixtures/service-offering-sd.json'
 import { JoiValidationPipe } from './pipes'
 import { VerifiablePresentationSchema } from './schema/selfDescription.schema'
@@ -14,6 +12,7 @@ import { CredentialTypes } from './enums'
 import { getTypeFromSelfDescription } from './utils'
 import { VerifiablePresentationDto } from './dto/presentation-meta.dto'
 import { IVerifiableCredential } from './@types/SSI.types'
+import { Signature2210vpService } from './services/signature.2010vp.service'
 
 const credentialType = CredentialTypes.common
 
@@ -27,9 +26,9 @@ const commonSDExamples = {
 @Controller({ path: '2020VP' })
 export class Common2010VPController {
   constructor(
-    private readonly selfDescriptionService: SelfDescriptionService,
-    private readonly signatureService: SignatureService,
-    private readonly proofService: ProofService
+    private readonly selfDescriptionService: SelfDescription2210vpService,
+    private readonly signatureService: Signature2210vpService,
+    private readonly proofService: Proof2210vpService
   ) {}
 
   @ApiResponse({

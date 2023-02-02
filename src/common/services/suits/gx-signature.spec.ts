@@ -1,5 +1,5 @@
 import nock from 'nock'
-import { ICredential } from '../../@types'
+import { ICredential } from '../../@types/SSI.types'
 
 /**
  * FIXME: Enable but using the signature service (was using the GXSignatureSuite we created for testing before)

@@ -59,6 +59,7 @@ export class ServiceOfferingContentValidationService {
       result.conforms = false
       result.results.push(`formatType: ${dataExport['gx-service-offering:formatType']} is not a valid formatType`)
     }
+
     return result
   }
 

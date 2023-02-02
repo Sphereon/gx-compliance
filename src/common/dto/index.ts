@@ -1,7 +1,0 @@
-export * from './address.dto'
-export * from './compliance-credential.dto'
-export * from './credential-meta.dto'
-export * from './self-description.dto'
-export * from './signature.dto'
-export * from './terms-and-conditions.dto'
-export * from './validation-result.dto'

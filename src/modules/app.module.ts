@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
-import { ParticipantModule } from './modules/participant.module'
+import { ParticipantModule } from './participant.module'
 import { ConfigModule } from '@nestjs/config'
-import { CommonModule } from './modules/common.module'
-import { ServiceOfferingModule } from './modules/service-offering.module'
+import { CommonModule } from './common.module'
+import { ServiceOfferingModule } from './service-offering.module'
 
 @Module({
   imports: [

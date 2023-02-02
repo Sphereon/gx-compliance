@@ -8,7 +8,7 @@
       "VerifiableCredential",
       "LegalPerson"
     ],
-    "id": "https://compliance.gaia-x.eu/.well-known/participant.json",
+    "id": "did:web:compliance.gaia-x.eu",
     "issuer": "did:web:compliance.gaia-x.eu",
     "issuanceDate": "2022-09-23T23:23:23.235Z",
     "credentialSubject": {
@@ -50,7 +50,7 @@
       "ParticipantCredential"
     ],
     "id": "https://catalogue.gaia-x.eu/credentials/ParticipantCredential/1664629337488",
-    "issuer": "did:web:compliance.gaia-x.eu",
+    "issuer": "did:web:compliance.ga7ia-x.eu",
     "issuanceDate": "2022-10-01T13:02:17.489Z",
     "credentialSubject": {
       "id": "did:web:compliance.gaia-x.eu",

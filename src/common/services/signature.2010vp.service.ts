@@ -1,6 +1,6 @@
 import { ComplianceCredentialDto } from '../dto'
 import { createHash } from 'crypto'
-import { getDidWeb, getDidWebVerificationMethodIdentifier } from '../utils'
+import { getDidWeb, getDidWebVerificationMethodIdentifier } from '../utils/did.2210vp.util'
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common'
 import { VerifiableCredentialDto } from '../dto'
 import * as jose from 'jose'

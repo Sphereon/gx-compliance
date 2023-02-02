@@ -6,9 +6,9 @@ import typer from 'media-typer'
 export class ServiceOfferingContentValidationService {
   async validate(data: ServiceOfferingSelfDescriptionDto, providedByResult?: ValidationResultDto): Promise<ValidationResult> {
     const results = []
+
     results.push(this.checkDataProtectionRegime(data?.dataProtectionRegime))
-    const dataExport = data?.dataExport ? data.dataExport : data['gx-service-offering:dataExport']
-    results.push(this.checkDataExport(dataExport))
+    results.push(this.checkDataExport(data?.dataExport))
 
     const mergedResults: ValidationResult = this.mergeResults(...results)
 

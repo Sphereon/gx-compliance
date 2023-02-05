@@ -1,10 +1,10 @@
 import { PipeTransform, Injectable, BadRequestException, ConflictException } from '@nestjs/common'
-import { AddressDto, VerifiableCredentialDto } from '../dto'
-import { SelfDescriptionTypes } from '../enums'
-import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../constants'
-import { RegistrationNumberDto } from '../../participant/dto/registration-number.dto'
-import { VerifiablePresentationDto } from '../dto/presentation-meta.dto'
-import { IProof, IVerifiableCredential, WrappedVerifiableCredential, WrappedVerifiablePresentation } from '../@types/SSI.types'
+import { AddressDto, VerifiableCredentialDto } from '../../@types/dto/common'
+import { SelfDescriptionTypes } from '../../@types/enums'
+import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../../@types/constants'
+import { RegistrationNumberDto } from '../../@types/dto/participant'
+import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
+import { IProof, IVerifiableCredential, WrappedVerifiableCredential, WrappedVerifiablePresentation } from '../../@types/type/SSI.types'
 
 //fixme: once rebased to 2210-Henry, use constants instead of literal strings
 @Injectable()
@@ -90,13 +90,13 @@ export class SsiTypesParserPipe
           cred[strippedKey] = this.getValueFromShacl(cred[key], strippedKey, type)
         })
       }
-
+      const raw = JSON.stringify({ ...verifiableCredential, credentialSubject: { ...credentialSubject } })
       return {
         type,
         rawVerifiableCredential: verifiableCredential as IVerifiableCredential,
         transformedCredentialSubject: flatten.cs,
         proof: verifiableCredential.proof as IProof,
-        raw: JSON.stringify({ ...verifiableCredential, credentialSubject: { ...credentialSubject } }),
+        raw,
         rawCredentialSubject: JSON.stringify({ ...credentialSubject })
       }
     } catch (error) {
@@ -106,8 +106,11 @@ export class SsiTypesParserPipe
 
   private transformVerifiablePresentation(verifiablePresentationDto: VerifiablePresentationDto): WrappedVerifiablePresentation {
     try {
+      const raw = JSON.stringify(verifiablePresentationDto)
       const types: string[] = []
-      verifiablePresentationDto.verifiableCredential.forEach(vc => types.push(SsiTypesParserPipe.getGXTypeFromVerifiableCredential(vc as VerifiableCredentialDto<any>)))
+      verifiablePresentationDto.verifiableCredential.forEach(vc =>
+        types.push(SsiTypesParserPipe.getGXTypeFromVerifiableCredential(vc as VerifiableCredentialDto<any>))
+      )
       let type = 'Participant'
       if (types.includes('ServiceOffering')) {
         type = 'ServiceOffering'
@@ -118,7 +121,7 @@ export class SsiTypesParserPipe
       for (const vc of verifiablePresentationDto.verifiableCredential) {
         const wrappedVC = this.transformVerifiableCredential(vc as VerifiableCredentialDto<any>)
         switch (wrappedVC.type) {
-          case 'Participant':
+          case 'LegalPerson':
             participantCredentials.push(wrappedVC)
             break
           case 'ServiceOffering':
@@ -137,7 +140,7 @@ export class SsiTypesParserPipe
         complianceCredentials,
         serviceOfferingCredentials,
         proof: verifiablePresentationDto.proof,
-        raw: JSON.stringify(verifiablePresentationDto)
+        raw
       }
     } catch (error) {
       throw new BadRequestException(`Transformation failed: ${error.message}`)
@@ -155,12 +158,10 @@ export class SsiTypesParserPipe
       throw new Error('Expecting ServiceOffering type in credentialSubject.type')
     }
     //fixme: we might wanna limit this to prevent unknown types
-    const types = verifiableCredential.type.find(t => t !== 'VerifiableCredential')
-    if (types.length === 0) {
+    const type = verifiableCredential.type.find(t => t !== 'VerifiableCredential')
+    if (!type) {
       throw new ConflictException('Provided type for VerifiableCredential is not supported')
-    } else if (types.length > 1) {
-      throw new ConflictException('Multiple provided types for for a Self Description are not supported')
     }
-    return types[0] === 'LegalPerson' ? 'Participant' : types[0]
+    return type
   }
 }

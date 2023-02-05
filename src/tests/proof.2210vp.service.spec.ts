@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { Proof2210vpService } from '.'
+import { Proof2210vpService } from '../methods/common/proof.2210vp.service'
 import { HttpModule } from '@nestjs/axios'
-import { CommonModule } from '../common.module'
-import { VerifiableCredentialDto } from '../dto'
-import { ParticipantSelfDescriptionDto } from '../../participant/dto'
+import { CommonModule } from '../modules/common.module'
+import { VerifiableCredentialDto } from '../@types/dto/common'
+import { ParticipantSelfDescriptionDto } from '../@types/dto/participant/'
 import nock from 'nock'
-import { MockData } from './mockData'
-import { IVerifiablePresentation } from '../@types/SSI.types'
+import { MockData } from './fixtures/mockData'
+import { IVerifiablePresentation } from '../@types/type/SSI.types'
 
 describe('ProofService', () => {
   let proofService: Proof2210vpService

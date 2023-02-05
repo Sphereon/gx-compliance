@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IProof, IVerifiableCredential, IVerifiablePresentation, PresentationSubmission } from '../@types/SSI.types'
+import { IProof, IVerifiableCredential, IVerifiablePresentation, PresentationSubmission } from '../../type/SSI.types'
 
 export class VerifiablePresentationDto implements IVerifiablePresentation {
   @ApiProperty({

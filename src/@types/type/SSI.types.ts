@@ -1,7 +1,3 @@
-import {SignatureDto, VerifiableCredentialDto} from "../dto";
-import {ParticipantSelfDescriptionDto} from "../../participant/dto";
-import {ServiceOfferingSelfDescriptionDto} from "../../service-offering/dto";
-
 /**
  * Contents of this file is copied from @sphereon/ssi-types
  */

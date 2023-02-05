@@ -1,9 +1,9 @@
 import { BadRequestException, ConflictException, HttpStatus, Injectable, Logger } from '@nestjs/common'
-import { SDParserPipe } from '../pipes/sd-parser.pipe'
 import { HttpService } from '@nestjs/axios'
-import { ParticipantSelfDescriptionDto } from '../../participant/dto'
-import { ServiceOfferingSelfDescriptionDto } from '../../service-offering/dto/service-offering-sd.dto'
 import { ShaclService } from './shacl.service'
+import DatasetExt from 'rdf-ext/lib/Dataset'
+import { lastValueFrom } from 'rxjs'
+import { Proof2210vpService } from './proof.2210vp.service'
 import {
   CredentialSubjectDto,
   SignatureDto,
@@ -11,15 +11,15 @@ import {
   ValidationResult,
   VerifiableCredentialDto,
   VerifiableSelfDescriptionDto
-} from '../dto'
-import DatasetExt from 'rdf-ext/lib/Dataset'
-import { SelfDescriptionTypes } from '../enums'
-import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../constants'
-import { validationResultWithoutContent } from '../@types'
-import { IVerifiablePresentation } from '../@types/SSI.types'
-import { lastValueFrom } from 'rxjs'
-import { VerifiablePresentationDto } from '../dto/presentation-meta.dto'
-import { Proof2210vpService } from './proof.2210vp.service'
+} from '../../@types/dto/common'
+import { validationResultWithoutContent } from '../../@types/type'
+import { SelfDescriptionTypes } from '../../@types/enums'
+import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../../@types/constants'
+import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
+import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant'
+import { ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
+import { IVerifiableCredential, IVerifiablePresentation } from '../../@types/type/SSI.types'
+import { SDParserPipe } from '../../utils/pipes'
 
 @Injectable()
 export class SelfDescription2210vpService {
@@ -92,7 +92,7 @@ export class SelfDescription2210vpService {
     /**
      * end of unchanged lines
      */
-    const isValidVP = await this.proofService.validate(signedSelfDescription)
+    const isValidVP = await this.proofService.validateVP(signedSelfDescription)
     if (!isValidVP) {
       throw new BadRequestException('ServiceOffering VP is not valid')
     }
@@ -115,7 +115,8 @@ export class SelfDescription2210vpService {
     sdType: string
   ): Promise<validationResultWithoutContent> {
     let participantVC: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
-    const _SDParserPipe = new SDParserPipe(sdType)
+    const type = sdType === 'Participant' ? 'LegalPerson' : 'ServiceOffering'
+    const _SDParserPipe = new SDParserPipe(type)
     if (participantSelfDescription.type.includes('VerifiablePresentation')) {
       participantVC = (participantSelfDescription as IVerifiablePresentation)
         .verifiableCredential[0] as unknown as VerifiableCredentialDto<ParticipantSelfDescriptionDto>
@@ -136,7 +137,6 @@ export class SelfDescription2210vpService {
     }
 
     const { selfDescriptionCredential: selfDescription, rawCredentialSubject } = _SDParserPipe.transform(verifiableSelfDescription)
-
     try {
       const type: string = selfDescription.type.find(t => t !== 'VerifiableCredential') // selfDescription.type
 
@@ -238,7 +238,7 @@ export class SelfDescription2210vpService {
 
   private async checkParticipantCredential(selfDescription, jws: string): Promise<boolean> {
     try {
-      const result: boolean = await this.proofService.validate(selfDescription, true, jws)
+      const result: boolean = await this.proofService.validateVC(selfDescription, true, jws)
       return result
     } catch (error) {
       this.logger.error(error)
@@ -246,25 +246,18 @@ export class SelfDescription2210vpService {
     }
   }
 
-  async validateVC(selfDescriptionDto: ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto | VerifiableCredentialDto<any>) {
-    let isValidVC: boolean
-    if (selfDescriptionDto['selfDescriptionCredential']) {
-      isValidVC = await this.proofService.validate(selfDescriptionDto['selfDescriptionCredential'] as VerifiableCredentialDto<any>)
-    } else {
-      isValidVC = await this.proofService.validate(selfDescriptionDto as VerifiableCredentialDto<any>)
-    }
+  async validateVC(verifiableCredential: IVerifiableCredential) {
+    const isValidVC = await this.proofService.validateVC(verifiableCredential as VerifiableCredentialDto<any>)
+
     if (!isValidVC) {
       throw new BadRequestException('VC is not valid')
     }
-    if (
-      selfDescriptionDto['selfDescriptionCredential'] &&
-      selfDescriptionDto['selfDescriptionCredential'].credentialSubject.id === selfDescriptionDto['selfDescriptionCredential'].issuer
-    ) {
+    if (verifiableCredential.credentialSubject.id === verifiableCredential.issuer) {
       return {
         shape: undefined,
         conforms: true
       }
-    } else if (selfDescriptionDto['credentialSubject'] && selfDescriptionDto['credentialSubject'].id === selfDescriptionDto['issuer']) {
+    } else if (verifiableCredential.credentialSubject && verifiableCredential.credentialSubject.id === verifiableCredential.issuer) {
       return {
         shape: undefined,
         conforms: true

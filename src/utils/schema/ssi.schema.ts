@@ -1,5 +1,5 @@
 import Joi from 'joi'
-import { DID_WEB_PATTERN } from '../constants'
+import { DID_WEB_PATTERN } from '../../@types/constants'
 
 const proofSchema = {
   type: Joi.string().required(),

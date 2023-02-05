@@ -1,14 +1,13 @@
-import { ComplianceCredentialDto } from '../dto'
+import { ComplianceCredentialDto, VerifiableCredentialDto } from '../../@types/dto/common'
 import { createHash } from 'crypto'
-import { getDidWeb, getDidWebVerificationMethodIdentifier } from '../utils/did.2210vp.util'
+import { getDidWeb, getDidWebVerificationMethodIdentifier } from '../../utils/methods/did.2210vp.util'
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common'
-import { VerifiableCredentialDto } from '../dto'
 import * as jose from 'jose'
 import * as jsonld from 'jsonld'
-import { SelfDescriptionTypes } from '../enums'
+import { SelfDescriptionTypes } from '../../@types/enums'
 import { DocumentLoader } from './DocumentLoader'
 import { subtle } from '@transmute/web-crypto-key-pair'
-import { ICredential, IVerifiableCredential, IVerifiablePresentation } from '../@types/SSI.types'
+import { ICredential, IVerifiableCredential, IVerifiablePresentation } from '../../@types/type/SSI.types'
 
 export interface Verification {
   protectedHeader: jose.CompactJWSHeaderParameters | undefined
@@ -44,8 +43,8 @@ export class Signature2210vpService {
   async normalize(doc: object): Promise<string> {
     try {
       let canonized
-      if (doc['type'] === 'VC') {
-        canonized = await jsonld.canonize(doc['selfDescriptionCredential'], {
+      if ((doc['type'] as string[]).includes('VerifiablePresentation') || (doc['type'] as string[]).includes('VerifiableCredential')) {
+        canonized = await jsonld.canonize(doc, {
           algorithm: 'URDNA2015',
           format: 'application/n-quads',
           //TODO FMA-23

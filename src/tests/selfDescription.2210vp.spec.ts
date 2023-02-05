@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing'
 
-import { ParticipantModule } from '../../participant/participant.module'
-import { AppModule } from '../../app.module'
-import { IVerifiablePresentation } from '../@types/SSI.types'
-import { SelfDescription2210vpService } from './selfDescription.2210vp.service'
+import { AppModule } from '../app.module'
+import { SelfDescription2210vpService } from '../methods/common/selfDescription.2210vp.service'
+import { ParticipantModule } from '../modules/participant.module'
+import { IVerifiablePresentation } from '../@types/type/SSI.types'
 
 describe('ParticipantService', () => {
   let selfDescriptionService: SelfDescription2210vpService

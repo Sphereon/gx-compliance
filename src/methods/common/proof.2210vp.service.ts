@@ -1,16 +1,17 @@
 import { ConflictException, Injectable } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
-import { ParticipantSelfDescriptionDto } from '../../participant/dto/participant-sd.dto'
+import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant'
 import { RegistryService } from './registry.service'
-import { ServiceOfferingSelfDescriptionDto } from '../../service-offering/dto/service-offering-sd.dto'
-import { VerifiableCredentialDto } from '../dto/credential-meta.dto'
+import { ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
+import { VerifiableCredentialDto } from '../../@types/dto/common'
 import * as jose from 'jose'
-import { METHOD_IDS } from '../constants'
+import { METHOD_IDS } from '../../@types/constants'
 import { DIDDocument, Resolver } from 'did-resolver'
 import web from 'web-did-resolver'
-import { IVerifiablePresentation } from '../@types/SSI.types'
+import { IProof, IVerifiablePresentation, WrappedVerifiablePresentation } from '../../@types/type/SSI.types'
 import { CERT_CHAIN } from './suits/mockData'
 import { Signature2210vpService, Verification } from './signature.2010vp.service'
+import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
 
 @Injectable()
 export class Proof2210vpService {
@@ -20,36 +21,51 @@ export class Proof2210vpService {
     private readonly signatureService: Signature2210vpService
   ) {}
 
-  public async validate(
-    selfDescriptionCredential:
-      | VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
-      | IVerifiablePresentation
-      | VerifiableCredentialDto<any>,
-    isValidityCheck?: boolean,
-    jws?: string
-  ): Promise<boolean> {
-    const { x5u, publicKeyJwk } = await this.getPublicKeys(selfDescriptionCredential)
+  public async validateVC(verifiableCredential: VerifiableCredentialDto<any>, isValidityCheck?: boolean, jws?: string): Promise<boolean> {
+    const { x5u, publicKeyJwk } = await this.getPublicKeys(verifiableCredential.proof as IProof)
     const certificatesRaw: string = await this.loadCertificatesRaw(x5u)
 
     //TODO: disabled for self signed certificates
     const isValidChain = true //await this.registryService.isValidCertificateChain(certificatesRaw)
 
-    if (!isValidChain) throw new ConflictException(`X509 certificate chain could not be resolved against registry trust anchors.`)
-    if (!(await this.publicKeyMatchesCertificate(publicKeyJwk, certificatesRaw)))
+    if (!isValidChain) {
+      throw new ConflictException(`X509 certificate chain could not be resolved against registry trust anchors.`)
+    }
+    if (!(await this.publicKeyMatchesCertificate(publicKeyJwk, certificatesRaw))) {
       throw new ConflictException(`Public Key does not match certificate chain.`)
+    }
 
-    const input = (selfDescriptionCredential as any).selfDescription ? (selfDescriptionCredential as any)?.selfDescription : selfDescriptionCredential
-
-    const isValidSignature = await this.checkSignature(input, isValidityCheck, jws, selfDescriptionCredential.proof, publicKeyJwk)
+    const isValidSignature = await this.checkSignature(verifiableCredential, isValidityCheck, jws, verifiableCredential.proof, publicKeyJwk)
 
     if (!isValidSignature) throw new ConflictException(`Provided signature does not match Self Description.`)
 
     return true
   }
 
-  private async getPublicKeys(selfDescriptionCredential) {
-    const didEndIdx = (selfDescriptionCredential.proof.verificationMethod as string).indexOf('#')
-    const { verificationMethod, id } = await this.loadDDO(selfDescriptionCredential.proof.verificationMethod.substring(0, didEndIdx))
+  public async validateVP(verifiablePresentation: VerifiablePresentationDto, isValidityCheck?: boolean, jws?: string): Promise<boolean> {
+    const { x5u, publicKeyJwk } = await this.getPublicKeys(verifiablePresentation.proof)
+    const certificatesRaw: string = await this.loadCertificatesRaw(x5u)
+
+    //TODO: disabled for self signed certificates
+    const isValidChain = true //await this.registryService.isValidCertificateChain(certificatesRaw)
+
+    if (!isValidChain) {
+      throw new ConflictException(`X509 certificate chain could not be resolved against registry trust anchors.`)
+    }
+    if (!(await this.publicKeyMatchesCertificate(publicKeyJwk, certificatesRaw))) {
+      throw new ConflictException(`Public Key does not match certificate chain.`)
+    }
+
+    const isValidSignature = await this.checkSignature(verifiablePresentation, isValidityCheck, jws, verifiablePresentation.proof, publicKeyJwk)
+
+    if (!isValidSignature) throw new ConflictException(`Provided signature does not match Self Description.`)
+
+    return true
+  }
+
+  public async getPublicKeys(proof: IProof) {
+    const didEndIdx = (proof.verificationMethod as string).indexOf('#')
+    const { verificationMethod, id } = await this.loadDDO(proof.verificationMethod.substring(0, didEndIdx))
 
     const jwk = verificationMethod.find(method => METHOD_IDS.includes(method.id) || method.id.startsWith(id))
     if (!jwk) throw new ConflictException(`verificationMethod ${verificationMethod} not found in did document`)
@@ -64,14 +80,11 @@ export class Proof2210vpService {
   }
 
   private async checkSignature(selfDescription, isValidityCheck: boolean, jws: string, proof, jwk: any): Promise<boolean> {
-    /* /!**
-      * These two branches are temporarily disabled. Re-enable them later
-      *!/
-     if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiableCredential') !== -1) {
-       return await this.signatureService.checkVcSignature(selfDescription, jwk)
-     } else if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiablePresentation') !== -1) {
-       return await this.signatureService.checkVpSignature(selfDescription, jwk)
-     }*/
+    /*if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiableCredential') !== -1) {
+      return await this.signatureService.checkVcSignature(selfDescription, jwk)
+    } else if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiablePresentation') !== -1) {
+      return await this.signatureService.checkVpSignature(selfDescription, jwk)
+    }*/
     delete selfDescription.proof
 
     const normalizedSD: string = await this.signatureService.normalize(selfDescription)
@@ -107,7 +120,7 @@ export class Proof2210vpService {
     }
   }
 
-  private async loadCertificatesRaw(url: string): Promise<string> {
+  public async loadCertificatesRaw(url: string): Promise<string> {
     //todo: removed this
     if (url === 'https://f825-87-213-241-251.eu.ngrok.io/.well-known/ca-chain.pem') {
       return CERT_CHAIN

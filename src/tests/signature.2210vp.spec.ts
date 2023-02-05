@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing'
-import { AppModule } from '../../app.module'
+import { AppModule } from '../app.module'
 import * as jose from 'jose'
-import { IVerifiableCredential, IVerifiablePresentation } from '../@types/SSI.types'
-import { Signature2210vpService } from './signature.2010vp.service'
+import { Signature2210vpService } from '../methods/common/signature.2010vp.service'
+import { IVerifiableCredential, IVerifiablePresentation } from '../@types/type/SSI.types'
 
 describe('SignatureService', () => {
   const algorithm = 'PS256'

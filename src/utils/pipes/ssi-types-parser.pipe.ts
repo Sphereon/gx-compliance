@@ -64,7 +64,9 @@ export class SsiTypesParserPipe
       [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE['@type']
     }
     const sdType = sdTypes[type]
-
+    if (!sdType) {
+      return key
+    }
     const keyType = sdType.substring(0, sdType.lastIndexOf(':') + 1)
 
     return key.replace(keyType, '')

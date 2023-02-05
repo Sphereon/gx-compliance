@@ -5,10 +5,11 @@ import { join } from 'path'
 export const X509_VERIFICATION_METHOD_NAME = 'X509-JWK2020'
 export const DID_DOC_FILE_PATH = join(__dirname, '../../utils/static/.well-known/did.json')
 export const X509_CERTIFICATE_CHAIN_URI = `${process.env.BASE_URL}/.well-known/x509CertificateChain.pem`
-export const X509_CERTIFICATE_CHAIN_FILE_PATH = join(__dirname, '../../utils/static/.well-known/x509CertificateChain.pem')
+export const X509_CERTIFICATE_CHAIN_FILE_PATH = join(__dirname, '../static/.well-known/x509CertificateChain.pem')
 
 export function getDidWeb() {
-  return `did:web:${process.env.BASE_URL.replace(/http[s]?:\/\//, '').replace('/', ':')}`
+  return 'did:web:e92e-87-213-241-251.eu.ngrok.io'
+  // return `did:web:${process.env.BASE_URL.replace(/http[s]?:\/\//, '').replace('/', ':')}`
 }
 
 export async function createDidDocument() {

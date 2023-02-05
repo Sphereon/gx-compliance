@@ -18,7 +18,7 @@ import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TY
 import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
 import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant'
 import { ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
-import { IVerifiableCredential, IVerifiablePresentation } from '../../@types/type/SSI.types'
+import { IVerifiableCredential, IVerifiablePresentation, WrappedVerifiablePresentation } from '../../@types/type/SSI.types'
 import { SDParserPipe } from '../../utils/pipes'
 
 @Injectable()
@@ -35,10 +35,8 @@ export class SelfDescription2210vpService {
     private readonly proofService: Proof2210vpService
   ) {}
 
-  public async validate(signedSelfDescription: SignedSelfDescriptionDto<CredentialSubjectDto>): Promise<validationResultWithoutContent> {
-    const { selfDescriptionCredential: selfDescription, raw, rawCredentialSubject, complianceCredential, proof } = signedSelfDescription
-
-    const type: string = selfDescription.type.find(t => t !== 'VerifiableCredential')
+  public async validate(wrappedVerifiablePresentation: WrappedVerifiablePresentation): Promise<validationResultWithoutContent> {
+    const type = wrappedVerifiablePresentation.type === 'Participant'? 'LegalPerson': 'ServiceOfferingExperimental'
     const shapePath: string = this.getShapePath(type)
     if (!shapePath) throw new BadRequestException('Provided Type does not exist for Self Descriptions')
 
@@ -47,22 +45,27 @@ export class SelfDescription2210vpService {
       [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
     }
 
-    if (!(type in expectedContexts)) throw new ConflictException('Provided Type is not supported')
-
+    if (!(type in expectedContexts)) {
+      throw new ConflictException('Provided Type is not supported')
+    }
+    const rawCredentialSubject =
+      wrappedVerifiablePresentation.type === 'Participant'
+        ? wrappedVerifiablePresentation.participantCredentials[0].rawCredentialSubject
+        : wrappedVerifiablePresentation.serviceOfferingCredentials[0].rawCredentialSubject
     const rawPrepared = {
       ...JSON.parse(rawCredentialSubject), // TODO: refactor to object, check if raw is still needed
-      ...expectedContexts[type]
+      ...expectedContexts[wrappedVerifiablePresentation.type]
     }
     const selfDescriptionDataset: DatasetExt = await this.shaclService.loadFromJsonLD(JSON.stringify(rawPrepared))
 
     const shape: ValidationResult = await this.shaclService.validate(await this.getShaclShape(shapePath), selfDescriptionDataset)
     // const content: ValidationResult = await this.validateContent(selfDescription, type)
 
-    const parsedRaw = JSON.parse(raw)
+    const parsedRaw = JSON.parse(wrappedVerifiablePresentation.participantCredentials[0].raw)
 
     const isValidSignature: boolean = await this.checkParticipantCredential(
-      { selfDescription: parsedRaw, proof: complianceCredential?.proof },
-      proof?.jws
+      { selfDescription: parsedRaw, proof: wrappedVerifiablePresentation.complianceCredentials[0].proof },
+      wrappedVerifiablePresentation.participantCredentials[0].proof.jws
     )
 
     const conforms: boolean = shape.conforms && isValidSignature // && content.conforms
@@ -216,16 +219,6 @@ export class SelfDescription2210vpService {
 
   //   return (await validationFns[type]()) || undefined
   // }
-
-  private async validateProvidedByParticipantSelfDescriptions(
-    providedBy: ServiceOfferingSelfDescriptionDto['providedBy']
-  ): Promise<validationResultWithoutContent> {
-    const response = await this.httpService.get(providedBy).toPromise()
-    const { data } = response
-
-    const participantSD = new SDParserPipe(SelfDescriptionTypes.PARTICIPANT).transform(data)
-    return await this.validate(participantSD)
-  }
 
   private getShapePath(type: string): string | undefined {
     const shapePathType = {

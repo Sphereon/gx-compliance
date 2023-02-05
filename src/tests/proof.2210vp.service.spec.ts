@@ -7,6 +7,7 @@ import { ParticipantSelfDescriptionDto } from '../@types/dto/participant/'
 import nock from 'nock'
 import { MockData } from './fixtures/mockData'
 import { IVerifiablePresentation } from '../@types/type/SSI.types'
+import { VerifiablePresentationDto } from '../@types/dto/common/presentation-meta.dto'
 
 describe('ProofService', () => {
   let proofService: Proof2210vpService
@@ -37,7 +38,7 @@ describe('ProofService', () => {
     const sd: VerifiableCredentialDto<ParticipantSelfDescriptionDto> =
       mockData.selfDescription as unknown as VerifiableCredentialDto<ParticipantSelfDescriptionDto>
     process.env.privateKey = mockData.privateKey
-    expect(await proofService.validate(sd)).toBe(true)
+    expect(await proofService.validateVC(sd)).toBe(true)
   }, 30000)
 
   it('returns true if validate function passes with an VP object', async () => {
@@ -101,6 +102,6 @@ describe('ProofService', () => {
       }
     }
     process.env.privateKey = mockData.privateKey
-    expect(await proofService.validate(vp)).toBe(true)
+    expect(await proofService.validateVP(vp as VerifiablePresentationDto)).toBe(true)
   }, 30000)
 })

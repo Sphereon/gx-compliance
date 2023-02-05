@@ -14,7 +14,7 @@ import { validationResultWithoutContent } from '../../@types/type'
 import SphereonParticipantVP from '../../tests/fixtures/2010VP/sphereon-participant-vp.json'
 import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
 import { SsiTypesParserPipe } from '../../utils/pipes/ssi-types-parser.pipe'
-import { IVerifiableCredential, WrappedVerifiableCredential } from '../../@types/type/SSI.types'
+import { IVerifiableCredential, WrappedVerifiableCredential, WrappedVerifiablePresentation } from '../../@types/type/SSI.types'
 
 const credentialType = CredentialTypes.participant
 @ApiTags(credentialType)
@@ -43,10 +43,10 @@ export class Participant2210vpController {
   @HttpCode(HttpStatus.OK)
   async verifyParticipantVP(
     @Body(new JoiValidationPipe(VerifiablePresentationSchema), new SsiTypesParserPipe())
-    signedSelfDescriptionDto: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>,
+    wrappedVerifiablePresentation: WrappedVerifiablePresentation,
     @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean
   ): Promise<ValidationResultDto> {
-    const validationResult: ValidationResultDto = await this.verifyAndStoreSignedParticipantVP(signedSelfDescriptionDto, storeSD)
+    const validationResult: ValidationResultDto = await this.verifyAndStoreSignedParticipantVP(wrappedVerifiablePresentation, storeSD)
     return validationResult
   }
 
@@ -68,23 +68,21 @@ export class Participant2210vpController {
     return validationResult
   }
 
-  private async verifyAndStoreSignedParticipantVP(
-    participantSelfDescription: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>,
-    storeSD?: boolean
-  ) {
-    const result = await this.verifySignedParticipantVP(participantSelfDescription)
-    if (result?.conforms && storeSD) result.storedSdUrl = await this.selfDescriptionService.storeSelfDescription(participantSelfDescription)
+  private async verifyAndStoreSignedParticipantVP(wrappedVerifiablePresentation: WrappedVerifiablePresentation, storeSD?: boolean) {
+    const result = await this.verifySignedParticipantVP(wrappedVerifiablePresentation)
+    if (result?.conforms && storeSD) {
+      result.storedSdUrl = await this.selfDescriptionService.storeSelfDescription(JSON.parse(wrappedVerifiablePresentation.raw))
+    }
 
     return result
   }
 
-  private async verifySignedParticipantVP(
-    participantSelfDescription: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>
-  ): Promise<ValidationResultDto> {
-    const validationResult = await this.selfDescriptionService.validate(participantSelfDescription)
+  private async verifySignedParticipantVP(wrappedVerifiablePresentation: WrappedVerifiablePresentation): Promise<ValidationResultDto> {
+    const validationResult = await this.selfDescriptionService.validate(wrappedVerifiablePresentation)
 
     const content = await this.participantContentValidationService.validate(
-      (participantSelfDescription.selfDescriptionCredential as VerifiableCredentialDto<ParticipantSelfDescriptionDto>).credentialSubject
+      //fixme: handle it in a better way
+      wrappedVerifiablePresentation.participantCredentials.pop().transformedCredentialSubject as unknown as ParticipantSelfDescriptionDto
     )
     validationResult.conforms = validationResult.conforms && content.conforms
     if (!validationResult.conforms)

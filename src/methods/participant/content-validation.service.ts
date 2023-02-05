@@ -8,6 +8,7 @@ import { AddressDto } from '../../@types/dto/common'
 import { RegistryService } from '../common'
 import { RegistrationNumberDto } from '../../@types/dto/participant/registration-number.dto'
 import { _ } from 'lodash'
+import {ICredentialSubject} from "../../@types/type/SSI.types";
 @Injectable()
 export class ParticipantContentValidationService {
   constructor(

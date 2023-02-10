@@ -17,7 +17,6 @@ import { getDidWeb, getTypeFromSelfDescription } from '../methods'
 export class SsiTypesParserPipe
   implements PipeTransform<VerifiableCredentialDto<any> | VerifiablePresentationDto, TypedVerifiableCredential | TypedVerifiablePresentation>
 {
-  // TODO extract to common const
   private readonly addressFields = ['legalAddress', 'headquarterAddress']
 
   transform(

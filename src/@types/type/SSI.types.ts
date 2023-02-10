@@ -1,6 +1,7 @@
 /**
  * Contents of this file is copied from @sphereon/ssi-types
  */
+import { VerifiablePresentationDto } from '../dto/common/presentation-meta.dto'
 
 export interface ICredential {
   // If exp is present, the UNIX timestamp MUST be converted to an [XMLSCHEMA11-2] date-time, and MUST be used to set the value of the expirationDate property of credentialSubject of the new JSON object.

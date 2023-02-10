@@ -18,8 +18,10 @@ import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TY
 import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
 import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant'
 import { ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
-import { IVerifiableCredential, IVerifiablePresentation, WrappedVerifiablePresentation } from '../../@types/type/SSI.types'
+import { IntentType, IVerifiableCredential, TypedVerifiableCredential, TypedVerifiablePresentation } from '../../@types/type/SSI.types'
 import { SDParserPipe } from '../../utils/pipes'
+import { getDidWeb } from '../../utils/methods'
+import { SsiTypesParserPipe } from '../../utils/pipes/ssi-types-parser.pipe'
 
 @Injectable()
 export class SelfDescription2210vpService {
@@ -35,48 +37,64 @@ export class SelfDescription2210vpService {
     private readonly proofService: Proof2210vpService
   ) {}
 
-  public async validate(wrappedVerifiablePresentation: WrappedVerifiablePresentation): Promise<validationResultWithoutContent> {
-    const type = wrappedVerifiablePresentation.type === 'Participant'? 'LegalPerson': 'ServiceOfferingExperimental'
-    const shapePath: string = this.getShapePath(type)
-    if (!shapePath) throw new BadRequestException('Provided Type does not exist for Self Descriptions')
+  public async validate(typedVerifiablePresentation: TypedVerifiablePresentation): Promise<validationResultWithoutContent> {
+    if (typedVerifiablePresentation.intent !== IntentType.GET_COMPLIANCE_PARTICIPANT) {
+      if (
+        !SsiTypesParserPipe.hasVerifiableCredential(
+          typedVerifiablePresentation.originalVerifiablePresentation,
+          'LegalPerson',
+          typedVerifiablePresentation.originalVerifiablePresentation.holder
+        )
+      ) {
+        throw new BadRequestException('Expected a VerifiableCredential of type LegalPerson')
+      }
+      const complianceVC = SsiTypesParserPipe.getTypedVerifiableCredentialWithTypeAndIssuer(
+        typedVerifiablePresentation,
+        'ParticipantCredential',
+        getDidWeb()
+      )
+      const legalPersonVC = SsiTypesParserPipe.getTypedVerifiableCredentialWithTypeAndIssuer(
+        typedVerifiablePresentation,
+        'LegalPerson',
+        typedVerifiablePresentation.originalVerifiablePresentation.holder
+      )
+      const serviceOfferingVC = SsiTypesParserPipe.getTypedVerifiableCredentialWithTypeAndIssuer(
+        typedVerifiablePresentation,
+        'ServiceOffering',
+        typedVerifiablePresentation.originalVerifiablePresentation.holder
+      )
 
-    const expectedContexts = {
-      [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE,
-      [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
-    }
-
-    if (!(type in expectedContexts)) {
-      throw new ConflictException('Provided Type is not supported')
-    }
-    const rawCredentialSubject =
-      wrappedVerifiablePresentation.type === 'Participant'
-        ? wrappedVerifiablePresentation.participantCredentials[0].rawCredentialSubject
-        : wrappedVerifiablePresentation.serviceOfferingCredentials[0].rawCredentialSubject
-    const rawPrepared = {
-      ...JSON.parse(rawCredentialSubject), // TODO: refactor to object, check if raw is still needed
-      ...expectedContexts[wrappedVerifiablePresentation.type]
-    }
-    const selfDescriptionDataset: DatasetExt = await this.shaclService.loadFromJsonLD(JSON.stringify(rawPrepared))
-
-    const shape: ValidationResult = await this.shaclService.validate(await this.getShaclShape(shapePath), selfDescriptionDataset)
-    // const content: ValidationResult = await this.validateContent(selfDescription, type)
-
-    const parsedRaw = JSON.parse(wrappedVerifiablePresentation.participantCredentials[0].raw)
-
-    const isValidSignature: boolean = await this.checkParticipantCredential(
-      { selfDescription: parsedRaw, proof: wrappedVerifiablePresentation.complianceCredentials[0].proof },
-      wrappedVerifiablePresentation.participantCredentials[0].proof.jws
-    )
-
-    const conforms: boolean = shape.conforms && isValidSignature // && content.conforms
-
-    return {
-      conforms,
-      shape,
-      // content,
-      isValidSignature
+      const expectedContexts = {
+        [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE,
+        [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
+      }
+      //fixme: @nklomp because this should be always present at this point?
+      const legalPersonShapeValidation = await this.checkCredentialShape(legalPersonVC, expectedContexts[legalPersonVC.type])
+      let serviceOfferingShapeValidation
+      if (serviceOfferingVC) {
+        serviceOfferingShapeValidation = this.checkCredentialShape(serviceOfferingVC, expectedContexts[serviceOfferingVC.type])
+      }
+      const isValidSignature: boolean = await this.checkParticipantCredential(
+        { selfDescription: legalPersonVC.rawVerifiableCredential, proof: complianceVC.rawVerifiableCredential.proof },
+        legalPersonVC.rawVerifiableCredential.proof.jws
+      )
+      const shapeResult: ValidationResult = serviceOfferingShapeValidation
+        ? {
+            ...serviceOfferingShapeValidation,
+            ...legalPersonShapeValidation,
+            conforms: serviceOfferingShapeValidation.conforms && legalPersonShapeValidation.conforms
+          }
+        : legalPersonShapeValidation
+      const conforms: boolean = shapeResult.conforms && isValidSignature // && content.conforms
+      return {
+        conforms,
+        shape: shapeResult,
+        // content,
+        isValidSignature
+      }
     }
   }
+
   public async validateVP(signedSelfDescription: VerifiablePresentationDto): Promise<validationResultWithoutContent> {
     const serviceOfferingVC = signedSelfDescription.verifiableCredential.filter(vc => vc.type.includes('ServiceOfferingExperimental'))[0]
     const participantVC = signedSelfDescription.verifiableCredential.filter(vc => vc.type.includes('ParticipantCredential'))[0]
@@ -114,18 +132,13 @@ export class SelfDescription2210vpService {
 
   //TODO: Could be potentially merged with validate()
   public async validateSelfDescription(
-    participantSelfDescription: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto> | IVerifiablePresentation,
+    participantSelfDescription: TypedVerifiablePresentation,
     sdType: string
   ): Promise<validationResultWithoutContent> {
-    let participantVC: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
-    const type = sdType === 'Participant' ? 'LegalPerson' : 'ServiceOffering'
-    const _SDParserPipe = new SDParserPipe(type)
-    if (participantSelfDescription.type.includes('VerifiablePresentation')) {
-      participantVC = (participantSelfDescription as IVerifiablePresentation)
-        .verifiableCredential[0] as unknown as VerifiableCredentialDto<ParticipantSelfDescriptionDto>
-    } else {
-      participantVC = participantSelfDescription as VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>
-    }
+    // const type = sdType === 'Participant' || sdType === 'LegalPerson' ? 'LegalPerson' : 'ServiceOffering'
+    const _SDParserPipe = new SDParserPipe('LegalPerson')
+    //fixme: we're getting the number 0 on the list, but it should consider the issuer for getting the right value? or is it the case that this credential should be singular in this list?
+    const participantTypedVC = participantSelfDescription.getTypedVerifiableCredentials('LegalPerson')[0]
     const verifiableSelfDescription: VerifiableSelfDescriptionDto<CredentialSubjectDto> = {
       complianceCredential: {
         proof: {} as SignatureDto,
@@ -136,27 +149,19 @@ export class SelfDescription2210vpService {
         issuer: '',
         issuanceDate: new Date().toISOString()
       },
-      selfDescriptionCredential: { ...participantVC }
+      selfDescriptionCredential: { ...participantTypedVC.rawVerifiableCredential } as VerifiableCredentialDto<any>
     }
 
-    const { selfDescriptionCredential: selfDescription, rawCredentialSubject } = _SDParserPipe.transform(verifiableSelfDescription)
+    const { selfDescriptionCredential: selfDescription } = _SDParserPipe.transform(verifiableSelfDescription)
     try {
       const type: string = selfDescription.type.find(t => t !== 'VerifiableCredential') // selfDescription.type
-
-      const rawPrepared: any = {
-        ...JSON.parse(rawCredentialSubject),
-        ...(type === 'LegalPerson' ? EXPECTED_PARTICIPANT_CONTEXT_TYPE : EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE)
-      }
-
-      const selfDescriptionDataset: DatasetExt = await this.shaclService.loadFromJsonLD(JSON.stringify(rawPrepared))
-
-      const shapePath: string = this.getShapePath(type)
-      const shape: ValidationResult = await this.shaclService.validate(await this.getShaclShape(shapePath), selfDescriptionDataset)
+      const shape: ValidationResult = await this.checkCredentialShape(
+        participantTypedVC,
+        type === 'LegalPerson' ? EXPECTED_PARTICIPANT_CONTEXT_TYPE : EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
+      )
 
       // const content: ValidationResult = await this.validateContent(selfDescription, type)
-
       const conforms: boolean = shape.conforms // && content.conforms
-
       const result = {
         conforms,
         //content,
@@ -261,5 +266,16 @@ export class SelfDescription2210vpService {
         conforms: false
       }
     }
+  }
+
+  private async checkCredentialShape(typedVerifiableCredential: TypedVerifiableCredential, context: any): Promise<ValidationResult> {
+    const shapePath: string = this.getShapePath(typedVerifiableCredential.type)
+    const rawCredentialSubject = typedVerifiableCredential.rawVerifiableCredential.credentialSubject
+    const rawPrepared = {
+      ...rawCredentialSubject, // TODO: refactor to object, check if raw is still needed
+      ...context
+    }
+    const selfDescriptionDataset: DatasetExt = await this.shaclService.loadFromJsonLD(JSON.stringify(rawPrepared))
+    return await this.shaclService.validate(await this.getShaclShape(shapePath), selfDescriptionDataset)
   }
 }

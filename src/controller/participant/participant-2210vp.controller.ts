@@ -2,7 +2,7 @@ import { ApiBody, ApiExtraModels, ApiOperation, ApiQuery, ApiTags } from '@nestj
 import { Body, ConflictException, Controller, HttpCode, HttpStatus, Post, Query } from '@nestjs/common'
 import { ApiVerifyResponse } from '../../utils/decorators'
 import { getApiVerifyBodySchema } from '../../utils/methods'
-import { SignedSelfDescriptionDto, ValidationResultDto, VerifiableCredentialDto } from '../../@types/dto/common'
+import { ValidationResultDto, VerifiableCredentialDto } from '../../@types/dto/common'
 import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant'
 import { JoiValidationPipe, BooleanQueryValidationPipe } from '../../utils/pipes'
 import { vcSchema, VerifiablePresentationSchema } from '../../utils/schema/ssi.schema'
@@ -14,7 +14,7 @@ import { validationResultWithoutContent } from '../../@types/type'
 import SphereonParticipantVP from '../../tests/fixtures/2010VP/sphereon-participant-vp.json'
 import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
 import { SsiTypesParserPipe } from '../../utils/pipes/ssi-types-parser.pipe'
-import { IVerifiableCredential, WrappedVerifiableCredential, WrappedVerifiablePresentation } from '../../@types/type/SSI.types'
+import { IVerifiableCredential, TypedVerifiableCredential, TypedVerifiablePresentation } from '../../@types/type/SSI.types'
 
 const credentialType = CredentialTypes.participant
 @ApiTags(credentialType)
@@ -43,7 +43,7 @@ export class Participant2210vpController {
   @HttpCode(HttpStatus.OK)
   async verifyParticipantVP(
     @Body(new JoiValidationPipe(VerifiablePresentationSchema), new SsiTypesParserPipe())
-    wrappedVerifiablePresentation: WrappedVerifiablePresentation,
+    wrappedVerifiablePresentation: TypedVerifiablePresentation,
     @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean
   ): Promise<ValidationResultDto> {
     const validationResult: ValidationResultDto = await this.verifyAndStoreSignedParticipantVP(wrappedVerifiablePresentation, storeSD)
@@ -62,27 +62,29 @@ export class Participant2210vpController {
   @HttpCode(HttpStatus.OK)
   async validateParticipantVC(
     @Body(new JoiValidationPipe(vcSchema), new SsiTypesParserPipe())
-    participantVC: WrappedVerifiableCredential
+    participantVC: TypedVerifiableCredential
   ): Promise<ValidationResultDto> {
-    const validationResult: ValidationResultDto = await this.validateSignedParticipantVC(JSON.parse(participantVC.raw))
+    const validationResult: ValidationResultDto = await this.validateSignedParticipantVC(participantVC.rawVerifiableCredential)
     return validationResult
   }
 
-  private async verifyAndStoreSignedParticipantVP(wrappedVerifiablePresentation: WrappedVerifiablePresentation, storeSD?: boolean) {
-    const result = await this.verifySignedParticipantVP(wrappedVerifiablePresentation)
+  private async verifyAndStoreSignedParticipantVP(typedVerifiablePresentation: TypedVerifiablePresentation, storeSD?: boolean) {
+    const result = await this.verifySignedParticipantVP(typedVerifiablePresentation)
     if (result?.conforms && storeSD) {
-      result.storedSdUrl = await this.selfDescriptionService.storeSelfDescription(JSON.parse(wrappedVerifiablePresentation.raw))
+      result.storedSdUrl = await this.selfDescriptionService.storeSelfDescription(
+        typedVerifiablePresentation.originalVerifiablePresentation as VerifiablePresentationDto
+      )
     }
 
     return result
   }
 
-  private async verifySignedParticipantVP(wrappedVerifiablePresentation: WrappedVerifiablePresentation): Promise<ValidationResultDto> {
-    const validationResult = await this.selfDescriptionService.validate(wrappedVerifiablePresentation)
+  private async verifySignedParticipantVP(typedVerifiablePresentation: TypedVerifiablePresentation): Promise<ValidationResultDto> {
+    const validationResult = await this.selfDescriptionService.validate(typedVerifiablePresentation)
 
     const content = await this.participantContentValidationService.validate(
-      //fixme: handle it in a better way
-      wrappedVerifiablePresentation.participantCredentials.pop().transformedCredentialSubject as unknown as ParticipantSelfDescriptionDto
+      typedVerifiablePresentation.getTypedVerifiableCredentials('LegalPerson')[0]
+        .transformedCredentialSubject as unknown as ParticipantSelfDescriptionDto
     )
     validationResult.conforms = validationResult.conforms && content.conforms
     if (!validationResult.conforms)
@@ -93,7 +95,7 @@ export class Participant2210vpController {
 
   private async validateSignedParticipantVC(participantVC: IVerifiableCredential) {
     const validationResult: validationResultWithoutContent = await this.selfDescriptionService.validateVC(participantVC)
-    //fixme validate should recieve the credentialSubject
+    //fixme validate should receive the credentialSubject
     const content = await this.participantContentValidationService.validate(
       participantVC.credentialSubject as unknown as ParticipantSelfDescriptionDto
     )

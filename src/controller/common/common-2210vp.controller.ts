@@ -5,21 +5,20 @@ import { SelfDescription2210vpService } from '../../methods/common/selfDescripti
 import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant'
 import { ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
 import { VerifiableCredentialDto } from '../../@types/dto/common'
-import ComplianceRequests from '../../tests/fixtures/2010VP/compliance-request-vps.json'
+import ComplianceRequests from '../../tests/fixtures/2010VP/common-compliance-objects.json'
 import { JoiValidationPipe } from '../../utils/pipes'
 import { VerifiablePresentationSchema } from '../../utils/schema/ssi.schema'
 import { CredentialTypes } from '../../@types/enums'
 import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
-import { IVerifiableCredential, WrappedVerifiablePresentation } from '../../@types/type/SSI.types'
+import { IVerifiableCredential, TypedVerifiablePresentation } from '../../@types/type/SSI.types'
 import { Signature2210vpService } from '../../methods/common/signature.2010vp.service'
 import { SsiTypesParserPipe } from '../../utils/pipes/ssi-types-parser.pipe'
 
 const credentialType = CredentialTypes.common
 
 const commonSDExamples = {
-  participant: { summary: 'Participant SD Example', value: ComplianceRequests.selfDescriptionCredential },
-  //todo: add service offering sd example
-  service: { summary: 'Service Offering Experimental SD Example', value: ComplianceRequests.selfDescriptionCredential }
+  participant: { summary: 'Participant SD Example', value: ComplianceRequests.selfDescriptionGaiax },
+  service: { summary: 'Service Offering Experimental SD Example', value: ComplianceRequests.serviceOfferingGaiax }
 }
 
 @ApiTags(credentialType)
@@ -46,19 +45,20 @@ export class Common2010VPController {
   })
   @ApiBody({
     type: VerifiablePresentationDto,
-    //fixme: create examples for compliance
     examples: commonSDExamples
   })
   @ApiOperation({ summary: 'Gets a selfDescribed VP and returns a Compliance VC in response' })
   @UsePipes(new JoiValidationPipe(VerifiablePresentationSchema), new SsiTypesParserPipe())
   @Post('compliance')
-  async createComplianceCredential(@Body() wrappedVerifiablePresentation: WrappedVerifiablePresentation): Promise<IVerifiableCredential> {
-    const sd = JSON.parse(wrappedVerifiablePresentation.raw)
+  async createComplianceCredential(@Body() typedVerifiablePresentation: TypedVerifiablePresentation): Promise<IVerifiableCredential> {
+    const sd = JSON.parse(JSON.stringify(typedVerifiablePresentation.originalVerifiablePresentation))
     await this.proofService.validateVP(sd)
-    const type: string = wrappedVerifiablePresentation.type
+    const type: string = SsiTypesParserPipe.hasVerifiableCredential(typedVerifiablePresentation.originalVerifiablePresentation, 'ServiceOffering')
+      ? 'ServiceOffering'
+      : 'LegalPerson'
 
-    await this.selfDescriptionService.validateSelfDescription(sd, type)
-    return await this.signatureService.createComplianceCredentialFromSelfDescription(sd)
+    await this.selfDescriptionService.validateSelfDescription(typedVerifiablePresentation, type)
+    return await this.signatureService.createComplianceCredentialFromSelfDescription(typedVerifiablePresentation.originalVerifiablePresentation)
   }
 
   @Post('normalize')

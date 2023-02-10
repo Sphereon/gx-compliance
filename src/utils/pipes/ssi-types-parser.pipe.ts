@@ -1,22 +1,28 @@
-import { PipeTransform, Injectable, BadRequestException, ConflictException } from '@nestjs/common'
+import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common'
 import { AddressDto, VerifiableCredentialDto } from '../../@types/dto/common'
 import { SelfDescriptionTypes } from '../../@types/enums'
 import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../../@types/constants'
 import { RegistrationNumberDto } from '../../@types/dto/participant'
 import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
-import { IProof, IVerifiableCredential, WrappedVerifiableCredential, WrappedVerifiablePresentation } from '../../@types/type/SSI.types'
+import {
+  IntentType,
+  IVerifiableCredential,
+  IVerifiablePresentation,
+  TypedVerifiableCredential,
+  TypedVerifiablePresentation
+} from '../../@types/type/SSI.types'
+import { getDidWeb, getTypeFromSelfDescription } from '../methods'
 
-//fixme: once rebased to 2210-Henry, use constants instead of literal strings
 @Injectable()
 export class SsiTypesParserPipe
-  implements PipeTransform<VerifiableCredentialDto<any> | VerifiablePresentationDto, WrappedVerifiableCredential | WrappedVerifiablePresentation>
+  implements PipeTransform<VerifiableCredentialDto<any> | VerifiablePresentationDto, TypedVerifiableCredential | TypedVerifiablePresentation>
 {
   // TODO extract to common const
   private readonly addressFields = ['legalAddress', 'headquarterAddress']
 
   transform(
     verifiableSelfDescriptionDto: VerifiableCredentialDto<any> | VerifiablePresentationDto
-  ): WrappedVerifiableCredential | WrappedVerifiablePresentation {
+  ): TypedVerifiableCredential | TypedVerifiablePresentation {
     if (!verifiableSelfDescriptionDto['type']) {
       throw new Error("Can't transform non-ssi type")
     }
@@ -72,9 +78,10 @@ export class SsiTypesParserPipe
     return key.replace(keyType, '')
   }
 
-  private transformVerifiableCredential(verifiableCredential: VerifiableCredentialDto<any>): WrappedVerifiableCredential {
+  private transformVerifiableCredential(verifiableCredential: VerifiableCredentialDto<any>): TypedVerifiableCredential {
     try {
-      const type = SsiTypesParserPipe.getGXTypeFromVerifiableCredential(verifiableCredential)
+      const originalVerifiableCredential = { ...verifiableCredential }
+      const type = getTypeFromSelfDescription(verifiableCredential)
       const { credentialSubject } = verifiableCredential
       delete verifiableCredential.credentialSubject
 
@@ -92,78 +99,110 @@ export class SsiTypesParserPipe
           cred[strippedKey] = this.getValueFromShacl(cred[key], strippedKey, type)
         })
       }
-      const raw = JSON.stringify({ ...verifiableCredential, credentialSubject: { ...credentialSubject } })
       return {
         type,
-        rawVerifiableCredential: verifiableCredential as IVerifiableCredential,
-        transformedCredentialSubject: flatten.cs,
-        proof: verifiableCredential.proof as IProof,
-        raw,
-        rawCredentialSubject: JSON.stringify({ ...credentialSubject })
+        rawVerifiableCredential: originalVerifiableCredential as IVerifiableCredential,
+        transformedCredentialSubject: flatten.cs
       }
     } catch (error) {
       throw new BadRequestException(`Transformation failed: ${error.message}`)
     }
   }
 
-  private transformVerifiablePresentation(verifiablePresentationDto: VerifiablePresentationDto): WrappedVerifiablePresentation {
+  private transformVerifiablePresentation(verifiablePresentationDto: VerifiablePresentationDto): TypedVerifiablePresentation {
     try {
-      const raw = JSON.stringify(verifiablePresentationDto)
       const types: string[] = []
-      verifiablePresentationDto.verifiableCredential.forEach(vc =>
-        types.push(SsiTypesParserPipe.getGXTypeFromVerifiableCredential(vc as VerifiableCredentialDto<any>))
-      )
-      let type = 'Participant'
-      if (types.includes('ServiceOffering')) {
-        type = 'ServiceOffering'
-      }
-      const participantCredentials: WrappedVerifiableCredential[] = []
-      const complianceCredentials: WrappedVerifiableCredential[] = []
-      const serviceOfferingCredentials: WrappedVerifiableCredential[] = []
+      const originalVP = JSON.parse(JSON.stringify(verifiablePresentationDto))
+      verifiablePresentationDto.verifiableCredential.forEach(vc => types.push(getTypeFromSelfDescription(vc as VerifiableCredentialDto<any>)))
+      const typedVerifiableCredentials: TypedVerifiableCredential[] = []
       for (const vc of verifiablePresentationDto.verifiableCredential) {
-        const wrappedVC = this.transformVerifiableCredential(vc as VerifiableCredentialDto<any>)
-        switch (wrappedVC.type) {
-          case 'LegalPerson':
-            participantCredentials.push(wrappedVC)
-            break
-          case 'ServiceOffering':
-            serviceOfferingCredentials.push(wrappedVC)
-            break
-          case 'ParticipantCredential':
-            complianceCredentials.push(wrappedVC)
-            break
-          default:
-            throw new Error(`Can't map ${wrappedVC.type}`)
-        }
+        typedVerifiableCredentials.push(this.transformVerifiableCredential(vc as VerifiableCredentialDto<any>))
       }
-      return {
-        type,
-        participantCredentials,
-        complianceCredentials,
-        serviceOfferingCredentials,
-        proof: verifiablePresentationDto.proof,
-        raw
-      }
+      const intent: IntentType = SsiTypesParserPipe.discoverIntent(typedVerifiableCredentials)
+      return new TypedVerifiablePresentation(intent, typedVerifiableCredentials, originalVP)
     } catch (error) {
       throw new BadRequestException(`Transformation failed: ${error.message}`)
     }
   }
 
-  private static getGXTypeFromVerifiableCredential(verifiableCredential: VerifiableCredentialDto<any>): string {
-    const sdTypes = verifiableCredential.type
-    if (!sdTypes) throw new BadRequestException('Expected type to be defined in Verifiable Credential')
-    if (sdTypes.length === 1 && sdTypes[0] === 'VerifiableCredential') {
-      if (verifiableCredential.credentialSubject['type'] && (verifiableCredential.credentialSubject.type as string).includes('ServiceOffering')) {
-        return 'ServiceOffering'
+  //todo implement logic for other intents
+  private static discoverIntent(typedVerifiableCredentials: TypedVerifiableCredential[]): IntentType {
+    let hasEcosystemServiceOfferingCompliance = false
+    let hasEcosystemParticipantCompliance = false
+    let hasServiceOfferingCredential = false
+    let hasGxServiceOfferingCompliance = false
+    let hasGxParticipantCompliance = false
+    let hasParticipantCredential = false
+    for (const tvc of typedVerifiableCredentials) {
+      //fixme: right now the way we're recognizing ecosystem compliance from gx-compliance is with their "id" field which is a hack. later we can change it to `issuer` or better than that each ecosystem will have their own compliance type, but for the lack of documentation, I'm not implementing that right now. take a look at src/tests/fixtures/2010VP/compliance-vps.json
+      if (tvc.type === 'ParticipantCredential') {
+        if (tvc.rawVerifiableCredential.id.startsWith('https://catalogue.gaia-x.eu')) {
+          hasGxParticipantCompliance = true
+        } else {
+          hasEcosystemParticipantCompliance = true
+        }
+      } else if (tvc.type === 'ServiceOfferingCredentialExperimental') {
+        if (tvc.rawVerifiableCredential.id.startsWith('https://catalogue.gaia-x.eu')) {
+          hasGxServiceOfferingCompliance = true
+        } else {
+          hasEcosystemServiceOfferingCompliance = true
+        }
+      } else if (tvc.type === 'ServiceOffering') {
+        hasServiceOfferingCredential = true
+      } else if (tvc.type === 'Participant' || tvc.type === 'LegalPerson') {
+        hasParticipantCredential = true
       }
-      //fixme: we might wanna expand this to include other types as well (resource?)
-      throw new Error('Expecting ServiceOffering type in credentialSubject.type')
     }
-    //fixme: we might wanna limit this to prevent unknown types
-    const type = verifiableCredential.type.find(t => t !== 'VerifiableCredential')
-    if (!type) {
-      throw new ConflictException('Provided type for VerifiableCredential is not supported')
+
+    if (hasEcosystemServiceOfferingCompliance) {
+      return IntentType.ONBOARD_ECOSYSTEM_SERVICE_OFFERING
+    } else if (hasEcosystemParticipantCompliance && hasServiceOfferingCredential) {
+      if (hasServiceOfferingCredential) {
+        return IntentType.GET_ECOSYSTEM_COMPLIANCE_SERVICE_OFFERING
+      }
+      return IntentType.ONBOARD_ECOSYSTEM_PARTICIPANT
     }
-    return type
+    // right now this can't work correctly so we have to handle it another way
+    else if (hasParticipantCredential && hasGxParticipantCompliance && !hasServiceOfferingCredential) {
+      if (getDidWeb() === 'did:web:compliance.gaia-x.eu') {
+        return IntentType.ONBOARD_PARTICIPANT
+      } else {
+        return IntentType.GET_ECOSYSTEM_COMPLIANCE_PARTICIPANT
+      }
+    } else if (hasGxServiceOfferingCompliance) {
+      return IntentType.ONBOARD_SERVICE_OFFERING
+    } else if (hasServiceOfferingCredential) {
+      return IntentType.GET_COMPLIANCE_SERVICE_OFFERING
+    } else if (hasParticipantCredential) {
+      return IntentType.GET_COMPLIANCE_PARTICIPANT
+    }
+  }
+
+  public static hasVerifiableCredential(
+    verifiablePresentation: VerifiablePresentationDto | IVerifiablePresentation,
+    credentialType: string,
+    issuerAddress?: string
+  ): boolean {
+    for (const vc of verifiablePresentation.verifiableCredential) {
+      const type = getTypeFromSelfDescription(vc as VerifiableCredentialDto<any>)
+      if (type === credentialType && ((issuerAddress && vc.issuer === issuerAddress) || !issuerAddress)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  //fixme: right now we're returning the first instance, we have to think about: 1. is there a valid scenario in which we encounter 2 VCs of the same type and same issuer? 2. do we want to throw an error here if we encounter this situation?
+  public static getTypedVerifiableCredentialWithTypeAndIssuer(
+    typedVerifiablePresentation: TypedVerifiablePresentation,
+    credentialType: string,
+    issuerAddress: string
+  ): TypedVerifiableCredential {
+    for (const tvc of typedVerifiablePresentation.typedVerifiableCredentials) {
+      if (tvc.type === credentialType && tvc.rawVerifiableCredential.issuer === issuerAddress) {
+        return tvc
+      }
+    }
+    return null
   }
 }

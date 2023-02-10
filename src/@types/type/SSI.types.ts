@@ -117,22 +117,78 @@ export interface Descriptor {
   format: string
 }
 
-export interface WrappedVerifiablePresentation {
-  type: string
-  participantCredentials: WrappedVerifiableCredential[]
-  complianceCredentials: WrappedVerifiableCredential[]
-  serviceOfferingCredentials: WrappedVerifiableCredential[]
-  proof: IProof
-  raw: string
+export enum IntentType {
+  GET_COMPLIANCE_PARTICIPANT = 'GET_COMPLIANCE_PARTICIPANT',
+  ONBOARD_PARTICIPANT = 'ONBOARD_PARTICIPANT',
+  GET_COMPLIANCE_SERVICE_OFFERING = 'GET_COMPLIANCE_SERVICE_OFFERING',
+  ONBOARD_SERVICE_OFFERING = 'ONBOARD_SERVICE_OFFERING',
+  GET_ECOSYSTEM_COMPLIANCE_PARTICIPANT = 'GET_ECOSYSTEM_COMPLIANCE_PARTICIPANT',
+  ONBOARD_ECOSYSTEM_PARTICIPANT = 'ONBOARD_ECOSYSTEM_PARTICIPANT',
+  GET_ECOSYSTEM_COMPLIANCE_SERVICE_OFFERING = 'GET_ECOSYSTEM_COMPLIANCE_SERVICE_OFFERING',
+  ONBOARD_ECOSYSTEM_SERVICE_OFFERING = 'ONBOARD_ECOSYSTEM_SERVICE_OFFERING'
 }
 
-export interface WrappedVerifiableCredential {
+export enum ServiceOfferingType {
+  AutoscaledVirtualMachine = 'AutoscaledVirtualMachine',
+  ComputeFunction = 'ComputeFunction',
+  IdentityAccessManagementOffering = 'IdentityAccessManagementOffering',
+  VirtualMachine = 'VirtualMachine',
+  InstantiatedVirtualResource = 'InstantiatedVirtualResource',
+  VerifiableCredentialWallet = 'VerifiableCredentialWallet',
+  PlatformOffering = 'PlatformOffering',
+  Location = 'Location',
+  ObjectStorageOffering = 'ObjectStorageOffering',
+  BigData = 'BigData',
+  InfrastructureOffering = 'InfrastructureOffering',
+  Connectivity = 'Connectivity',
+  ServiceOffering = 'ServiceOffering',
+  Database = 'Database',
+  WalletOffering = 'WalletOffering',
+  ImageRegistryOffering = 'ImageRegistryOffering',
+  IdentityFederation = 'IdentityFederation',
+  SoftwareOffering = 'SoftwareOffering',
+  LinkConnectivity = 'LinkConnectivity',
+  PhysicalConnectivity = 'PhysicalConnectivity',
+  Container = 'Container',
+  Interconnection = 'Interconnection',
+  StorageOffering = 'StorageOffering',
+  AutoscaledContainer = 'AutoscaledContainer',
+  Catalogue = 'Catalogue',
+  Compute = 'Compute',
+  NetworkOffering = 'NetworkOffering',
+  NetworkConnectivity = 'NetworkConnectivity',
+  LocatedServiceOffering = 'LocatedServiceOffering',
+  BareMetal = 'BareMetal',
+  FileStorageOffering = 'FileStorageOffering',
+  IdentityProvider = 'IdentityProvider',
+  Orchestration = 'Orchestration',
+  BlockStorageOffering = 'BlockStorageOffering',
+  DigitalIdentityWallet = 'DigitalIdentityWallet'
+}
+
+export class TypedVerifiablePresentation {
+  constructor(intent: IntentType, typedVerifiableCredentials: TypedVerifiableCredential[], verifiablePresentationDto: VerifiablePresentationDto) {
+    this.intent = intent
+    this.originalVerifiablePresentation = verifiablePresentationDto
+    this.typedVerifiableCredentials = typedVerifiableCredentials
+  }
+
+  intent: IntentType
+  originalVerifiablePresentation: IVerifiablePresentation
+  typedVerifiableCredentials: TypedVerifiableCredential[]
+
+  public getTypedVerifiableCredentials(type?: string) {
+    if (!type) {
+      return this.typedVerifiableCredentials
+    }
+    return this.typedVerifiableCredentials.filter(tvc => tvc.type === type)
+  }
+}
+
+export interface TypedVerifiableCredential {
   type: string
   rawVerifiableCredential: IVerifiableCredential
   transformedCredentialSubject: ICredentialSubject
-  proof: IProof
-  raw: string
-  rawCredentialSubject: string
 }
 
 export enum IProofPurpose {

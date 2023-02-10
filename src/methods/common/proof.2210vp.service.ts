@@ -1,14 +1,12 @@
 import { ConflictException, Injectable } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
-import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant'
 import { RegistryService } from './registry.service'
-import { ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
 import { VerifiableCredentialDto } from '../../@types/dto/common'
 import * as jose from 'jose'
 import { METHOD_IDS } from '../../@types/constants'
 import { DIDDocument, Resolver } from 'did-resolver'
 import web from 'web-did-resolver'
-import { IProof, IVerifiablePresentation, WrappedVerifiablePresentation } from '../../@types/type/SSI.types'
+import { IProof } from '../../@types/type/SSI.types'
 import { CERT_CHAIN } from './suits/mockData'
 import { Signature2210vpService, Verification } from './signature.2010vp.service'
 import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
@@ -80,11 +78,6 @@ export class Proof2210vpService {
   }
 
   private async checkSignature(selfDescription, isValidityCheck: boolean, jws: string, proof, jwk: any): Promise<boolean> {
-    /*if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiableCredential') !== -1) {
-      return await this.signatureService.checkVcSignature(selfDescription, jwk)
-    } else if (selfDescription['type'] && (selfDescription['type'] as string[]).lastIndexOf('VerifiablePresentation') !== -1) {
-      return await this.signatureService.checkVpSignature(selfDescription, jwk)
-    }*/
     delete selfDescription.proof
 
     const normalizedSD: string = await this.signatureService.normalize(selfDescription)

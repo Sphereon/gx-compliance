@@ -3,7 +3,9 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { AppModule } from '../app.module'
 import { SelfDescription2210vpService } from '../methods/common/selfDescription.2210vp.service'
 import { ParticipantModule } from '../modules/participant.module'
-import { IVerifiablePresentation } from '../@types/type/SSI.types'
+import { IVerifiablePresentation, TypedVerifiablePresentation } from '../@types/type/SSI.types'
+import { SsiTypesParserPipe } from '../utils/pipes/ssi-types-parser.pipe'
+import { VerifiablePresentationDto } from '../@types/dto/common/presentation-meta.dto'
 
 describe('ParticipantService', () => {
   let selfDescriptionService: SelfDescription2210vpService
@@ -68,7 +70,11 @@ describe('ParticipantService', () => {
           jws: 'eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..SLtW5EW5QGk47QH7IlZ8LcixwIXPVR7JdSkeU9vyibTu9WqyDcaS7bOd5jwtMHCZLHK1lo4-ayjC1WVREJvvdTBnYndwqv4pd1fadyhBeXU08ifHI5QL2sRiye7yL2W2ZpCPpcA3vXXZ9cinHbjSAjQeOhI9_u1qKalB1ji-H1XvyX-lCG7OIyM9EZVgmpYTzsYRNKW_8J8Yaqa0Bln-j8DF93NlH5UNf4djoEIOTjWELAhbRJsBXiNe7X5rGrFtjjR_5LSiAR52OhoFnBJh0ZpvhhzAyHQ3cZ3KUR3fOtqO1YLe0hhYIRMSkJYjU2l-MeVV2nATIUt0_Ng5VaadIQ'
         }
       }
-      const response = await selfDescriptionService.validateSelfDescription(vp, 'LegalPerson')
+      const parser = new SsiTypesParserPipe()
+      const response = await selfDescriptionService.validateSelfDescription(
+        parser.transform(vp as VerifiablePresentationDto) as TypedVerifiablePresentation,
+        'LegalPerson'
+      )
       console.log(response)
     })
   })

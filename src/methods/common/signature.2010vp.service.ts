@@ -8,6 +8,7 @@ import { SelfDescriptionTypes } from '../../@types/enums'
 import { DocumentLoader } from './DocumentLoader'
 import { subtle } from '@transmute/web-crypto-key-pair'
 import { ICredential, IVerifiableCredential, IVerifiablePresentation } from '../../@types/type/SSI.types'
+import { getTypeFromSelfDescription } from '../../utils/methods'
 
 export interface Verification {
   protectedHeader: jose.CompactJWSHeaderParameters | undefined
@@ -40,24 +41,14 @@ export class Signature2210vpService {
     }
   }
 
-  async normalize(doc: object): Promise<string> {
+  public async normalize(doc: object): Promise<string> {
     try {
-      let canonized
-      if ((doc['type'] as string[]).includes('VerifiablePresentation') || (doc['type'] as string[]).includes('VerifiableCredential')) {
-        canonized = await jsonld.canonize(doc, {
-          algorithm: 'URDNA2015',
-          format: 'application/n-quads',
-          //TODO FMA-23
-          documentLoader: new DocumentLoader().getLoader()
-        })
-      } else {
-        canonized = await jsonld.canonize(doc, {
-          algorithm: 'URDNA2015',
-          format: 'application/n-quads',
-          //TODO FMA-23
-          documentLoader: new DocumentLoader().getLoader()
-        })
-      }
+      const canonized = await jsonld.canonize(doc, {
+        algorithm: 'URDNA2015',
+        format: 'application/n-quads',
+        //TODO FMA-23
+        documentLoader: new DocumentLoader().getLoader()
+      })
 
       if (canonized === '') throw new Error()
 
@@ -76,7 +67,7 @@ export class Signature2210vpService {
   }
 
   async sign(hash: string): Promise<string> {
-    const alg = 'PS256'
+    const alg = 'RS256'
     const rsaPrivateKey = await jose.importPKCS8(process.env.privateKey, alg)
 
     const jws = await new jose.CompactSign(new TextEncoder().encode(hash)).setProtectedHeader({ alg, b64: false, crit: ['b64'] }).sign(rsaPrivateKey)
@@ -203,7 +194,7 @@ export class Signature2210vpService {
   }
 
   private async issueComplianceCredential(selfDescription: IVerifiablePresentation, serviceUrl: string): Promise<IVerifiableCredential> {
-    const selfDescribedVC = selfDescription.verifiableCredential.filter(vc => vc.type.includes(SelfDescriptionTypes.PARTICIPANT.valueOf()))[0]
+    const selfDescribedVC: IVerifiableCredential = Signature2210vpService.findSelfDescribedCredentialForComplianceIssuance(selfDescription)
     const sd_jws = selfDescribedVC.proof['jws']
     if (!sd_jws) {
       throw new BadRequestException('selfDescription does not contain jws property')
@@ -212,7 +203,7 @@ export class Signature2210vpService {
     const normalizedSD: string = await this.normalize(selfDescribedVC)
     const hash: string = this.sha256(normalizedSD + sd_jws)
 
-    const type: string = selfDescribedVC.type.find(t => t !== 'VerifiableCredential')
+    const type: string = getTypeFromSelfDescription(selfDescribedVC)
     const complianceCredentialType: string =
       SelfDescriptionTypes.PARTICIPANT === type ? SelfDescriptionTypes.PARTICIPANT_CREDENTIAL : SelfDescriptionTypes.SERVICE_OFFERING_CREDENTIAL
     const unsignedCredential: ICredential = Signature2210vpService.createUnsignedComplianceCredential(
@@ -247,5 +238,23 @@ export class Signature2210vpService {
         hash
       }
     }
+  }
+
+  private static findSelfDescribedCredentialForComplianceIssuance(selfDescription: IVerifiablePresentation) {
+    let serviceOffering
+    let participant
+    for (const vc of selfDescription.verifiableCredential) {
+      if (getTypeFromSelfDescription(vc) === 'ServiceOffering') {
+        serviceOffering = vc
+      } else if (getTypeFromSelfDescription(vc) === SelfDescriptionTypes.PARTICIPANT) {
+        participant = vc
+      }
+    }
+    if (serviceOffering) {
+      return serviceOffering
+    } else if (participant) {
+      return participant
+    }
+    throw new BadRequestException("Couldn't find selfDescribed Credential for issuing Compliance credential.")
   }
 }

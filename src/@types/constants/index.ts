@@ -5,7 +5,6 @@ export const METHOD_IDS = [
   'did:web:compliance.lab.gaia-x.eu#X509-JWK2020'
 ]
 
-export const SUPPORTED_TYPES = ['LegalPerson', 'ServiceOfferingExperimental', 'ServiceOffering']
 
 export const DID_WEB_PATTERN = /^did:web:([a-zA-Z0-9%?#._-]+:?)*[a-zA-Z0-9%?#._-]+/
 

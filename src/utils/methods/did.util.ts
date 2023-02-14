@@ -8,8 +8,7 @@ export const X509_CERTIFICATE_CHAIN_URI = `${process.env.BASE_URL}/.well-known/x
 export const X509_CERTIFICATE_CHAIN_FILE_PATH = join(__dirname, '../static/.well-known/x509CertificateChain.pem')
 
 export function getDidWeb() {
-  return 'did:web:e92e-87-213-241-251.eu.ngrok.io'
-  // return `did:web:${process.env.BASE_URL.replace(/http[s]?:\/\//, '').replace('/', ':')}`
+  return `did:web:${process.env.BASE_URL.replace(/http[s]?:\/\//, '').replace('/', ':')}`
 }
 
 export async function createDidDocument() {

@@ -13,7 +13,7 @@ import { ServiceOfferingModule } from './service-offering.module'
       isGlobal: true
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'src/static'),
+      rootPath: join(__dirname, '..', 'utils/static'),
       exclude: ['/api*']
     }),
     CommonModule,

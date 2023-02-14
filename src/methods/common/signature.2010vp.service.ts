@@ -87,7 +87,7 @@ export class Signature2210vpService {
       SelfDescriptionTypes.PARTICIPANT === type ? SelfDescriptionTypes.PARTICIPANT_CREDENTIAL : SelfDescriptionTypes.SERVICE_OFFERING_CREDENTIAL
 
     const complianceCredential: VerifiableCredentialDto<ComplianceCredentialDto> = {
-      '@context': ['https://www.w3.org/2018/credentials/v1'],
+      '@context': ['https://www.w3.org/2018/credentials/v1', 'https://sphereon-opensource.github.io/vc-contexts/fma/gaia-x.jsonld'],
       type: ['VerifiableCredential', complianceCredentialType],
       id: `https://catalogue.gaia-x.eu/credentials/${complianceCredentialType}/${new Date().getTime()}`,
       issuer: getDidWeb(),
@@ -228,7 +228,7 @@ export class Signature2210vpService {
   }
   private static createUnsignedComplianceCredential(type: string, url: string, id: string, hash: string): ICredential {
     return {
-      '@context': ['https://www.w3.org/2018/credentials/v1'],
+      '@context': ['https://www.w3.org/2018/credentials/v1', 'https://sphereon-opensource.github.io/vc-contexts/fma/gaia-x.jsonld'],
       type: ['VerifiableCredential', type],
       id: `${url}${type}/${new Date().getTime()}`,
       issuer: getDidWeb(),

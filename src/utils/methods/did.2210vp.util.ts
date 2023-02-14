@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'fs'
 import * as jose from 'jose'
 import { join } from 'path'
 
-export const X509_VERIFICATION_METHOD_NAME = 'X509-JWK2020'
+export const X509_VERIFICATION_METHOD_NAME = 'JWK2020-RSA'
 export const DID_DOC_FILE_PATH = join(__dirname, '../static/.well-known/did.json')
 export const X509_CERTIFICATE_CHAIN_FILE_PATH = join(__dirname, '../static/.well-known/x509CertificateChain.pem')
 

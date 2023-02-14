@@ -25,22 +25,23 @@ export async function createDidDocument() {
   const x5u = `${getBaseUrl()}/.well-known/x509CertificateChain.pem`
 
   const DID_DOC = {
-    '@context': ['https://www.w3.org/ns/did/v1'],
+    '@context': 'https://w3id.org/did/v1',
     id: getDidWeb(),
     verificationMethod: [
       {
-        '@context': 'https://w3c-ccg.github.io/lds-jws2020/contexts/v1/',
         id: x509VerificationMethodIdentifier,
         type: 'JsonWebKey2020',
         controller: getDidWeb(),
         publicKeyJwk: {
           ...(await jose.exportJWK(spki)),
-          alg: 'RS256',
+          // alg: 'RS256',
           x5u
         }
       }
     ],
-    assertionMethod: [x509VerificationMethodIdentifier]
+    authentication: [x509VerificationMethodIdentifier],
+    assertionMethod: [x509VerificationMethodIdentifier],
+    service: []
   }
 
   writeFileSync(DID_DOC_FILE_PATH, JSON.stringify(DID_DOC))

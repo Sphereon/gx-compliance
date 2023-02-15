@@ -1,13 +1,14 @@
 import { NestFactory } from '@nestjs/core'
-import { AppModule } from './app.module'
+import { AppModule } from './modules/app.module'
 import { RequestMethod } from '@nestjs/common'
-import { setupSwagger } from './common/swagger'
-import { createDidDocument } from './common/utils/did.util'
+import { setupSwagger } from './swagger'
+import { createDidDocument } from './utils/methods/did.2210vp.util'
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
-  app.setGlobalPrefix('/v2206/api/', {
+  app.setGlobalPrefix('/api/', {
     exclude: [{ path: '/', method: RequestMethod.GET }]
   })
   setupSwagger(app)
@@ -15,6 +16,6 @@ async function bootstrap() {
   createDidDocument()
 
   app.enableCors()
-  await app.listen(process.env.PORT || 3000)
+  await app.listen(process.env.PORT || 3003)
 }
 bootstrap()

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gx-compliance-main
+  namespace: gx-lab
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http-api
+  selector:
+    app: gx-compliance-main
+  sessionAffinity: None
+  type: ClusterIP

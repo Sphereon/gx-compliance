@@ -1,15 +1,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gx-compliance-2206-main
+  name: gx-compliance-live-server-2206-main
   namespace: gx-lab
 spec:
-  progressDeadlineSeconds: 601
+  progressDeadlineSeconds: 600
   replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: gx-compliance-2206-main
+      app: gx-compliance-live-server-2206-main
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -19,7 +19,7 @@ spec:
     metadata:
       creationTimestamp: null
       labels:
-        app: gx-compliance-2206-main
+        app: gx-compliance-live-server-2206-main
     spec:
       containers:
       - env:
@@ -42,18 +42,18 @@ spec:
           valueFrom:
             secretKeyRef:
               key: tls.crt
-              name: gx-compliance-secrets
+              name: gx-compliance-server-tls-secret
         - name: REGISTRY_URL
-          value: http://20.76.5.229
+          value: https://registry.gaia-x.eu
         - name: BASE_URL
-          value: https://sphereon-test.ddns.net
+          value: https://compliance.gaia-x.eu
         - name: SD_STORAGE_BASE_URL
-          value: http://20.4.152.212
+          value: https://example-storage.lab.gaia-x.eu
         - name: SD_STORAGE_API_KEY
-          value: test123
-        image: vdxcontainerregistry2022051200.azurecr.io/gx-compliance:v2.0.0
+          value: #ADD
+        image: registry.gitlab.com/gaia-x/lab/compliance/gx-compliance:2206-unreleased
         imagePullPolicy: Always
-        name: gx-compliance-2206-main
+        name: gx-compliance-live-server-2206-main
         ports:
         - containerPort: 3000
           name: http-api

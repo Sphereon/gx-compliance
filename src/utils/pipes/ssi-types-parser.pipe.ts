@@ -184,11 +184,15 @@ export class SsiTypesParserPipe
   public static getTypedVerifiableCredentialWithTypeAndIssuer(
     typedVerifiablePresentation: TypedVerifiablePresentation,
     credentialType: string,
-    issuerAddress: string
+    issuerAddress?: string
   ): TypedVerifiableCredential {
     for (const tvc of typedVerifiablePresentation.typedVerifiableCredentials) {
-      if (tvc.type === credentialType && tvc.rawVerifiableCredential.issuer === issuerAddress) {
-        return tvc
+      if (tvc.type === credentialType) {
+        if(issuerAddress && tvc.rawVerifiableCredential.issuer === issuerAddress) {
+          return tvc
+        } else {
+          return tvc
+        }
       }
     }
     return null

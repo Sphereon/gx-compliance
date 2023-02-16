@@ -1,94 +1,214 @@
 {
+  "id": "urn:uuid:26557bf5-3c5e-4f06-8336-e88bbccb1236",
+  "type": [
+    "VerifiablePresentation"
+  ],
   "@context": [
     "https://www.w3.org/2018/credentials/v1"
   ],
-  "type": ["VerifiablePresentation"],
   "verifiableCredential": [
     {
       "@context": [
-        "https://www.w3.org/2018/credentials/v1",
-        "https://registry.gaia-x.eu/v2206/api/shape"
+        "https://www.w3.org/2018/credentials/v1"
       ],
-      "type": [
-        "VerifiableCredential",
-        "ServiceOfferingExperimental"
-      ],
-      "id": "63a6c1fb-2b37-44d6-ae87-a72440dcaf38",
-      "issuer": "did:web:0c1b-2001-1c04-2b34-bb00-c366-4d7b-3320-824b.eu.ngrok.io",
-      "issuanceDate": "2022-12-02T11:49:11.112Z",
+      "issuer": "did:web:873c-87-213-241-251.eu.ngrok.io",
+      "id": "urn:uuid:bc45f0a0-7a1d-4ed1-b63c-45ba6bacf169",
       "credentialSubject": {
-        "id": "did:web:0c1b-2001-1c04-2b34-bb00-c366-4d7b-3320-824b.eu.ngrok.io",
-        "gx-service-offering:providedBy": "https://0c1b-2001-1c04-2b34-bb00-c366-4d7b-3320-824b.eu.ngrok.io/.well-known/did.json.",
-        "gx-service-offering:name": "Gaia-X Lab Compliance Service",
-        "gx-service-offering:description": "The Compliance Service will validate the shape and content of Self Descriptions. Required fields and consistency rules are defined in the Gaia-X Trust Framework.",
-        "gx-service-offering:webAddress": "https://compliance.gaia-x.eu/",
-        "gx-service-offering:termsAndConditions": [
-          {
-            "gx-service-offering:url": "https://compliance.gaia-x.eu/terms",
-            "gx-service-offering:hash": "myrandomhash"
-          }
-        ],
-        "gx-service-offering:gdpr": [
-          {
-            "gx-service-offering:imprint": "https://gaia-x.eu/imprint/"
+        "@context": {
+          "cc": "http://creativecommons.org/ns#",
+          "schema": "http://schema.org/",
+          "cred": "https://www.w3.org/2018/credentials#",
+          "void": "http://rdfs.org/ns/void#",
+          "owl": "http://www.w3.org/2002/07/owl#",
+          "xsd": "http://www.w3.org/2001/XMLSchema#",
+          "gax-validation": "http://w3id.org/gaia-x/validation#",
+          "skos": "http://www.w3.org/2004/02/skos/core#",
+          "voaf": "http://purl.org/vocommons/voaf#",
+          "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+          "vcard": "http://www.w3.org/2006/vcard/ns#",
+          "gax-core": "http://w3id.org/gaia-x/core#",
+          "dct": "http://purl.org/dc/terms/",
+          "sh": "http://www.w3.org/ns/shacl#",
+          "gax-trust-framework": "http://w3id.org/gaia-x/gax-trust-framework#",
+          "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          "ids": "https://w3id.org/idsa/core/",
+          "dcat": "http://www.w3.org/ns/dcat#",
+          "vann": "http://purl.org/vocab/vann/",
+          "foaf": "http://xmlns.com/foaf/0.1/",
+          "did": "https://www.w3.org/TR/did-core/#"
+        },
+        "id": "did:web:873c-87-213-241-251.eu.ngrok.io",
+        "@type": "gax-trust-framework:LegalPerson",
+        "gax-trust-framework:legalName": {
+          "@value": "Sphereon BV",
+          "@type": "xsd:string"
+        },
+        "gax-trust-framework:legalForm": "LLC",
+        "gax-trust-framework:registrationNumber": {
+          "@value": "3232323",
+          "@type": "xsd:string"
+        },
+        "gax-trust-framework:legalAddress": {
+          "@type": "vcard:Address",
+          "vcard:country-name": {
+            "@value": "NL",
+            "@type": "xsd:string"
           },
-          {
-            "gx-service-offering:privacyPolicy": "https://gaia-x.eu/privacy-policy/"
+          "vcard:gps": {
+            "@value": "52.1352365,5.0280565",
+            "@type": "xsd:string"
+          },
+          "vcard:street-address": {
+            "@value": "Bisonspoor",
+            "@type": "xsd:string"
+          },
+          "vcard:postal-code": {
+            "@value": "3605LB",
+            "@type": "xsd:string"
+          },
+          "vcard:locality": {
+            "@value": "Maarssen",
+            "@type": "xsd:string"
           }
-        ],
-        "gx-service-offering:dataProtectionRegime": [
-          "GDPR2016"
-        ],
-        "gx-service-offering:dataExport": [
-          {
-            "gx-service-offering:requestType": "email",
-            "gx-service-offering:accessType": "digital",
-            "gx-service-offering:formatType": "mime/png"
+        },
+        "gax-trust-framework:headquarterAddress": {
+          "@type": "vcard:Address",
+          "vcard:country-name": {
+            "@value": "NL",
+            "@type": "xsd:string"
+          },
+          "vcard:gps": {
+            "@value": "52.1352365,5.0280565",
+            "@type": "xsd:string"
+          },
+          "vcard:street-address": {
+            "@value": "Bisonspoor",
+            "@type": "xsd:string"
+          },
+          "vcard:postal-code": {
+            "@value": "3605LB",
+            "@type": "xsd:string"
+          },
+          "vcard:locality": {
+            "@value": "Maarssen",
+            "@type": "xsd:string"
           }
-        ],
-        "gx-service-offering:dependsOn": [
-          "https://compliance.gaia-x.eu/.well-known/serviceManagedPostgreSQLOVH.json",
-          "https://compliance.gaia-x.eu/.well-known/serviceManagedK8sOVH.json"
-        ]
+        }
       },
+      "type": [
+        "VerifiableCredential"
+      ],
+      "issuanceDate": "2023-02-16T11:43:15.393Z",
       "proof": {
         "type": "JsonWebSignature2020",
-        "created": "2022-12-02T11:49:11.112Z",
+        "created": "2023-02-16T12:19:22Z",
+        "verificationMethod": "did:web:873c-87-213-241-251.eu.ngrok.io#JWK2020-RSA",
         "proofPurpose": "assertionMethod",
-        "verificationMethod": "did:web:0c1b-2001-1c04-2b34-bb00-c366-4d7b-3320-824b.eu.ngrok.io#JWK2020-RSA",
-        "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..SLtW5EW5QGk47QH7IlZ8LcixwIXPVR7JdSkeU9vyibTu9WqyDcaS7bOd5jwtMHCZLHK1lo4-ayjC1WVREJvvdTBnYndwqv4pd1fadyhBeXU08ifHI5QL2sRiye7yL2W2ZpCPpcA3vXXZ9cinHbjSAjQeOhI9_u1qKalB1ji-H1XvyX-lCG7OIyM9EZVgmpYTzsYRNKW_8J8Yaqa0Bln-j8DF93NlH5UNf4djoEIOTjWELAhbRJsBXiNe7X5rGrFtjjR_5LSiAR52OhoFnBJh0ZpvhhzAyHQ3cZ3KUR3fOtqO1YLe0hhYIRMSkJYjU2l-MeVV2nATIUt0_Ng5VaadIQ"
+        "jws": "eyJhbGciOiJSUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..WLjceJUPoYNmWS6z1E-FllprcDzIIngsEd0XRS1IVRRoAHssqJlmiHtJFUmEI_BxxfXR_VzPSzXF9Dxc6ICJ0ZObTzRMxBw9vGCPP8CfjOVjck77JGsonYLqj_CnluyDWHIs6mUyNRuz5Vh2g27535MEs_yO7dlRYU11mS9pApM7QtASdBYfW5eq5_GDN5qdHI1yiWoKx40-kB1rfXZJmdTsWf_AR0eQAki-v592OZSXeyRqHHUEsraM88Cx5l4qv4nmLhHkL144vSxVMAGXzm3BZ4LI2MJXJl9anPYZLkt7JfUn-h6yfc-JUb0-fB1WtR8fq1pd6yYRHhlH7qEhZQ"
       }
-    }, {
+    },
+    {
       "@context": [
-        "https://www.w3.org/2018/credentials/v1"
+        "https://www.w3.org/2018/credentials/v1",
+        "https://sphereon-opensource.github.io/vc-contexts/fma/gaia-x.jsonld"
       ],
       "type": [
         "VerifiableCredential",
         "ParticipantCredential"
       ],
-      "id": "https://catalogue.gaia-x.eu/credentials/ParticipantCredential/1669891548906",
-      "issuer": "did:web:20.23.55.213",
-      "issuanceDate": "2022-12-16T14:54:29.812Z",
+      "id": "https://catalogue.gaia-x.eu/credentials/ParticipantCredential/1676549969321",
+      "issuer": "did:web:873c-87-213-241-251.eu.ngrok.io",
+      "issuanceDate": "2023-02-16T12:19:29.321Z",
       "credentialSubject": {
-        "id": "did:web:0c1b-2001-1c04-2b34-bb00-c366-4d7b-3320-824b.eu.ngrok.io",
-        "hash": "9ba95c9d21ce0404c827f1365cba49a10c96bc8022146f7d0bb16f436b72e241"
+        "id": "did:web:873c-87-213-241-251.eu.ngrok.io",
+        "hash": "0f0cb0a5fdef71c3667f5e457b99aa0b5ccc608425c823727aa6d1bf4ddbe44e"
       },
       "proof": {
         "type": "JsonWebSignature2020",
-        "created": "2022-12-16T14:54:29.812Z",
-        "challenge": "2022-12-16",
+        "created": "2023-02-16T12:19:29.763Z",
         "proofPurpose": "assertionMethod",
-        "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..gLhcoeGKUeExcQfK1d7s8FdoMYUe7IOXclkt3cfpnn_8XR_Thb5akD29Ls-x1EDl-EaXgmj-7XBa8j7u0f26w2VWC5Do1SH3S6HJZ551mEFB47mpl2glSDyUrWSzlDafs2VFLF1A7Ec9mu3vaSE2FlaDdhy-uvTFH5COr8H_MFM6NfBpzE8ZEvVYI32aYFNHymf2juVnvP9WXdXSpBqwKKUYG6VfM2QwGZVv4Wc4OoMEQb1jAgMAhTDWt9BwdW1JGXGhlSypA5R4M4WqyvYmCxmZ2OQ7DPC3DwPUG8dzLNTszeqLdyxMFs7ge4pu5SNpp1FvypjgohVhcPO1_r437g",
-        "verificationMethod": "did:web:20.23.55.213#JWK2020-RSA"
+        "jws": "eyJhbGciOiJSUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..ZgC2WmnmPvb_g8eMy4C3QUdCBMOHbNB-FAGJGBOrIciBAYU5teWhOwe5lX5lCHoSZrTbZSWKYlFtVtl6_L4ivDAW66odgi_bIZDyVdVZpdGzwjZAvRuU2co4ZoMV8f7pZ_XX_rqgHCvgkvJX37_tpsv3lFi6HIVk6Xs5G2XPuCtyTmxNPeBn5hjXuNrZ1hlW_jFRp-kX8NITsgoQLmYG7wJ5FVrLrd2oD4Vnw8rkcJ4CVf2CfLfrz8NbOXHbCsJuj4GF4B0d2dxjebNkoxYs_LUIzE6uxZ8xekqSklTjhHq5y77Ka-0wh0Zo3Yd9GmSTTKSLhErEugVhqdvCBf9FFQ",
+        "verificationMethod": "did:web:873c-87-213-241-251.eu.ngrok.io#JWK2020-RSA"
       }
-    }],
+    },
+    {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1"
+      ],
+      "issuer": "did:web:873c-87-213-241-251.eu.ngrok.io",
+      "id": "urn:uuid:33dff546-4eec-4bfc-add6-e032a205ea61",
+      "credentialSubject": {
+        "@context": {
+          "cc": "http://creativecommons.org/ns#",
+          "schema": "http://schema.org/",
+          "cred": "https://www.w3.org/2018/credentials#",
+          "void": "http://rdfs.org/ns/void#",
+          "owl": "http://www.w3.org/2002/07/owl#",
+          "xsd": "http://www.w3.org/2001/XMLSchema#",
+          "gax-validation": "http://w3id.org/gaia-x/validation#",
+          "skos": "http://www.w3.org/2004/02/skos/core#",
+          "voaf": "http://purl.org/vocommons/voaf#",
+          "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+          "vcard": "http://www.w3.org/2006/vcard/ns#",
+          "gax-core": "http://w3id.org/gaia-x/core#",
+          "dct": "http://purl.org/dc/terms/",
+          "sh": "http://www.w3.org/ns/shacl#",
+          "gax-trust-framework": "http://w3id.org/gaia-x/gax-trust-framework#",
+          "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          "ids": "https://w3id.org/idsa/core/",
+          "dcat": "http://www.w3.org/ns/dcat#",
+          "vann": "http://purl.org/vocab/vann/",
+          "foaf": "http://xmlns.com/foaf/0.1/",
+          "did": "https://www.w3.org/TR/did-core/#"
+        },
+        "id": "did:web:873c-87-213-241-251.eu.ngrok.io",
+        "@type": "gax-trust-framework:IdentityAccessManagementOffering"
+      },
+      "type": [
+        "VerifiableCredential"
+      ],
+      "issuanceDate": "2023-02-16T13:29:41.715Z",
+      "proof": {
+        "type": "JsonWebSignature2020",
+        "created": "2023-02-16T13:29:41Z",
+        "verificationMethod": "did:web:873c-87-213-241-251.eu.ngrok.io#JWK2020-RSA",
+        "proofPurpose": "assertionMethod",
+        "jws": "eyJhbGciOiJSUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..q_cytI6i_4KurG-w-KINF3QZLBqEqXcdlARUK6nekfTofSQqhkdMvcCWqzTjtm_y36hEZNQu-7W0z6GQVlc3Xbg6dHpzUexWmip9Y5t8nblyWb1SGWSncBO_D95vj7lEtdC13DS2_-Rfpurei27VebxONDkyknCA1BZLPza8Sw8oo36G-ewUBKhWEwG4whuxna0ChH_wJHCw-27KjERVa0rqSpkEe0NbP9E3SNIUV6mmOTiqp-m9uGjaAx2UHcDtJyUAVlFVwxy0hEGCtf_z_NIYyi6MVqbrHABcEooC8I94fKG4bliC5SYWDLgbn-cwaVMtJJmAA-Srai2o3ORLBQ"
+      }
+    },
+    {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://sphereon-opensource.github.io/vc-contexts/fma/gaia-x.jsonld"
+      ],
+      "type": [
+        "VerifiableCredential",
+        "ServiceOfferingCredentialExperimental"
+      ],
+      "id": "https://catalogue.gaia-x.eu/credentials/ServiceOfferingCredentialExperimental/1676554183624",
+      "issuer": "did:web:873c-87-213-241-251.eu.ngrok.io",
+      "issuanceDate": "2023-02-16T13:29:43.624Z",
+      "credentialSubject": {
+        "id": "did:web:873c-87-213-241-251.eu.ngrok.io",
+        "hash": "d8698608ca10b2c35447c32ee87c623633979963d4e0092083aae61694aedec3"
+      },
+      "proof": {
+        "type": "JsonWebSignature2020",
+        "created": "2023-02-16T13:29:43.962Z",
+        "proofPurpose": "assertionMethod",
+        "jws": "eyJhbGciOiJSUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..TP5paPys9-L2EmeYCaReNwKHeb-UZNjoLGDdJjiRnq7RYxLjDOmiKPZKSJqVxB5m90bNlAwCudtf1reZbeAWIlXHqeYFMtjXLTUTvh28Pr44qbuVfOOO81ase6_7XdynQREQ1uYB1iwPG6KLQDI2s1ie0A2tNLGQFRPkV2xri6yprx9KWxbxAptIQbPzbkT72fUnIRV1ldqbhN4PUKDfjm9QPox_r-JHJbidRktOVkLi9k230SM0uu23qo0mn68enSIzfsntLYJ9vhi2Yykq9vdONGeZHQ0Sv09pwgIMwXI-VQb6WVMQze9ft_Xnfn0AxwYGEGbs7k3YDNd9gszq4A",
+        "verificationMethod": "did:web:873c-87-213-241-251.eu.ngrok.io#JWK2020-RSA"
+      }
+    }
+  ],
+  "holder": "did:web:873c-87-213-241-251.eu.ngrok.io",
   "proof": {
     "type": "JsonWebSignature2020",
-    "created": "2022-12-16T44:14:52.652Z",
-    "challenge": "2022-12-16",
-    "domain": "https://20.23.55.213",
-    "proofPurpose": "assertionMethod",
-    "verificationMethod": "did:web:0c1b-2001-1c04-2b34-bb00-c366-4d7b-3320-824b.eu.ngrok.io#JWK2020-RSA",
-    "jws": "ey..."
+    "created": "2023-02-16T13:31:55Z",
+    "verificationMethod": "did:web:873c-87-213-241-251.eu.ngrok.io#JWK2020-RSA",
+    "proofPurpose": "authentication",
+    "challenge": "2023-02-16",
+    "domain": "http://localhost:3003",
+    "jws": "eyJhbGciOiJSUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..B_-P_1hQs0bpFJNoK5m1_-6j_qM7umih8DD1e0fdnDwUHS7buEssr-wJm_9oquSRWDnkV_Y4JjQYFUTTvzh5yotXmnNww3QItNoOR4fdMDAFaurV0VNy7H7KKraa72vTgQIZGf-1W3rxRKyZglv8Wt_XKRqhxW9TRBJvV1Z3yyX5LP_xGEyAEVjkh4PosRpOC1WRHOL_msmiypuHgzPGmn89YW7xsIHNppw0SZEg80D-_l0iLZpVrudsfam-uO3EgsbfcJPFR1hLXUSwJdkOk_OIPwL7Is5_3NdYksgrm5jzVT_rzQy5433XK0GEb_kXzCBesuMSBVG5K8H4_8beaA"
   }
 }

@@ -38,6 +38,22 @@ export class SelfDescription2210vpService {
   ) {}
 
   public async validate(typedVerifiablePresentation: TypedVerifiablePresentation): Promise<validationResultWithoutContent> {
+    let isValidSignature = await this.proofService.validateVP(
+      typedVerifiablePresentation.originalVerifiablePresentation as VerifiablePresentationDto,
+      false,
+      typedVerifiablePresentation.originalVerifiablePresentation.proof.jws
+    )
+    for (const typedVerifiableCredential of typedVerifiablePresentation.typedVerifiableCredentials) {
+      typedVerifiableCredential.rawVerifiableCredential
+      const signatureCheck = await this.proofService.validateVC(
+        typedVerifiableCredential.rawVerifiableCredential as VerifiableCredentialDto<any>,
+        false,
+        typedVerifiableCredential.rawVerifiableCredential.proof.jws
+      )
+      if (!signatureCheck) {
+        isValidSignature = false
+      }
+    }
     if (typedVerifiablePresentation.intent !== IntentType.GET_COMPLIANCE_PARTICIPANT) {
       if (
         !SsiTypesParserPipe.hasVerifiableCredential(
@@ -72,26 +88,17 @@ export class SelfDescription2210vpService {
       const legalPersonShapeValidation = await this.checkCredentialShape(legalPersonVC, expectedContexts[legalPersonVC.type])
       let serviceOfferingShapeValidation
       if (serviceOfferingVC) {
-        serviceOfferingShapeValidation = this.checkCredentialShape(serviceOfferingVC, expectedContexts[serviceOfferingVC.type])
+        //fixme we're ignoring the shape validation for service-offerings for now, bringg thisback when we have shpaes for v2210vp service-offerings
+        // serviceOfferingShapeValidation = this.checkCredentialShape(serviceOfferingVC, expectedContexts[serviceOfferingVC.type])
+        serviceOfferingShapeValidation = {
+          conforms: true,
+          results: []
+        }
       }
+
       if (!complianceVC) {
         throw new Error(`No compliance Verifiable Credential found for the issuer: ${getDidWeb()}`)
       }
-      const isValidSignatureParticipant: boolean = await this.proofService.validateVC(
-        legalPersonVC.rawVerifiableCredential as VerifiableCredentialDto<any>,
-        false,
-        legalPersonVC.rawVerifiableCredential.proof.jws
-      )
-      const isValidSignatureCompliance: boolean = await this.proofService.validateVC(
-        complianceVC.rawVerifiableCredential as VerifiableCredentialDto<any>,
-        false,
-        complianceVC.rawVerifiableCredential.proof.jws
-      )
-      const isValidSignatureVp: boolean = await this.proofService.validateVP(
-        typedVerifiablePresentation.originalVerifiablePresentation as VerifiablePresentationDto,
-        false,
-        typedVerifiablePresentation.originalVerifiablePresentation.proof.jws
-      )
       const shapeResult: ValidationResult = serviceOfferingShapeValidation
         ? {
             ...serviceOfferingShapeValidation,
@@ -99,18 +106,18 @@ export class SelfDescription2210vpService {
             conforms: serviceOfferingShapeValidation.conforms && legalPersonShapeValidation.conforms
           }
         : legalPersonShapeValidation
-      const conforms: boolean = shapeResult.conforms && isValidSignatureVp && isValidSignatureParticipant && isValidSignatureCompliance // && content.conforms
+      const conforms: boolean = shapeResult.conforms && isValidSignature // && content.conforms
       return {
         conforms,
         shape: shapeResult,
         // content,
-        isValidSignature: isValidSignatureVp && isValidSignatureParticipant && isValidSignatureCompliance
+        isValidSignature: isValidSignature
       }
     }
   }
 
   public async validateVP(signedSelfDescription: VerifiablePresentationDto): Promise<validationResultWithoutContent> {
-    const serviceOfferingVC = signedSelfDescription.verifiableCredential.filter(vc => vc.type.includes('ServiceOfferingExperimental'))[0]
+    const serviceOfferingVC = signedSelfDescription.verifiableCredential.filter(vc => vc.type.includes('ServiceOffering'))[0]
     const participantVC = signedSelfDescription.verifiableCredential.filter(vc => vc.type.includes('ParticipantCredential'))[0]
     /**
      * I will not change the following lines for now

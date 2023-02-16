@@ -20,7 +20,7 @@ import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant'
 import { ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
 import { IntentType, IVerifiableCredential, TypedVerifiableCredential, TypedVerifiablePresentation } from '../../@types/type/SSI.types'
 import { SDParserPipe } from '../../utils/pipes'
-import { getDidWeb } from '../../utils/methods'
+import { getDidWeb } from '../../utils/methods/did.2210vp.util'
 import { SsiTypesParserPipe } from '../../utils/pipes/ssi-types-parser.pipe'
 
 @Injectable()
@@ -74,9 +74,23 @@ export class SelfDescription2210vpService {
       if (serviceOfferingVC) {
         serviceOfferingShapeValidation = this.checkCredentialShape(serviceOfferingVC, expectedContexts[serviceOfferingVC.type])
       }
-      const isValidSignature: boolean = await this.checkParticipantCredential(
-        { selfDescription: legalPersonVC.rawVerifiableCredential, proof: complianceVC.rawVerifiableCredential.proof },
+      if (!complianceVC) {
+        throw new Error(`No compliance Verifiable Credential found for the issuer: ${getDidWeb()}`)
+      }
+      const isValidSignatureParticipant: boolean = await this.proofService.validateVC(
+        legalPersonVC.rawVerifiableCredential as VerifiableCredentialDto<any>,
+        false,
         legalPersonVC.rawVerifiableCredential.proof.jws
+      )
+      const isValidSignatureCompliance: boolean = await this.proofService.validateVC(
+        complianceVC.rawVerifiableCredential as VerifiableCredentialDto<any>,
+        false,
+        complianceVC.rawVerifiableCredential.proof.jws
+      )
+      const isValidSignatureVp: boolean = await this.proofService.validateVP(
+        typedVerifiablePresentation.originalVerifiablePresentation as VerifiablePresentationDto,
+        false,
+        typedVerifiablePresentation.originalVerifiablePresentation.proof.jws
       )
       const shapeResult: ValidationResult = serviceOfferingShapeValidation
         ? {
@@ -85,12 +99,12 @@ export class SelfDescription2210vpService {
             conforms: serviceOfferingShapeValidation.conforms && legalPersonShapeValidation.conforms
           }
         : legalPersonShapeValidation
-      const conforms: boolean = shapeResult.conforms && isValidSignature // && content.conforms
+      const conforms: boolean = shapeResult.conforms && isValidSignatureVp && isValidSignatureParticipant && isValidSignatureCompliance // && content.conforms
       return {
         conforms,
         shape: shapeResult,
         // content,
-        isValidSignature
+        isValidSignature: isValidSignatureVp && isValidSignatureParticipant && isValidSignatureCompliance
       }
     }
   }

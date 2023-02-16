@@ -1,8 +1,7 @@
 import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common'
-import { AddressDto, VerifiableCredentialDto } from '../../@types/dto/common'
+import { VerifiableCredentialDto } from '../../@types/dto/common'
 import { SelfDescriptionTypes } from '../../@types/enums'
 import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../../@types/constants'
-import { RegistrationNumberDto } from '../../@types/dto/participant'
 import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
 import {
   IntentType,
@@ -12,6 +11,7 @@ import {
   TypedVerifiablePresentation
 } from '../../@types/type/SSI.types'
 import { getDidWeb, getTypeFromSelfDescription } from '../methods'
+import { Address2210vpDto } from '../../@types/dto/common/address-2210vp.dto'
 
 @Injectable()
 export class SsiTypesParserPipe
@@ -33,42 +33,31 @@ export class SsiTypesParserPipe
     throw new Error(`Can't transform unsupported type: ${verifiableSelfDescriptionDto['type']}`)
   }
 
-  private getAddressValues(address: any): AddressDto {
-    const code = this.getValueFromShacl(address['gx-participant:addressCode'], 'code', SelfDescriptionTypes.PARTICIPANT)
-    const country_code = this.getValueFromShacl(address['gx-participant:addressCountryCode'], 'country_code', SelfDescriptionTypes.PARTICIPANT)
+  public getAddressValues(address: any): Address2210vpDto {
+    const countryName = this.getValueFromShacl(address['vcard:country-name'], 'country-name', SelfDescriptionTypes.PARTICIPANT)
+    const gps = this.getValueFromShacl(address['vcard:gps'], 'gps', SelfDescriptionTypes.PARTICIPANT)
+    const streetAddress = this.getValueFromShacl(address['vcard:street-address'], 'street-address', SelfDescriptionTypes.PARTICIPANT)
+    const postalCode = this.getValueFromShacl(address['vcard:postal-code'], 'postal-code', SelfDescriptionTypes.PARTICIPANT)
+    const locality = this.getValueFromShacl(address['vcard:locality'], 'locality', SelfDescriptionTypes.PARTICIPANT)
 
-    return { code, country_code }
-  }
-
-  private getRegistrationNumberValues(registrationNumber: any): RegistrationNumberDto[] {
-    if (registrationNumber.constructor !== Array) registrationNumber = [registrationNumber]
-
-    const values = []
-    for (const num of registrationNumber) {
-      const rType = this.getValueFromShacl(num['gx-participant:registrationNumberType'], 'type', SelfDescriptionTypes.PARTICIPANT)
-      const rNumber = this.getValueFromShacl(num['gx-participant:registrationNumberNumber'], 'number', SelfDescriptionTypes.PARTICIPANT)
-      values.push({ type: rType, number: rNumber })
-    }
-    return values
+    return { 'country-name': countryName, gps, 'street-address': streetAddress, 'postal-code': postalCode, locality }
   }
 
   private getValueFromShacl(shacl: any, key: string, type: string): any {
     if (type === SelfDescriptionTypes.PARTICIPANT && this.addressFields.includes(key)) {
       return this.getAddressValues(shacl)
     }
-    if (type === SelfDescriptionTypes.PARTICIPANT && key === 'registrationNumber') {
-      return this.getRegistrationNumberValues(shacl)
-    }
 
     return shacl && typeof shacl === 'object' && '@value' in shacl ? shacl['@value'] : shacl
   }
 
-  private replacePlaceholderInKey(key: string, type: string): string {
+  private static replacePlaceholderInKey(key: string, type: string): string {
     const sdTypes = {
       [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE['@type'],
       [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE['@type']
     }
-    const sdType = sdTypes[type]
+    let sdType = sdTypes[type]
+    sdType = key.startsWith(sdType) ? sdType : 'gax-trust-framework:'
     if (!sdType) {
       return key
     }
@@ -80,12 +69,12 @@ export class SsiTypesParserPipe
   private transformVerifiableCredential(verifiableCredential: VerifiableCredentialDto<any>): TypedVerifiableCredential {
     try {
       const originalVerifiableCredential = { ...verifiableCredential }
-      const type = getTypeFromSelfDescription(verifiableCredential)
-      const { credentialSubject } = verifiableCredential
-      delete verifiableCredential.credentialSubject
+      const type = getTypeFromSelfDescription(originalVerifiableCredential)
+      const { credentialSubject } = originalVerifiableCredential
+      delete originalVerifiableCredential.credentialSubject
 
       const flatten = {
-        sd: { ...verifiableCredential },
+        sd: { ...originalVerifiableCredential },
         cs: { ...credentialSubject }
       }
       delete flatten.sd.credentialSubject
@@ -94,13 +83,13 @@ export class SsiTypesParserPipe
         const keys = Object.keys(flatten[key])
         const cred = flatten[key]
         keys.forEach(key => {
-          const strippedKey = this.replacePlaceholderInKey(key, type)
+          const strippedKey = SsiTypesParserPipe.replacePlaceholderInKey(key, type)
           cred[strippedKey] = this.getValueFromShacl(cred[key], strippedKey, type)
         })
       }
       return {
         type,
-        rawVerifiableCredential: originalVerifiableCredential as IVerifiableCredential,
+        rawVerifiableCredential: verifiableCredential as IVerifiableCredential,
         transformedCredentialSubject: flatten.cs
       }
     } catch (error) {

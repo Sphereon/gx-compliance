@@ -6,11 +6,12 @@ import { CommonModule } from './common.module'
 import { SignatureService } from '../methods/common'
 import { Participant2210vpController } from '../controller/participant/participant-2210vp.controller'
 import { Signature2210vpService } from '../methods/common/signature.2010vp.service'
+import { ParticipantContentValidationV2210vpService } from '../methods/participant/content-validation-v2210vp.service'
 
 @Module({
   imports: [HttpModule, CommonModule],
   controllers: [ParticipantController, Participant2210vpController],
-  providers: [ParticipantContentValidationService, SignatureService, Signature2210vpService],
-  exports: [ParticipantContentValidationService]
+  providers: [ParticipantContentValidationService, ParticipantContentValidationV2210vpService, SignatureService, Signature2210vpService],
+  exports: [ParticipantContentValidationService, ParticipantContentValidationV2210vpService]
 })
 export class ParticipantModule {}

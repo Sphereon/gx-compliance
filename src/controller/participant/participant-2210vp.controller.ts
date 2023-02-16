@@ -3,11 +3,9 @@ import { Body, ConflictException, Controller, HttpCode, HttpStatus, Post, Query 
 import { ApiVerifyResponse } from '../../utils/decorators'
 import { getApiVerifyBodySchema } from '../../utils/methods'
 import { ValidationResultDto, VerifiableCredentialDto } from '../../@types/dto/common'
-import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant'
 import { JoiValidationPipe, BooleanQueryValidationPipe } from '../../utils/pipes'
 import { vcSchema, VerifiablePresentationSchema } from '../../utils/schema/ssi.schema'
 import { CredentialTypes } from '../../@types/enums'
-import { ParticipantContentValidationService } from '../../methods/participant/content-validation.service'
 import { SelfDescription2210vpService } from '../../methods/common/selfDescription.2210vp.service'
 import ParticipantVC from '../../tests/fixtures/2010VP/sphereon-LegalPerson.json'
 import { validationResultWithoutContent } from '../../@types/type'
@@ -15,6 +13,8 @@ import SphereonParticipantVP from '../../tests/fixtures/2010VP/sphereon-particip
 import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
 import { SsiTypesParserPipe } from '../../utils/pipes/ssi-types-parser.pipe'
 import { IVerifiableCredential, TypedVerifiableCredential, TypedVerifiablePresentation } from '../../@types/type/SSI.types'
+import { ParticipantContentValidationV2210vpService } from '../../methods/participant/content-validation-v2210vp.service'
+import { ParticipantSelfDescriptionV2210vpDto } from '../../@types/dto/participant/participant-sd-v2210vp.dto'
 
 const credentialType = CredentialTypes.participant
 @ApiTags(credentialType)
@@ -22,11 +22,11 @@ const credentialType = CredentialTypes.participant
 export class Participant2210vpController {
   constructor(
     private readonly selfDescriptionService: SelfDescription2210vpService,
-    private readonly participantContentValidationService: ParticipantContentValidationService
+    private readonly participantContentValidationService: ParticipantContentValidationV2210vpService
   ) {}
 
   @ApiVerifyResponse(credentialType)
-  @Post('onboard')
+  @Post('verify/raw')
   @ApiOperation({ summary: 'Validate a Participant Self Description VP' })
   @ApiExtraModels(VerifiablePresentationDto)
   @ApiQuery({
@@ -84,7 +84,7 @@ export class Participant2210vpController {
 
     const content = await this.participantContentValidationService.validate(
       typedVerifiablePresentation.getTypedVerifiableCredentials('LegalPerson')[0]
-        .transformedCredentialSubject as unknown as ParticipantSelfDescriptionDto
+        .transformedCredentialSubject as unknown as ParticipantSelfDescriptionV2210vpDto
     )
     validationResult.conforms = validationResult.conforms && content.conforms
     if (!validationResult.conforms)
@@ -97,7 +97,7 @@ export class Participant2210vpController {
     const validationResult: validationResultWithoutContent = await this.selfDescriptionService.validateVC(participantVC)
     //fixme validate should receive the credentialSubject
     const content = await this.participantContentValidationService.validate(
-      participantVC.credentialSubject as unknown as ParticipantSelfDescriptionDto
+      participantVC.credentialSubject as unknown as ParticipantSelfDescriptionV2210vpDto
     )
     if (!validationResult.conforms)
       throw new ConflictException({

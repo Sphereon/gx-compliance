@@ -88,7 +88,7 @@ export class SelfDescription2210vpService {
       const legalPersonShapeValidation = await this.checkCredentialShape(legalPersonVC, expectedContexts[legalPersonVC.type])
       let serviceOfferingShapeValidation
       if (serviceOfferingVC) {
-        //fixme we're ignoring the shape validation for service-offerings for now, bringg thisback when we have shpaes for v2210vp service-offerings
+        //fixme we're ignoring the shape validation for service-offerings for now, bring this back when we have shapes for v2210vp service-offerings
         // serviceOfferingShapeValidation = this.checkCredentialShape(serviceOfferingVC, expectedContexts[serviceOfferingVC.type])
         serviceOfferingShapeValidation = {
           conforms: true,

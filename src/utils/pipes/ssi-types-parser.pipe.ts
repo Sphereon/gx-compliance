@@ -66,15 +66,15 @@ export class SsiTypesParserPipe
     return key.replace(keyType, '')
   }
 
-  private transformVerifiableCredential(verifiableCredential: VerifiableCredentialDto<any>): TypedVerifiableCredential {
+  private transformVerifiableCredential(originalVerifiableCredential: VerifiableCredentialDto<any>): TypedVerifiableCredential {
     try {
-      const originalVerifiableCredential = { ...verifiableCredential }
-      const type = getTypeFromSelfDescription(originalVerifiableCredential)
-      const { credentialSubject } = originalVerifiableCredential
-      delete originalVerifiableCredential.credentialSubject
+      const verifiableCredential = { ...originalVerifiableCredential }
+      const type = getTypeFromSelfDescription(verifiableCredential)
+      const { credentialSubject } = verifiableCredential
+      delete verifiableCredential.credentialSubject
 
       const flatten = {
-        sd: { ...originalVerifiableCredential },
+        sd: { ...verifiableCredential },
         cs: { ...credentialSubject }
       }
       delete flatten.sd.credentialSubject
@@ -89,7 +89,7 @@ export class SsiTypesParserPipe
       }
       return {
         type,
-        rawVerifiableCredential: verifiableCredential as IVerifiableCredential,
+        rawVerifiableCredential: originalVerifiableCredential as IVerifiableCredential,
         transformedCredentialSubject: flatten.cs
       }
     } catch (error) {
@@ -188,7 +188,7 @@ export class SsiTypesParserPipe
   ): TypedVerifiableCredential {
     for (const tvc of typedVerifiablePresentation.typedVerifiableCredentials) {
       if (tvc.type === credentialType) {
-        if(issuerAddress && tvc.rawVerifiableCredential.issuer === issuerAddress) {
+        if (issuerAddress && tvc.rawVerifiableCredential.issuer === issuerAddress) {
           return tvc
         } else {
           return tvc

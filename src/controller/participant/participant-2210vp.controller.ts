@@ -15,6 +15,8 @@ import { SsiTypesParserPipe } from '../../utils/pipes/ssi-types-parser.pipe'
 import { IVerifiableCredential, TypedVerifiableCredential, TypedVerifiablePresentation } from '../../@types/type/SSI.types'
 import { ParticipantContentValidationV2210vpService } from '../../methods/participant/content-validation-v2210vp.service'
 import { ParticipantSelfDescriptionV2210vpDto } from '../../@types/dto/participant/participant-sd-v2210vp.dto'
+import { HttpService } from '@nestjs/axios'
+import { VerifyParticipantDto } from '../../@types/dto/participant'
 
 const credentialType = CredentialTypes.participant
 @ApiTags(credentialType)
@@ -22,7 +24,8 @@ const credentialType = CredentialTypes.participant
 export class Participant2210vpController {
   constructor(
     private readonly selfDescriptionService: SelfDescription2210vpService,
-    private readonly participantContentValidationService: ParticipantContentValidationV2210vpService
+    private readonly participantContentValidationService: ParticipantContentValidationV2210vpService,
+    private readonly httpService: HttpService
   ) {}
 
   @ApiVerifyResponse(credentialType)
@@ -48,6 +51,41 @@ export class Participant2210vpController {
   ): Promise<ValidationResultDto> {
     const validationResult: ValidationResultDto = await this.verifyAndStoreSignedParticipantVP(wrappedVerifiablePresentation, storeSD)
     return validationResult
+  }
+
+  @ApiVerifyResponse(credentialType)
+  @Post('verify')
+  @ApiOperation({ summary: 'Validate a Participant Self Description VP via its URL' })
+  @ApiExtraModels(VerifiablePresentationDto)
+  @ApiBody({
+    type: VerifyParticipantDto
+  })
+  @ApiQuery({
+    name: 'store',
+    type: Boolean,
+    description: 'Store Self Description for learning purposes for six months in the storage service',
+    required: false
+  })
+  @HttpCode(HttpStatus.OK)
+  async verifyParticipantUrl(
+    @Body() verifyParticipant,
+    @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean
+  ): Promise<ValidationResultDto> {
+    const { url } = verifyParticipant
+    let typesVerifiablePresentation: TypedVerifiablePresentation
+    try {
+      const response = await this.httpService.get(url, { transformResponse: r => r }).toPromise()
+      const { data: rawData } = response
+      typesVerifiablePresentation = new SsiTypesParserPipe().transform(JSON.parse(rawData)) as TypedVerifiablePresentation
+    } catch (e) {
+      throw new ConflictException({
+        statusCode: HttpStatus.CONFLICT,
+        message: `Can't get the VerifiablePresentation from url: ${url}`,
+        error: 'Conflict'
+      })
+    }
+
+    return await this.verifyAndStoreSignedParticipantVP(typesVerifiablePresentation, storeSD)
   }
 
   @ApiVerifyResponse(credentialType)

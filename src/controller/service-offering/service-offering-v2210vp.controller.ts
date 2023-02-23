@@ -1,37 +1,31 @@
 import { ApiBody, ApiExtraModels, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { Body, Controller, HttpStatus, Post, HttpCode, ConflictException, BadRequestException, Query } from '@nestjs/common'
-import ServiceOfferingVC from '../../tests/fixtures/2010VP/sphereon-service-offering-vc.json'
 import SphereonServiceOfferingVP from '../../tests/fixtures/2010VP/sphereon-service-offering.json'
 import { HttpService } from '@nestjs/axios'
-import { RegistryService, SelfDescriptionService, ShaclService } from '../../methods/common'
-import { ServiceOfferingContentValidationService } from '../../methods/service-offering/content-validation.service'
+import { SelfDescriptionService, ShaclService } from '../../methods/common'
 import { ApiVerifyResponse } from '../../utils/decorators'
 import {
   CredentialSubjectDto,
   Schema_caching,
-  SignedSelfDescriptionDto,
   ValidationResult,
   ValidationResultDto,
   VerifiableCredentialDto,
   VerifiableSelfDescriptionDto
 } from '../../@types/dto/common'
-import { ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
+import { ServiceOfferingSelfDescriptionDto, VerifyServiceOfferingDto } from '../../@types/dto/service-offering'
 import { getApiVerifyBodySchema } from '../../utils/methods'
 import { BooleanQueryValidationPipe, JoiValidationPipe, SDParserPipe } from '../../utils/pipes'
-import { SignedSelfDescriptionSchema } from '../../utils/schema/selfDescription.schema'
 import { SsiTypesParserPipe } from '../../utils/pipes/ssi-types-parser.pipe'
 import { validationResultWithoutContent } from '../../@types/type'
 import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
 import { vcSchema, VerifiablePresentationSchema } from '../../utils/schema/ssi.schema'
-import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant'
 import { CredentialTypes, SelfDescriptionTypes } from '../../@types/enums'
-import { ParticipantContentValidationService } from '../../methods/participant/content-validation.service'
 import DatasetExt from 'rdf-ext/lib/Dataset'
 import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../../@types/constants'
 import { SelfDescription2210vpService } from '../../methods/common/selfDescription.2210vp.service'
 import { ServiceOfferingContentValidation2210vpService } from '../../methods/service-offering/content-validation.2210vp.service'
 import { Proof2210vpService } from '../../methods/common/proof.2210vp.service'
-import { IVerifiableCredential, TypedVerifiableCredential, TypedVerifiablePresentation } from '../../@types/type/SSI.types'
+import { TypedVerifiableCredential, TypedVerifiablePresentation } from '../../@types/type/SSI.types'
 
 const credentialType = CredentialTypes.service_offering
 
@@ -89,6 +83,46 @@ export class ServiceOfferingV2210vpController {
       verifyParticipant
     )
     return validationResult
+  }
+
+  @ApiVerifyResponse(credentialType)
+  @Post('verify')
+  @ApiOperation({ summary: 'Validate a ServiceOffering Self Description VP via its URL' })
+  @ApiExtraModels(VerifiablePresentationDto)
+  @ApiBody({
+    type: VerifyServiceOfferingDto
+  })
+  @ApiQuery({
+    name: 'store',
+    type: Boolean,
+    description: 'Store Self Description for learning purposes for six months in the storage service',
+    required: false
+  })
+  @ApiQuery({
+    name: 'verifyParticipant',
+    type: Boolean,
+    required: false
+  })
+  @HttpCode(HttpStatus.OK)
+  async verifyServiceOfferingUrl(
+    @Body() verifyServiceOffering,
+    @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean
+  ): Promise<ValidationResultDto> {
+    const { url } = verifyServiceOffering
+    let typesVerifiablePresentation: TypedVerifiablePresentation
+    try {
+      const response = await this.httpService.get(url, { transformResponse: r => r }).toPromise()
+      const { data: rawData } = response
+      typesVerifiablePresentation = new SsiTypesParserPipe().transform(JSON.parse(rawData)) as TypedVerifiablePresentation
+    } catch (e) {
+      throw new ConflictException({
+        statusCode: HttpStatus.CONFLICT,
+        message: `Can't get the VerifiablePresentation from url: ${url}`,
+        error: 'Conflict'
+      })
+    }
+
+    return await this.verifyAndStoreSignedServiceOfferingVP(typesVerifiablePresentation, storeSD)
   }
 
   @ApiVerifyResponse(credentialType)

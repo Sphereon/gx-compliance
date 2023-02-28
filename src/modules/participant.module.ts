@@ -11,7 +11,13 @@ import { ParticipantContentValidationV2210vpService } from '../methods/participa
 @Module({
   imports: [HttpModule, CommonModule],
   controllers: [ParticipantController, Participant2210vpController],
-  providers: [ParticipantContentValidationService, ParticipantContentValidationV2210vpService, SignatureService, Signature2210vpService],
-  exports: [ParticipantContentValidationService, ParticipantContentValidationV2210vpService]
+  providers: [
+    ParticipantContentValidationService,
+    ParticipantContentValidationV2210vpService,
+    SignatureService,
+    Signature2210vpService,
+    ParticipantController
+  ],
+  exports: [ParticipantContentValidationService, ParticipantContentValidationV2210vpService, ParticipantController]
 })
 export class ParticipantModule {}

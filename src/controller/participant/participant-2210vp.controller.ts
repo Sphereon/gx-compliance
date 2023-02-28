@@ -2,8 +2,8 @@ import { ApiBody, ApiExtraModels, ApiOperation, ApiQuery, ApiTags } from '@nestj
 import { Body, ConflictException, Controller, HttpCode, HttpStatus, Post, Query } from '@nestjs/common'
 import { ApiVerifyResponse } from '../../utils/decorators'
 import { getApiVerifyBodySchema } from '../../utils/methods'
-import { ValidationResultDto, VerifiableCredentialDto } from '../../@types/dto/common'
-import { JoiValidationPipe, BooleanQueryValidationPipe } from '../../utils/pipes'
+import { SignedSelfDescriptionDto, ValidationResultDto, VerifiableCredentialDto, VerifiableSelfDescriptionDto } from '../../@types/dto/common'
+import { JoiValidationPipe, BooleanQueryValidationPipe, SDParserPipe } from '../../utils/pipes'
 import { vcSchema, VerifiablePresentationSchema } from '../../utils/schema/ssi.schema'
 import { CredentialTypes } from '../../@types/enums'
 import { SelfDescription2210vpService } from '../../methods/common/selfDescription.2210vp.service'
@@ -16,7 +16,8 @@ import { IVerifiableCredential, TypedVerifiableCredential, TypedVerifiablePresen
 import { ParticipantContentValidationV2210vpService } from '../../methods/participant/content-validation-v2210vp.service'
 import { ParticipantSelfDescriptionV2210vpDto } from '../../@types/dto/participant/participant-sd-v2210vp.dto'
 import { HttpService } from '@nestjs/axios'
-import { VerifyParticipantDto } from '../../@types/dto/participant'
+import { ParticipantSelfDescriptionDto, VerifyParticipantDto } from '../../@types/dto/participant'
+import { ParticipantController } from './participant.controller'
 
 const credentialType = CredentialTypes.participant
 @ApiTags(credentialType)
@@ -25,7 +26,8 @@ export class Participant2210vpController {
   constructor(
     private readonly selfDescriptionService: SelfDescription2210vpService,
     private readonly participantContentValidationService: ParticipantContentValidationV2210vpService,
-    private readonly httpService: HttpService
+    private readonly httpService: HttpService,
+    private readonly gxParticipantController: ParticipantController
   ) {}
 
   @ApiVerifyResponse(credentialType)
@@ -45,12 +47,19 @@ export class Participant2210vpController {
   )
   @HttpCode(HttpStatus.OK)
   async verifyParticipantVP(
-    @Body(new JoiValidationPipe(VerifiablePresentationSchema), new SsiTypesParserPipe())
-    wrappedVerifiablePresentation: TypedVerifiablePresentation,
+    @Body(new JoiValidationPipe(VerifiablePresentationSchema))
+    rawData: VerifiablePresentationDto | VerifiableSelfDescriptionDto<ParticipantSelfDescriptionDto>,
     @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean
   ): Promise<ValidationResultDto> {
-    const validationResult: ValidationResultDto = await this.verifyAndStoreSignedParticipantVP(wrappedVerifiablePresentation, storeSD)
-    return validationResult
+    if (!rawData['type'] || !(rawData['type'] as string[]).includes('VerifiablePresentation')) {
+      const sdParser = new SDParserPipe('LegalPerson')
+      const transformed: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto> = sdParser.transform(
+        rawData as VerifiableSelfDescriptionDto<ParticipantSelfDescriptionDto>
+      ) as SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>
+      return await this.gxParticipantController.verifyParticipantRaw(transformed, storeSD)
+    }
+    const typedVerifiablePresentation = new SsiTypesParserPipe().transform(rawData as VerifiablePresentationDto) as TypedVerifiablePresentation
+    return await this.verifyAndStoreSignedParticipantVP(typedVerifiablePresentation, storeSD)
   }
 
   @ApiVerifyResponse(credentialType)
@@ -76,7 +85,15 @@ export class Participant2210vpController {
     try {
       const response = await this.httpService.get(url, { transformResponse: r => r }).toPromise()
       const { data: rawData } = response
-      typesVerifiablePresentation = new SsiTypesParserPipe().transform(JSON.parse(rawData)) as TypedVerifiablePresentation
+      const dataJson = JSON.parse(rawData)
+      if (!dataJson['type'] || !(dataJson['type'] as string[]).includes('VerifiablePresentation')) {
+        const sdParser = new SDParserPipe('LegalPerson')
+        const transformed: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto> = sdParser.transform(
+          dataJson
+        ) as SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>
+        return await this.gxParticipantController.verifyParticipantRaw(transformed, storeSD)
+      }
+      typesVerifiablePresentation = new SsiTypesParserPipe().transform(dataJson) as TypedVerifiablePresentation
     } catch (e) {
       throw new ConflictException({
         statusCode: HttpStatus.CONFLICT,

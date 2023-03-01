@@ -5,7 +5,7 @@ import { CredentialSubjectDto, VerifiableCredentialDto } from '../common'
 import { SignatureDto } from '../common'
 import { RegistrationNumberDto } from './registration-number.dto'
 
-export class ParticipantSelfDescriptionDto extends CredentialSubjectDto {
+export class  ParticipantSelfDescriptionDto extends CredentialSubjectDto {
   @ApiProperty({
     description: 'Registration number(s) which identify one specific company.',
     externalDocs: {

@@ -6,13 +6,13 @@ metadata:
 spec:
   internalTrafficPolicy: Cluster
   ipFamilies:
-  - IPv4
+    - IPv4
   ipFamilyPolicy: SingleStack
   ports:
-  - name: http
-    port: 80
-    protocol: TCP
-    targetPort: http-api
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http-api
   selector:
     app: gx-compliance-live-server-2206-main
   sessionAffinity: None

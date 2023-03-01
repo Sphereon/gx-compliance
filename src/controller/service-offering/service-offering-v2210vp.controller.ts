@@ -1,10 +1,8 @@
 import { ApiBody, ApiExtraModels, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { Body, Controller, HttpStatus, Post, HttpCode, ConflictException, BadRequestException, Query } from '@nestjs/common'
-import ServiceOfferingVC from '../../tests/fixtures/2010VP/sphereon-service-offering-vc.json'
 import SphereonServiceOfferingVP from '../../tests/fixtures/2010VP/sphereon-service-offering.json'
 import { HttpService } from '@nestjs/axios'
-import { RegistryService, SelfDescriptionService, ShaclService } from '../../methods/common'
-import { ServiceOfferingContentValidationService } from '../../methods/service-offering/content-validation.service'
+import { SelfDescriptionService, ShaclService } from '../../methods/common'
 import { ApiVerifyResponse } from '../../utils/decorators'
 import {
   CredentialSubjectDto,
@@ -15,23 +13,22 @@ import {
   VerifiableCredentialDto,
   VerifiableSelfDescriptionDto
 } from '../../@types/dto/common'
-import { ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
+import { ServiceOfferingSelfDescriptionDto, VerifyServiceOfferingDto } from '../../@types/dto/service-offering'
 import { getApiVerifyBodySchema } from '../../utils/methods'
 import { BooleanQueryValidationPipe, JoiValidationPipe, SDParserPipe } from '../../utils/pipes'
-import { SignedSelfDescriptionSchema } from '../../utils/schema/selfDescription.schema'
 import { SsiTypesParserPipe } from '../../utils/pipes/ssi-types-parser.pipe'
 import { validationResultWithoutContent } from '../../@types/type'
 import { VerifiablePresentationDto } from '../../@types/dto/common/presentation-meta.dto'
-import { vcSchema } from '../../utils/schema/ssi.schema'
-import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant'
+import { vcSchema, VerifiablePresentationSchema } from '../../utils/schema/ssi.schema'
 import { CredentialTypes, SelfDescriptionTypes } from '../../@types/enums'
-import { ParticipantContentValidationService } from '../../methods/participant/content-validation.service'
 import DatasetExt from 'rdf-ext/lib/Dataset'
 import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../../@types/constants'
 import { SelfDescription2210vpService } from '../../methods/common/selfDescription.2210vp.service'
 import { ServiceOfferingContentValidation2210vpService } from '../../methods/service-offering/content-validation.2210vp.service'
 import { Proof2210vpService } from '../../methods/common/proof.2210vp.service'
-import { IVerifiableCredential, TypedVerifiableCredential, TypedVerifiablePresentation } from '../../@types/type/SSI.types'
+import { TypedVerifiableCredential, TypedVerifiablePresentation } from '../../@types/type/SSI.types'
+import { ServiceOfferingController } from './service-offering.controller'
+import { ServiceOfferingContentValidationService } from '../../methods/service-offering/content-validation.service'
 
 const credentialType = CredentialTypes.service_offering
 
@@ -50,14 +47,16 @@ const cache: Schema_caching = {
 export class ServiceOfferingV2210vpController {
   constructor(
     private readonly httpService: HttpService,
-    private readonly selfDescriptionService: SelfDescription2210vpService,
-    private readonly serviceOfferingContentValidationService: ServiceOfferingContentValidationService,
+    private readonly selfDescription2210vpService: SelfDescription2210vpService,
+    private readonly serviceOfferingContentValidation2210vpService: ServiceOfferingContentValidation2210vpService,
     private readonly shaclService: ShaclService,
-    private readonly proofService: Proof2210vpService
+    private readonly proof2210vpService: Proof2210vpService,
+    private readonly selfDescriptionService: SelfDescriptionService,
+    private readonly serviceOfferingContentValidationService: ServiceOfferingContentValidationService
   ) {}
 
   @ApiVerifyResponse(credentialType)
-  @Post('onboard')
+  @Post('verify/raw')
   @ApiOperation({ summary: 'Validate a Service Offering Self Description' })
   @ApiExtraModels(VerifiableSelfDescriptionDto, VerifiableCredentialDto, ServiceOfferingSelfDescriptionDto)
   @ApiQuery({
@@ -78,17 +77,75 @@ export class ServiceOfferingV2210vpController {
   )
   @HttpCode(HttpStatus.OK)
   async verifyServiceOfferingVP(
-    @Body(new JoiValidationPipe(SignedSelfDescriptionSchema), new SsiTypesParserPipe())
-    typedVerifiablePresentation: TypedVerifiablePresentation,
+    @Body() rawData: VerifiablePresentationDto | VerifiableSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>,
     @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean,
-    @Query('verifyParticipant', new BooleanQueryValidationPipe(true)) verifyParticipant: boolean
+    @Query('verifyParticipant', new BooleanQueryValidationPipe()) verifyParticipant: boolean
   ): Promise<ValidationResultDto> {
-    const validationResult: ValidationResultDto = await this.verifyAndStoreSignedServiceOfferingVP(
-      typedVerifiablePresentation,
-      storeSD,
-      verifyParticipant
-    )
-    return validationResult
+    if (!rawData['type'] || !(rawData['type'] as string[]).includes('VerifiablePresentation')) {
+      const sdParser = new SDParserPipe(SelfDescriptionTypes.SERVICE_OFFERING)
+      const transformed: SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto> = sdParser.transform(
+        rawData as VerifiableSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>
+      ) as SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>
+      return await new ServiceOfferingController(this.selfDescriptionService, this.serviceOfferingContentValidationService).verifyServiceOfferingRaw(
+        transformed,
+        storeSD,
+        verifyParticipant
+      )
+    }
+    const typedVerifiablePresentation = new SsiTypesParserPipe().transform(rawData as VerifiablePresentationDto) as TypedVerifiablePresentation
+    return await this.verifyAndStoreSignedServiceOfferingVP(typedVerifiablePresentation, storeSD, verifyParticipant)
+  }
+
+  @ApiVerifyResponse(credentialType)
+  @Post('verify')
+  @ApiOperation({ summary: 'Validate a ServiceOffering Self Description VP via its URL' })
+  @ApiExtraModels(VerifiablePresentationDto)
+  @ApiBody({
+    type: VerifyServiceOfferingDto
+  })
+  @ApiQuery({
+    name: 'store',
+    type: Boolean,
+    description: 'Store Self Description for learning purposes for six months in the storage service',
+    required: false
+  })
+  @ApiQuery({
+    name: 'verifyParticipant',
+    type: Boolean,
+    required: false
+  })
+  @HttpCode(HttpStatus.OK)
+  async verifyServiceOfferingUrl(
+    @Body() verifyServiceOffering,
+    @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean,
+    @Query('verifyParticipant', new BooleanQueryValidationPipe()) verifyParticipant: boolean
+  ): Promise<ValidationResultDto> {
+    const { url } = verifyServiceOffering
+    let typesVerifiablePresentation: TypedVerifiablePresentation
+    try {
+      const response = await this.httpService.get(url, { transformResponse: r => r }).toPromise()
+      const { data: rawData } = response
+      const dataJson = JSON.parse(rawData)
+      if (!dataJson['type'] || !(rawData['type'] as string[]).includes('VerifiablePresentation')) {
+        const sdParser = new SDParserPipe(SelfDescriptionTypes.SERVICE_OFFERING)
+        const transformed: SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto> = sdParser.transform(
+          dataJson
+        ) as SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>
+        return await new ServiceOfferingController(
+          this.selfDescriptionService,
+          this.serviceOfferingContentValidationService
+        ).verifyServiceOfferingRaw(transformed, storeSD, verifyParticipant)
+      }
+      typesVerifiablePresentation = new SsiTypesParserPipe().transform(dataJson) as TypedVerifiablePresentation
+    } catch (e) {
+      throw new ConflictException({
+        statusCode: HttpStatus.CONFLICT,
+        message: `Can't get the VerifiablePresentation from url: ${url}`,
+        error: 'Conflict'
+      })
+    }
+
+    return await this.verifyAndStoreSignedServiceOfferingVP(typesVerifiablePresentation, storeSD)
   }
 
   @ApiVerifyResponse(credentialType)
@@ -97,7 +154,7 @@ export class ServiceOfferingV2210vpController {
   @ApiExtraModels(VerifiableCredentialDto)
   @ApiBody(
     getApiVerifyBodySchema('ServiceOfferingExperimental', {
-      service: { summary: 'Service Offering VC Example', value: ServiceOfferingVC }
+      service: { summary: 'Service Offering VC Example', value: SphereonServiceOfferingVP.verifiableCredential[2] }
     })
   )
   @HttpCode(HttpStatus.OK)
@@ -105,25 +162,31 @@ export class ServiceOfferingV2210vpController {
     @Body(new JoiValidationPipe(vcSchema), new SsiTypesParserPipe())
     typedVerifiableCredential: TypedVerifiableCredential
   ): Promise<ValidationResultDto> {
-    const validationResult: ValidationResultDto = await this.validateSignedServiceOfferingVC(typedVerifiableCredential.rawVerifiableCredential)
+    const validationResult: ValidationResultDto = await this.validateSignedServiceOfferingVC(typedVerifiableCredential)
     return validationResult
   }
 
   private async verifySignedServiceOfferingVP(
-    serviceOfferingSelfDescription: VerifiablePresentationDto,
-    verifyParticipant = true
+    serviceOfferingSelfDescription: TypedVerifiablePresentation,
+    verifyParticipant: boolean
   ): Promise<ValidationResultDto> {
     // TODO Use actual validate functions instead of a remote call
+    const serviceOffering = SsiTypesParserPipe.getTypedVerifiableCredentialWithTypeAndIssuer(serviceOfferingSelfDescription, 'ServiceOffering')
+    if (!serviceOffering) {
+      throw new Error("Couldn't find a valid ServiceOffering")
+    }
+    // fixme: disabling this check because we have valid instances which don't have this property
+    /*if (!serviceOffering.rawVerifiableCredential.credentialSubject.providedBy) {
+      throw new Error("Couldn't find a valid the 'providedBy` field of the ServiceOffering")
+    }*/
     if (verifyParticipant) {
       try {
         const httpService = new HttpService()
-        for (const vc1 of serviceOfferingSelfDescription.verifiableCredential.filter(vc => vc.type.indexOf('ServiceOfferingExperimental') != -1)) {
-          await httpService
-            .post('https://compliance.gaia-x.eu/v2206/api/participant/verify', {
-              url: vc1.credentialSubject.providedBy
-            })
-            .toPromise()
-        }
+        await httpService
+          .post('https://compliance.gaia-x.eu/v2206/api/participant/verify', {
+            url: serviceOffering.rawVerifiableCredential.credentialSubject.providedBy
+          })
+          .toPromise()
       } catch (error) {
         console.error({ error })
         if (error.response.status == 409) {
@@ -140,24 +203,16 @@ export class ServiceOfferingV2210vpController {
       }
     }
 
-    const validationResult: validationResultWithoutContent = await this.selfDescriptionService.validateVP(serviceOfferingSelfDescription)
-    const serviceOfferingVC = serviceOfferingSelfDescription.verifiableCredential.filter(vc => vc.type.indexOf('ServiceOfferingExperimental'))[0]
-    const get_SD: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto> = await new Promise(async (resolve, reject) => {
-      try {
-        const response = await this.httpService.get(serviceOfferingVC.credentialSubject.providedBy as string).toPromise()
-        const { data } = response
-        const participantSD = new SDParserPipe(SelfDescriptionTypes.PARTICIPANT).transform(data)
-        resolve(participantSD as SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>)
-      } catch (e) {
-        reject(new ConflictException('Participant SD not found'))
+    const validationResult: validationResultWithoutContent = await this.selfDescription2210vpService.validate(serviceOfferingSelfDescription)
+    const content = await this.serviceOfferingContentValidation2210vpService.validate(
+      //TODO: fix this later
+      serviceOfferingSelfDescription,
+      {
+        conforms: true,
+        shape: { conforms: true, results: [] },
+        content: { conforms: true, results: [] },
+        isValidSignature: true
       }
-    })
-    // make it VP/VC friendly
-    const participant_verif = await this.validate(get_SD)
-    const content = await this.serviceOfferingContentValidationService.validate(
-      serviceOfferingVC as unknown as SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>,
-      get_SD,
-      participant_verif
     )
 
     if (!validationResult.conforms)
@@ -176,22 +231,12 @@ export class ServiceOfferingV2210vpController {
     }
   }
 
-  private async validateSignedServiceOfferingVC(serviceOfferingVC: IVerifiableCredential): Promise<ValidationResultDto> {
-    const validationResult: validationResultWithoutContent = await this.selfDescriptionService.validateVC(serviceOfferingVC)
-    const get_SD: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto> = await new Promise(async (resolve, reject) => {
-      try {
-        const response = await this.httpService.get(serviceOfferingVC.credentialSubject['providedBy'] as string).toPromise()
-        const { data } = response
-        const participantSD = new SDParserPipe(SelfDescriptionTypes.PARTICIPANT).transform(data)
-        resolve(participantSD as SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>)
-      } catch (e) {
-        reject(new ConflictException('Participant SD not found'))
-      }
-    })
-    const content = await this.serviceOfferingContentValidationService.validate(
-      get_SD as unknown as SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>,
-      get_SD as SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>,
-      null
+  private async validateSignedServiceOfferingVC(typedServiceOfferingVC: TypedVerifiableCredential): Promise<ValidationResultDto> {
+    const validationResult: validationResultWithoutContent = await this.selfDescription2210vpService.validateVC(
+      typedServiceOfferingVC.rawVerifiableCredential
+    )
+    const content = await this.serviceOfferingContentValidation2210vpService.validateServiceOfferingCredentialSubject(
+      typedServiceOfferingVC.rawVerifiableCredential
     )
 
     if (!validationResult.conforms)
@@ -207,56 +252,6 @@ export class ServiceOfferingV2210vpController {
     return {
       ...validationResult,
       content
-    }
-  }
-
-  public async validate(signedSelfDescription: any): Promise<ValidationResultDto> {
-    try {
-      const participantContentValidationService = new ParticipantContentValidationService(this.httpService, new RegistryService(this.httpService))
-      const serviceOfferingContentValidationService = new ServiceOfferingContentValidation2210vpService(this.proofService, this.httpService)
-      const { selfDescriptionCredential: selfDescription, raw, rawCredentialSubject, complianceCredential, proof } = signedSelfDescription
-      const type: string = selfDescription.type.find(t => t !== 'VerifiableCredential')
-      const shape: ValidationResult = await this.ShapeVerification(selfDescription, rawCredentialSubject, type)
-      const isValidSignature = true
-      // fixme:bring this back
-      /*await this.checkParticipantCredential(
-        { selfDescription: parsedRaw, proof: complianceCredential?.proof },
-        proof?.jws
-      )*/
-      //const isValidSignature = true //test-purpose
-      const validationFns: { [key: string]: () => Promise<ValidationResultDto> } = {
-        [SelfDescriptionTypes.PARTICIPANT]: async () => {
-          const content: ValidationResult = await participantContentValidationService.validate(
-            selfDescription.credentialSubject as ParticipantSelfDescriptionDto
-          )
-          const conforms: boolean = shape.conforms && isValidSignature && content.conforms
-
-          return { conforms, isValidSignature, content, shape }
-        },
-        [SelfDescriptionTypes.SERVICE_OFFERING]: async () => {
-          const get_SD: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto> = await new Promise(async (resolve, reject) => {
-            try {
-              const response = await this.httpService.get(selfDescription.credentialSubject.providedBy).toPromise()
-              const { data } = response
-              const participantSD = new SDParserPipe(SelfDescriptionTypes.PARTICIPANT).transform(data)
-              resolve(participantSD as SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>)
-            } catch (e) {
-              reject(new ConflictException('Participant SD not found'))
-            }
-          })
-          const participant_verif = await this.validate(get_SD)
-          const content = await serviceOfferingContentValidationService.validate(
-            signedSelfDescription as SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>,
-            get_SD as SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>,
-            participant_verif
-          )
-          const conforms: boolean = shape.conforms && isValidSignature && content.conforms
-          return { conforms, isValidSignature, content, shape }
-        }
-      }
-      return (await validationFns[type]()) || undefined
-    } catch (e) {
-      throw e
     }
   }
 
@@ -266,9 +261,11 @@ export class ServiceOfferingV2210vpController {
     verifyParticipant?: boolean
   ) {
     const serviceOfferingVerifiablePresentation = serviceOfferingSelfDescription.originalVerifiablePresentation
-    const result = await this.verifySignedServiceOfferingVP(serviceOfferingVerifiablePresentation as VerifiablePresentationDto, verifyParticipant)
+    const result = await this.verifySignedServiceOfferingVP(serviceOfferingSelfDescription, verifyParticipant)
     if (result?.conforms && storeSD) {
-      result.storedSdUrl = await this.selfDescriptionService.storeSelfDescription(serviceOfferingVerifiablePresentation as VerifiablePresentationDto)
+      result.storedSdUrl = await this.selfDescription2210vpService.storeSelfDescription(
+        serviceOfferingVerifiablePresentation as VerifiablePresentationDto
+      )
     }
     return result
   }

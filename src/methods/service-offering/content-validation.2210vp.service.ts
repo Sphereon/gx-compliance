@@ -1,48 +1,46 @@
 import { Injectable } from '@nestjs/common'
-import { ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
-import { SignedSelfDescriptionDto, ValidationResult, ValidationResultDto } from '../../@types/dto/common'
+import { ValidationResult, ValidationResultDto } from '../../@types/dto/common'
 import { HttpService } from '@nestjs/axios'
 import typer from 'media-typer'
-import { ParticipantSelfDescriptionDto } from 'src/@types/dto/participant'
 import { Proof2210vpService } from '../common/proof.2210vp.service'
+import { ICredentialSubject, TypedVerifiablePresentation } from '../../@types/type/SSI.types'
+
 @Injectable()
 export class ServiceOfferingContentValidation2210vpService {
   constructor(private readonly proofService: Proof2210vpService, private readonly httpService: HttpService) {}
 
-  async validate(
-    Service_offering_SD: SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>,
-    Provided_by_SD: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>,
-    providedByResult?: ValidationResultDto
-  ): Promise<ValidationResult> {
+  async validateServiceOfferingCredentialSubject(credentialSubject: ICredentialSubject): Promise<ValidationResult> {
     const results = []
-    const data = Service_offering_SD.selfDescriptionCredential.credentialSubject
-    results.push(this.checkDataProtectionRegime(data?.dataProtectionRegime))
-    results.push(this.checkDataExport(data?.dataExport))
-    results.push(this.checkVcprovider(Provided_by_SD))
-    results.push(await this.checkKeyChainProvider(Provided_by_SD.selfDescriptionCredential, Service_offering_SD.selfDescriptionCredential))
-    results.push(await this.CSR06_CheckDid(this.parseJSONLD(Service_offering_SD.selfDescriptionCredential, 'did:web')))
-    results.push(await this.CSR04_Checkhttp(this.parseJSONLD(Service_offering_SD.selfDescriptionCredential, 'https://')))
+    if (credentialSubject.dataProtectionRegime) results.push(this.checkDataProtectionRegime(credentialSubject.dataProtectionRegime))
+    if (credentialSubject.dataExport) results.push(this.checkDataExport(credentialSubject.dataExport))
+    results.push(await this.CSR06_CheckDid(this.parseJSONLD(credentialSubject, 'did:web')))
+    results.push(await this.CSR04_Checkhttp(this.parseJSONLD(credentialSubject, 'https://')))
+    return this.mergeResults(...results)
+  }
+
+  async validate(serviceOfferingVP: TypedVerifiablePresentation, providedByResult?: ValidationResultDto): Promise<ValidationResult> {
+    const results = []
+    const data = serviceOfferingVP.getTypedVerifiableCredentials('ServiceOffering')[0]
+    results.push(await this.validateServiceOfferingCredentialSubject(data.transformedCredentialSubject))
+    if (!serviceOfferingVP.getTypedVerifiableCredentials('ServiceOffering').length) {
+      results.push({
+        conforms: false,
+        results: ['Provider does not have a Compliance Credential']
+      })
+    }
     const mergedResults: ValidationResult = this.mergeResults(...results)
     if (!providedByResult || !providedByResult.conforms) {
       mergedResults.conforms = false
       mergedResults.results.push(
         !providedByResult?.conforms
           ? `providedBy: provided Participant SD does not conform.`
-          : `providedBy: could not load Participant SD at ${data.providedBy}.`
+          : `providedBy: could not load Participant SD at ${data.transformedCredentialSubject.providedBy}.`
       )
     }
 
     return mergedResults
   }
 
-  checkVcprovider(Participant_SD: SignedSelfDescriptionDto<ParticipantSelfDescriptionDto>): ValidationResult {
-    const result = { conforms: true, results: [] }
-    if (!Participant_SD.complianceCredential) {
-      result.conforms = false
-      result.results.push('Provider does not have a Compliance Credential')
-    }
-    return result
-  }
   async checkKeyChainProvider(Participant_SDCredential: any, Service_offering_SDCredential: any): Promise<ValidationResult> {
     //Only key comparison for now
     const result = { conforms: true, results: [] }

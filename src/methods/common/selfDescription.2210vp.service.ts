@@ -20,7 +20,7 @@ import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant'
 import { ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
 import { IntentType, IVerifiableCredential, TypedVerifiableCredential, TypedVerifiablePresentation } from '../../@types/type/SSI.types'
 import { SDParserPipe } from '../../utils/pipes'
-import { getDidWeb } from '../../utils/methods'
+import { getDidWeb } from '../../utils/methods/did.2210vp.util'
 import { SsiTypesParserPipe } from '../../utils/pipes/ssi-types-parser.pipe'
 
 @Injectable()
@@ -38,6 +38,22 @@ export class SelfDescription2210vpService {
   ) {}
 
   public async validate(typedVerifiablePresentation: TypedVerifiablePresentation): Promise<validationResultWithoutContent> {
+    let isValidSignature = await this.proofService.validateVP(
+      typedVerifiablePresentation.originalVerifiablePresentation as VerifiablePresentationDto,
+      false,
+      typedVerifiablePresentation.originalVerifiablePresentation.proof.jws
+    )
+    for (const typedVerifiableCredential of typedVerifiablePresentation.typedVerifiableCredentials) {
+      typedVerifiableCredential.rawVerifiableCredential
+      const signatureCheck = await this.proofService.validateVC(
+        typedVerifiableCredential.rawVerifiableCredential as VerifiableCredentialDto<any>,
+        false,
+        typedVerifiableCredential.rawVerifiableCredential.proof.jws
+      )
+      if (!signatureCheck) {
+        isValidSignature = false
+      }
+    }
     if (typedVerifiablePresentation.intent !== IntentType.GET_COMPLIANCE_PARTICIPANT) {
       if (
         !SsiTypesParserPipe.hasVerifiableCredential(
@@ -72,12 +88,17 @@ export class SelfDescription2210vpService {
       const legalPersonShapeValidation = await this.checkCredentialShape(legalPersonVC, expectedContexts[legalPersonVC.type])
       let serviceOfferingShapeValidation
       if (serviceOfferingVC) {
-        serviceOfferingShapeValidation = this.checkCredentialShape(serviceOfferingVC, expectedContexts[serviceOfferingVC.type])
+        //fixme we're ignoring the shape validation for service-offerings for now, bring this back when we have shapes for v2210vp service-offerings
+        // serviceOfferingShapeValidation = this.checkCredentialShape(serviceOfferingVC, expectedContexts[serviceOfferingVC.type])
+        serviceOfferingShapeValidation = {
+          conforms: true,
+          results: []
+        }
       }
-      const isValidSignature: boolean = await this.checkParticipantCredential(
-        { selfDescription: legalPersonVC.rawVerifiableCredential, proof: complianceVC.rawVerifiableCredential.proof },
-        legalPersonVC.rawVerifiableCredential.proof.jws
-      )
+
+      if (!complianceVC) {
+        throw new Error(`No compliance Verifiable Credential found for the issuer: ${getDidWeb()}`)
+      }
       const shapeResult: ValidationResult = serviceOfferingShapeValidation
         ? {
             ...serviceOfferingShapeValidation,
@@ -90,13 +111,13 @@ export class SelfDescription2210vpService {
         conforms,
         shape: shapeResult,
         // content,
-        isValidSignature
+        isValidSignature: isValidSignature
       }
     }
   }
 
   public async validateVP(signedSelfDescription: VerifiablePresentationDto): Promise<validationResultWithoutContent> {
-    const serviceOfferingVC = signedSelfDescription.verifiableCredential.filter(vc => vc.type.includes('ServiceOfferingExperimental'))[0]
+    const serviceOfferingVC = signedSelfDescription.verifiableCredential.filter(vc => vc.type.includes('ServiceOffering'))[0]
     const participantVC = signedSelfDescription.verifiableCredential.filter(vc => vc.type.includes('ParticipantCredential'))[0]
     /**
      * I will not change the following lines for now

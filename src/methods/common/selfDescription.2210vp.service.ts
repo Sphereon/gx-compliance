@@ -206,7 +206,8 @@ export class SelfDescription2210vpService {
   }
 
   public async getShaclShape(shapePath: string): Promise<DatasetExt> {
-    return await this.shaclService.loadFromUrl(`${process.env.REGISTRY_URL || 'https://registry.gaia-x.eu'}${shapePath}`)
+    //fixme: since gaia-x registry is down, I'm changing this fallback url
+    return await this.shaclService.loadFromUrl(`${process.env.REGISTRY_URL || 'http://20.76.5.229'}${shapePath}`)
   }
 
   public async storeSelfDescription(

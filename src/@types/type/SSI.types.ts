@@ -130,6 +130,7 @@ export enum IntentType {
 }
 
 export enum ServiceOfferingType {
+  DcatDataSet = 'dcat:Dataset',
   AutoscaledVirtualMachine = 'AutoscaledVirtualMachine',
   ComputeFunction = 'ComputeFunction',
   IdentityAccessManagementOffering = 'IdentityAccessManagementOffering',

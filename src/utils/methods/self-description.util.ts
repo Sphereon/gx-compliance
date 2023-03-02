@@ -1,4 +1,4 @@
-import { CredentialSubjectDto, VerifiableCredentialDto } from '../../@types/dto/common'
+import { VerifiableCredentialDto } from '../../@types/dto/common'
 import { BadRequestException, ConflictException } from '@nestjs/common'
 import { IVerifiableCredential, ServiceOfferingType } from '../../@types/type/SSI.types'
 
@@ -8,8 +8,12 @@ export function getTypeFromSelfDescription(verifiableCredential: VerifiableCrede
   const subjectType = verifiableCredential.credentialSubject['type']
     ? verifiableCredential.credentialSubject['type']
     : verifiableCredential.credentialSubject['@type']
+  //todo: ask @nklomp if this way for recognizing dcat datasets is valid
+  if (!subjectType && verifiableCredential.credentialSubject['@graph']) {
+    return 'ServiceOffering'
+  }
   if (sdTypes.length === 1 && sdTypes[0] === 'VerifiableCredential' && subjectType) {
-    for (const type of Object.keys(ServiceOfferingType)) {
+    for (const type of Object.values(ServiceOfferingType)) {
       if ((subjectType as string).includes(type)) {
         return 'ServiceOffering'
       }

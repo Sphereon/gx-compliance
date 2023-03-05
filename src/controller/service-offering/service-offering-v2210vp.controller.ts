@@ -304,7 +304,8 @@ export class ServiceOfferingV2210vpController {
   }
 
   public async getShaclShape(shapePath: string): Promise<DatasetExt> {
-    return await this.shaclService.loadFromUrl(`${process.env.REGISTRY_URL || 'https://registry.gaia-x.eu'}${shapePath}`)
+    //fixme: since gaia-x registry is down, I'm changing this fallback url
+    return await this.shaclService.loadFromUrl(`${process.env.REGISTRY_URL || 'http://20.76.5.229'}${shapePath}`)
   }
 
   private getShapePath(type: string): string | undefined {

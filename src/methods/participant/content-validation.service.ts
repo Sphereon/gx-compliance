@@ -1,39 +1,36 @@
 import { Injectable } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
-import { ValidationResult } from '../../@types/dto/common/validation-result.dto'
-import countryCodes from '../../utils/static/validation/2206/iso-3166-2-country-codes.json'
-import countryListEEA from '../../utils/static/validation/country-codes.json'
-import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant/participant-sd.dto'
-import { AddressDto } from '../../@types/dto/common'
-import { RegistryService } from '../common'
-import { RegistrationNumberDto } from '../../@types/dto/participant/registration-number.dto'
-import { _ } from 'lodash'
-import {ICredentialSubject} from "../../@types/type/SSI.types";
+import { ValidationResult } from '../../common/dto/validation-result.dto'
+import countryCodes from '../../static/validation/2206/iso-3166-2-country-codes.json'
+import countryListEEA from '../../static/validation/country-codes.json'
+import { ParticipantSelfDescriptionDto } from '../dto/participant-sd.dto'
+import { AddressDto } from '../../common/dto'
+import { RegistryService } from '../../common/services'
+import { RegistrationNumberDto } from '../dto/registration-number.dto'
+import { response } from 'express'
+
 @Injectable()
 export class ParticipantContentValidationService {
-  constructor(
-    private readonly httpService: HttpService,
-    private readonly registryService: RegistryService
-  ) {}
-
+  constructor(private readonly httpService: HttpService, private readonly registryService: RegistryService) {}
 
   async validate(data: ParticipantSelfDescriptionDto): Promise<ValidationResult> {
     const { legalAddress, leiCode, registrationNumber, termsAndConditions } = data
+
     const checkUSAAndValidStateAbbreviation = this.checkUSAAndValidStateAbbreviation(legalAddress)
 
     const validationPromises: Promise<ValidationResult>[] = []
     validationPromises.push(this.checkRegistrationNumbers(registrationNumber, data))
     validationPromises.push(this.checkValidLeiCode(leiCode, data))
-    validationPromises.push(this.checkTermsAndConditions(termsAndConditions))
-    validationPromises.push(this.CPR08_CheckDid(this.parseDid(data)))
+    //validationPromises.push(this.checkTermsAndConditions(termsAndConditions))
+    validationPromises.push(this.CPR08_CheckDid(data))
     const results = await Promise.all(validationPromises)
+
     return this.mergeResults(...results, checkUSAAndValidStateAbbreviation)
   }
 
   async checkTermsAndConditions(termsAndConditionsHash: string): Promise<ValidationResult> {
-    const errorMessage = 'Terms and Conditions does not match against SHA512 of the Generic Terms and Conditions'
-    //TODO: update to 22.06 once available
-    const tac = await this.registryService.getTermsAndConditions('22.04')
+    const errorMessage = 'Terms and Conditions does not match against SHA256 of the Generic Terms and Conditions'
+    const tac = await this.registryService.getTermsAndConditions()
 
     return this.validateAgainstObject(tac, tac => tac.hash === termsAndConditionsHash, errorMessage)
   }
@@ -55,6 +52,7 @@ export class ParticipantContentValidationService {
 
     if (leiData) leiResult = this.checkValidLeiCountries(leiData, selfDescription)
     else leiResult = { conforms: false, results: ['leiCode: the given leiCode is invalid or does not exist'] }
+
     return leiResult
   }
 
@@ -97,6 +95,7 @@ export class ParticipantContentValidationService {
     try {
       const checkPromises = registrationNumber.map(number => this.checkRegistrationNumber(number, participantSD))
       const checks = await Promise.all(checkPromises)
+
       return this.mergeResults(...checks)
     } catch (error) {
       console.error(error)
@@ -151,16 +150,16 @@ export class ParticipantContentValidationService {
   }
 
   private async checkRegistrationNumberLocal(registrationNumber: string, participantSD: ParticipantSelfDescriptionDto): Promise<ValidationResult> {
-    //TODO: enable when opencorporates api works again
-    // const errorMessage = 'registrationNumber could not be verified as valid state issued company number'
+    //   //TODO: enable when opencorporates api works again
+    //   // const errorMessage = 'registrationNumber could not be verified as valid state issued company number'
 
-    // const { headquarterAddress } = participantSD
+    //   // const { headquarterAddress } = participantSD
 
-    // const openCorporateBaseUri = 'https://api.opencorporates.com/companies'
+    //   // const openCorporateBaseUri = 'https://api.opencorporates.com/companies'
 
-    // const res = await this.httpService.get(`${openCorporateBaseUri}/${headquarterAddress?.country_code}/${registrationNumber}`).toPromise()
+    //   // const res = await this.httpService.get(`${openCorporateBaseUri}/${headquarterAddress?.country_code}/${registrationNumber}`).toPromise()
 
-    // const { results } = res.data
+    //   // const { results } = res.data
 
     const localRegistrationNumberRegex = /^[A-Za-z0-9_ -]*$/
 
@@ -171,9 +170,9 @@ export class ParticipantContentValidationService {
   }
 
   // TODO: implement check
-  private async checkRegistrationNumberEUID(registrationNumber: string): Promise<ValidationResult> {
-    return this.validateAgainstObject({}, () => true, 'registrationNumber could not be verified as valid EUID')
-  }
+  // private async checkRegistrationNumberEUID(registrationNumber: string): Promise<ValidationResult> {
+  //   return this.validateAgainstObject({}, () => true, 'registrationNumber could not be verified as valid EUID')
+  // }
 
   private async checkRegistrationNumberVat(vatNumber: string, countryCode: string): Promise<ValidationResult> {
     //TODO: check what is broken and enable again
@@ -190,6 +189,22 @@ export class ParticipantContentValidationService {
     return this.validateAgainstObject({}, () => true, 'registrationNumber could not be verified') // this.validateAgainstObject(res, res => res.valid, errorMessage)
   }
 
+  // private async checkRegistrationNumberEori(registrationNumber: string): Promise<ValidationResult> {
+  //   const errorMessage = 'registrationNumber could not be verified as valid EORI.'
+  //   const eoriValidationServiceWSDLUri = 'https://ec.europa.eu/taxation_customs/dds2/eos/validation/services/validation?wsdl'
+
+  //   // const client = await this.soapService.getSoapClient(eoriValidationServiceWSDLUri)
+  //   // const res = await this.soapService.callClientMethod(client, 'validateEORI', { eori: registrationNumber })
+
+  //   return this.validateAgainstObject(
+  //     res,
+  //     res => {
+  //       const { result }: { result: { eori: string; status: number; statusDescr: string }[] } = res
+  //       return result.find(r => r.eori === registrationNumber).status !== 1
+  //     },
+  //     errorMessage
+  //   )
+  // }
 
   checkUSAAndValidStateAbbreviation(legalAddress: AddressDto): ValidationResult {
     let conforms = true
@@ -216,6 +231,7 @@ export class ParticipantContentValidationService {
   private mergeResults(...results: ValidationResult[]): ValidationResult {
     const resultArray = results.map(res => res.results)
     const res = resultArray.reduce((p, c) => c.concat(p))
+
     return {
       conforms: results.filter(r => !r.conforms).length == 0,
       results: res
@@ -238,6 +254,11 @@ export class ParticipantContentValidationService {
     return result
   }
 
+  // private isEEACountry(code: string): boolean {
+  //   const c = this.getISO31662Country(code)
+
+  //   return c && countryListEEA.find(eeaCountry => c.country_code === eeaCountry.alpha2) !== undefined
+  // }
 
   private isValidLeiCountry(leiCountry: string, sdIsoCode: string): boolean {
     const leiCountryISO = this.getISO31661Country(leiCountry)
@@ -251,11 +272,11 @@ export class ParticipantContentValidationService {
   parseJSONLD(jsonLD, values = []) {
     for (const key in jsonLD) {
       if (jsonLD.hasOwnProperty(key)) {
-        const element = jsonLD[key];
+        const element = jsonLD[key]
         if (typeof element === 'object') {
-          this.parseJSONLD(element, values);
+          this.parseJSONLD(element, values)
         } else {
-          values.push(element);
+          values.push(element)
         }
       }
     }
@@ -265,30 +286,31 @@ export class ParticipantContentValidationService {
   parseDid(jsonLD, tab = []) {
     const values = this.parseJSONLD(jsonLD)
     for (let i = 0; i < values.length; i++) {
-      if (values[i].startsWith("did:web:")) {
+      if (values[i].startsWith('did:web:')) {
         tab.push(values[i])
       }
     }
-    return tab.filter((item, index) => tab.indexOf(item) === index);
+    return tab.filter((item, index) => tab.indexOf(item) === index)
   }
-  
+
   async checkDidUrls(arrayDids, invalidUrls = []) {
-    await Promise.all(arrayDids.map(async(element) => {
-      try {
-        await this.httpService.get(element.replace("did:web:", "https://")).toPromise()
-      } catch(e) {
-        invalidUrls.push(element)
-      }
-      
-    }))
+    await Promise.all(
+      arrayDids.map(async element => {
+        try {
+          await this.httpService.get(element.replace('did:web:', 'https://')).toPromise()
+          
+        } catch (e) {
+          invalidUrls.push(element)
+          
+        }
+      })
+    )
     return invalidUrls
   }
-  
-  async CPR08_CheckDid(arr):Promise<ValidationResult> {
-    let invalidUrls = await this.checkDidUrls(arr)
-    let isValid = invalidUrls.length == 0 ? true : false
+  async CPR08_CheckDid(jsonLd): Promise<ValidationResult> {
+    const invalidUrls = await this.checkDidUrls(this.parseDid(jsonLd))
+    const isValid = invalidUrls.length == 0 ? true : false
     //return { ruleName: "CPR-08_CheckDid", status: isValid, invalidUrls: invalidUrls }
     return { conforms: isValid, results: invalidUrls }
   }
-
 }

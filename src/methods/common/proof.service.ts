@@ -1,16 +1,16 @@
 import { ConflictException, Injectable } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
-import { ParticipantSelfDescriptionDto } from '../../@types/dto/participant'
+import { ParticipantSelfDescriptionDto } from '../../participant/dto/participant-sd.dto'
 import { RegistryService } from './registry.service'
-import { ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
+import { ServiceOfferingSelfDescriptionDto } from '../../service-offering/dto/service-offering-sd.dto'
 import { SignatureService, Verification } from './signature.service'
-import { VerifiableCredentialDto } from '../../@types/dto/common'
+import { VerifiableCredentialDto } from '../dto/credential-meta.dto'
 import * as jose from 'jose'
-import { METHOD_IDS } from '../../@types/constants'
+import { METHOD_IDS } from '../constants'
 import { Resolver, DIDDocument } from 'did-resolver'
 import web from 'web-did-resolver'
 const webResolver = web.getResolver()
-
+const resolver = new Resolver(webResolver)
 
 @Injectable()
 export class ProofService {
@@ -18,7 +18,7 @@ export class ProofService {
     private readonly httpService: HttpService,
     private readonly registryService: RegistryService,
     private readonly signatureService: SignatureService
-  ) { }
+  ) {}
 
   public async validate(
     selfDescriptionCredential: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>,
@@ -26,12 +26,18 @@ export class ProofService {
     jws?: string
   ): Promise<boolean> {
     const { x5u, publicKeyJwk } = await this.getPublicKeys(selfDescriptionCredential)
+
     const certificatesRaw: string = await this.loadCertificatesRaw(x5u)
     const isValidChain: boolean = await this.registryService.isValidCertificateChain(certificatesRaw)
+
     if (!isValidChain) throw new ConflictException(`X509 certificate chain could not be resolved against registry trust anchors.`)
+
     if (!this.publicKeyMatchesCertificate(publicKeyJwk, certificatesRaw)) throw new ConflictException(`Public Key does not match certificate chain.`)
+
     const input = (selfDescriptionCredential as any).selfDescription ? (selfDescriptionCredential as any)?.selfDescription : selfDescriptionCredential
+
     const isValidSignature: boolean = await this.checkSignature(input, isValidityCheck, jws, selfDescriptionCredential.proof, publicKeyJwk)
+
     if (!isValidSignature) throw new ConflictException(`Provided signature does not match Self Description.`)
 
     return true
@@ -99,8 +105,6 @@ export class ProofService {
   }
 
   private async getDidWebDocument(did: string): Promise<DIDDocument> {
-    
-    const resolver = new Resolver(webResolver)
     const doc = await resolver.resolve(did)
 
     return doc.didDocument

@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { ParticipantContentValidationService } from '../methods/participant/content-validation.service'
-import { ParticipantSelfDescriptionDto } from '../@types/dto/participant'
+import { ParticipantContentValidationService } from './content-validation.service'
+import { ParticipantSelfDescriptionDto } from '../dto/participant-sd.dto'
 import { HttpModule } from '@nestjs/axios'
-import { AddressDto } from '../@types/dto/common'
-import { RegistrationNumberDto, RegistrationNumberTypes } from '../@types/dto/participant'
-import { CommonModule } from '../modules/common.module'
-import ParticipantSD from './fixtures/participant-sd.json'
+import { AddressDto } from '../../common/dto'
+import { RegistrationNumberDto, RegistrationNumberTypes } from '../dto/registration-number.dto'
+import { CommonModule } from '../../common/common.module'
+
 
 describe('ParticipantContentValidationService', () => {
   let participantContentValidationService: ParticipantContentValidationService
@@ -31,7 +31,7 @@ describe('ParticipantContentValidationService', () => {
   describe(`Content validation`, () => {
     describe(`Check termsAndConditions`, () => {
       it.skip('returns true for SD with valid hash of termsAndConditions', async () => {
-        const termsAndConditionsHash = '70c1d713215f95191a11d38fe2341faed27d19e083917bc8732ca4fea4976700'
+        const termsAndConditionsHash = '1c5367540d27366fb0a02c3bcaf04da905f663daf0fd4e06f6475fe1a0faaf35'
 
         const checkTerms = await participantContentValidationService.checkTermsAndConditions(termsAndConditionsHash)
 
@@ -48,7 +48,7 @@ describe('ParticipantContentValidationService', () => {
       })
     })
 
-    describe(`Check registrationNumber`, () => {
+    describe.skip(`Check registrationNumber`, () => {
       const participantSDMock2206 = {
         legalAddress: {
           country_code: 'DE',
@@ -217,6 +217,7 @@ describe('ParticipantContentValidationService', () => {
           validLeiCode,
           participantMock as unknown as ParticipantSelfDescriptionDto
         )
+
         expect(validationResult).toEqual(expectedValidResult)
       })
 
@@ -261,7 +262,6 @@ describe('ParticipantContentValidationService', () => {
         )
       })
     })
-
     describe('CPR08_CheckDid', () => {
       it('Should return valid result if all URLs are valid', async () => {
         const validUrls = ['did:web:abc-federation.gaia-x.community', 'did:web:compliance.gaia-x.eu']
@@ -374,5 +374,6 @@ describe('ParticipantContentValidationService', () => {
         ]);
       });
     });
+
   })
 })

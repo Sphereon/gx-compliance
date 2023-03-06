@@ -1,0 +1,22 @@
+{
+  "name": "test-lab",
+  "main": "./lib/index.js",
+  "type": "module",
+  "scripts": {
+    "lint": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": {
+    "name": ""
+  },
+  "license": "ISC",
+  "dependencies": {
+    "chai": "^4.3.6",
+    "chai-http": "^4.3.0",
+    "fs": "^0.0.1-security",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "mocha": "^10.1.0"
+  }
+}

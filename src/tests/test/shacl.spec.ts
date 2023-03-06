@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { CommonModule } from '../../modules/common.module'
-import { ShaclService } from '../../methods/common'
+import { CommonModule } from '../common.module'
+import { ShaclService } from './shacl.service'
 import { DatasetCore } from 'rdf-js'
 import { readFileSync } from 'fs'
 import path from 'path'
@@ -32,7 +32,7 @@ describe('ShaclService', () => {
     [Symbol.iterator]: expect.any(Object)
   }
 
-  const participantShaclShapeRaw = readFileSync(path.join(__dirname, '../../utils/static/schemas/participant.ttl')).toString()
+  const participantShaclShapeRaw = readFileSync(path.join(__dirname, '../../static/schemas/participant.ttl')).toString()
 
   const participantSDRaw = JSON.stringify(ParticipantSDFixture)
   const participantMinimalSDRaw = JSON.stringify(ParticipantMinimalSDFixture)
@@ -58,13 +58,23 @@ describe('ShaclService', () => {
       expectDatasetKeysToExist(dataset)
     })
 
-    it.skip('transforms a dataset correctly from an url with turtle input', async () => {
-      const registryUrl = process.env.REGISTRY_URL || 'http://localhost:3000//api/trusted-schemas-registry/schemas'
-      const datasetParticipant = await shaclService.loadFromUrl(`${registryUrl}/participant`)
-      const datasetServiceOffering = await shaclService.loadFromUrl(`${registryUrl}/serviceOffering`)
+    it('transforms a dataset correctly from an url with turtle input', async () => {
+      const datasetParticipant = await shaclService.loadShaclFromUrl("participant")
+      const datasetServiceOffering = await shaclService.loadShaclFromUrl("serviceoffering")
+      
+
       expectDatasetKeysToExist(datasetParticipant)
       expectDatasetKeysToExist(datasetServiceOffering)
     })
+    it('should throw an error when searching for a non uploaded shape', async () => {
+      try {
+        const registryUrl = process.env.REGISTRY_URL || 'https://registry.lab.gaia-x.eu'
+        await shaclService.loadShaclFromUrl("test")
+          fail()
+      } catch (e) {
+          expect(e.status).toEqual(409)
+      }
+  })
 
     it('transforms a dataset correctly from an url with JsonLD input', async () => {
       const dataset = await shaclService.loadFromUrl('https://raw.githubusercontent.com/deltaDAO/files/main/participant-sd-minimal.json')

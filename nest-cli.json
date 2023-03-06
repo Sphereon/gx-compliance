@@ -18,6 +18,16 @@
         "include": "static/**/*.md",
         "watchAssets": true,
         "outDir": "dist/src/"
+      },
+      {
+        "include": "static/**/*.pem",
+        "watchAssets": true,
+        "outDir": "dist/src/"
+      },
+      {
+        "include": "secrets/*.pem",
+        "watchAssets": true,
+        "outDir": "dist/src/"
       }
     ],
     "watchAssets": true

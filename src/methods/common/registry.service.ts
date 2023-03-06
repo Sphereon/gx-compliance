@@ -11,8 +11,11 @@ export class RegistryService {
   // TODO: check why this is not called for participants
   async isValidCertificateChain(raw: string): Promise<boolean> {
     try {
+      // skip signature check against registry - NEVER ENABLE IN PRODUCTION
+      if (process.env.DISABLE_SIGNATURE_CHECK === 'true') return true
+
       const response = await this.httpService
-        .post(`${this.registryUrl}/v2206/api/trustAnchor/chain`, {
+        .post(`${this.registryUrl}/api/trustAnchor/chain`, {
           certs: raw
         })
         .toPromise()
@@ -22,9 +25,9 @@ export class RegistryService {
     }
   }
 
-  async getTermsAndConditions(version: '22.04' | '22.06' = '22.06'): Promise<{ version: string; hash: string; text: string }> {
+  async getTermsAndConditions(): Promise<{ version: string; hash: string; text: string }> {
     try {
-      const response = await this.httpService.get(`${this.registryUrl}/v2206/api/termsAndConditions?version=${version}`).toPromise() // TODO: make v2206 dynamic again once 22.06 terms and conditions exist
+      const response = await this.httpService.get(`${this.registryUrl}/api/termsAndConditions`).toPromise()
 
       return response.data
     } catch (error) {

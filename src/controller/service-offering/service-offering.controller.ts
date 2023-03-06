@@ -1,22 +1,33 @@
-import { ApiBody, ApiExtraModels, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
-import { Body, Controller, HttpStatus, Post, HttpCode, ConflictException, BadRequestException, Query } from '@nestjs/common'
-import { SelfDescriptionService } from '../../methods/common'
-import { SignedSelfDescriptionDto, ValidationResultDto, VerifiableCredentialDto, VerifiableSelfDescriptionDto } from '../../@types/dto/common'
-import { VerifyServiceOfferingDto, ServiceOfferingSelfDescriptionDto } from '../../@types/dto/service-offering'
-import { ApiVerifyResponse } from '../../utils/decorators'
-import { getApiVerifyBodySchema } from '../../utils/methods/api-verify-raw-body-schema.util'
-import { SignedSelfDescriptionSchema, VerifySdSchema } from '../../utils/schema/selfDescription.schema'
-import ServiceOfferingExperimentalSD from '../../tests/fixtures/service-offering-sd.json'
-import { CredentialTypes } from '../../@types/enums'
-import { UrlSDParserPipe, SDParserPipe, JoiValidationPipe, BooleanQueryValidationPipe } from '../../utils//pipes'
-import { SelfDescriptionTypes } from '../../@types/enums'
+import { ApiBody, ApiExtraModels, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger'
+import {
+  Body,
+  Controller,
+  HttpStatus,
+  Post,
+  HttpCode,
+  ConflictException,
+  BadRequestException,
+  Query,
+  InternalServerErrorException,
+  Get,
+  Param
+} from '@nestjs/common'
+import { SelfDescriptionService } from '../common/services'
+import { SignedSelfDescriptionDto, ValidationResultDto, VerifiableCredentialDto, VerifiableSelfDescriptionDto } from '../common/dto'
+import { VerifyServiceOfferingDto, ServiceOfferingSelfDescriptionDto } from './dto'
+import { ApiVerifyResponse } from '../common/decorators'
+import { getApiVerifyBodySchema } from '../common/utils/api-verify-raw-body-schema.util'
+import { SignedSelfDescriptionSchema, VerifySdSchema } from '../common/schema/selfDescription.schema'
+import ServiceOfferingExperimentalSD from '../tests/fixtures/service-offering-sd.json'
+import { CredentialTypes } from '../common/enums'
+import { UrlSDParserPipe, SDParserPipe, JoiValidationPipe, BooleanQueryValidationPipe } from '../common/pipes'
+import { SelfDescriptionTypes } from '../common/enums'
 import { HttpService } from '@nestjs/axios'
-import { validationResultWithoutContent } from '../../@types/type'
-import { ServiceOfferingContentValidationService } from '../../methods/service-offering/content-validation.service'
+import { ServiceOfferingContentValidationService } from './services/content-validation.service'
 
 const credentialType = CredentialTypes.service_offering
 @ApiTags(credentialType)
-@Controller({ path: 'service-offering' })
+@Controller({ path: '/api/service-offering' })
 export class ServiceOfferingController {
   constructor(
     private readonly selfDescriptionService: SelfDescriptionService,
@@ -51,7 +62,6 @@ export class ServiceOfferingController {
       storeSD,
       verifyParticipant
     )
-
     return validationResult
   }
 
@@ -90,31 +100,37 @@ export class ServiceOfferingController {
     return validationResult
   }
 
+  @Get('/:functionName')
+  @ApiOperation({ summary: 'Test a compliance rule', description: 'For more details on using this API route please see: https://gitlab.com/gaia-x/lab/compliance/gx-compliance/-/tree/dev#api-endpoint-with-dynamic-routes' })
+  async callFunction(@Param('functionName') functionName: string, @Body() body: any) {
+    return this.serviceOfferingContentValidationService[functionName](body);
+  }
+
   private async verifySignedServiceOfferingSD(
     serviceOfferingSelfDescription: SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>,
     verifyParticipant = true
   ): Promise<ValidationResultDto> {
-    if (verifyParticipant) {
-      try {
-        const validationResult: ValidationResultDto = await this.selfDescriptionService.validate(serviceOfferingSelfDescription)
-        if (!validationResult.conforms)
+    try {
+      const validationResult: ValidationResultDto = await this.selfDescriptionService.verify(serviceOfferingSelfDescription)
+      if (!validationResult.conforms) {
         throw new ConflictException({
           statusCode: HttpStatus.CONFLICT,
           message: {
-            ...validationResult,
+            ...validationResult
           },
           error: 'Conflict'
         })
+      }
       return validationResult
-      
-      } catch (error) {
-        if (error.status == 409) {
-          throw new ConflictException({
-            statusCode: HttpStatus.CONFLICT,
-            message: error.response.message,
-            error: 'Conflict'
-          })
-        }
+    } catch (error) {
+      if (error.status == 409) {
+        throw new ConflictException({
+          statusCode: HttpStatus.CONFLICT,
+          message: error.response.message,
+          error: 'Conflict'
+        })
+      } else {
+        throw new InternalServerErrorException()
       }
     }
   }

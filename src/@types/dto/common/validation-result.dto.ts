@@ -34,12 +34,12 @@ export class ValidationResultDto {
   @ApiProperty({
     description: 'The SHACL Shape validation results'
   })
-  public shape: ValidationResult
+  public shape?: ValidationResult
 
   @ApiProperty({
     description: 'Content validation results'
   })
-  public content: ValidationResult
+  public content?: ValidationResult
 
   @ApiProperty({
     description: 'The credential subject of the SD'

@@ -110,7 +110,7 @@ export class Signature2210vpService {
 
   async createComplianceCredentialFromSelfDescription(selfDescription: IVerifiablePresentation): Promise<IVerifiableCredential> {
     if (Signature2210vpService.hasGxComplianceCredential(selfDescription)) {
-      const ecosystemUrl = process.env.GX_ECOSYSTEM_URL || 'http://20.23.137.224/' //fixme this should be changed to the actual FMA
+      const ecosystemUrl = process.env.GX_ECOSYSTEM_URL || 'https://cs.fma.test.sphereon.com/' //fixme this should be changed to the actual FMA
       return this.issueComplianceCredential(selfDescription, ecosystemUrl)
     }
     return this.issueComplianceCredential(selfDescription, 'https://catalogue.gaia-x.eu/credentials/')
@@ -182,9 +182,7 @@ export class Signature2210vpService {
   }
 
   private static hasGxComplianceCredential(selfDescription: IVerifiablePresentation): boolean {
-    const gxComplianceServer = process.env.GX_COMPLIANCE_SERVICE_DID || 'did:web:sphereon-test.ddns.net'
-    //fixme remove following line
-    // const gxComplianceServer = process.env.GX_COMPLIANCE_SERVICE_DID || 'did:web:555d-87-213-241-251.eu.ngrok.io'
+    const gxComplianceServer = process.env.GX_COMPLIANCE_SERVICE_DID || 'did:web:cs.gx.test.sphereon.com'
     for (const vc of selfDescription.verifiableCredential) {
       if (vc.issuer === gxComplianceServer && vc.type.includes(SelfDescriptionTypes.PARTICIPANT_CREDENTIAL.valueOf())) {
         return true

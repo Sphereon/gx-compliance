@@ -206,7 +206,11 @@ export class ParticipantContentValidationV2210vpService {
         try {
           await this.httpService.get(element.replace('did:web:', 'https://')).toPromise()
         } catch (e) {
-          invalidUrls.push(element)
+          try {
+            await this.httpService.get(element.replace('did:web:', 'https://')+'/.well-known/did.json').toPromise()
+          } catch (e) {
+            invalidUrls.push(element)
+          }
         }
       })
     )

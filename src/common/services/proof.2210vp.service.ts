@@ -116,7 +116,7 @@ export class Proof2210vpService {
   public async loadCertificatesRaw(url: string): Promise<string> {
     try {
       const response = await this.httpService.get(url).toPromise()
-      return response.data.replace(/\n/gm, '') || undefined
+      return response.data || undefined
     } catch (error) {
       throw new ConflictException(`Could not load X509 certificate(s) at ${url}`)
     }

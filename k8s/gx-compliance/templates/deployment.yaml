@@ -61,15 +61,13 @@ spec:
                 secretKeyRef:
                   key: key
                   name: {{ include "gx-compliance.fullname" . }}-secrets
-            - name: publicKey
+            - name: X509_CERTIFICATE
               valueFrom:
                 secretKeyRef:
                   key: x509
                   name: {{ include "gx-compliance.fullname" . }}-secrets
             - name: APP_PATH
               value: "{{ (first (first .Values.ingress.hosts).paths).path }}"
-            - name: TLS
-              value: "true"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

@@ -13,7 +13,7 @@ import {
   VerifiableCredentialDto,
   VerifiableSelfDescriptionDto
 } from '../common/dto'
-import { ServiceOfferingSelfDescriptionDto, VerifyServiceOfferingDto } from '../service-offering/dto'
+import { ServiceOfferingSelfDescriptionDto, VerifyServiceOfferingDto } from './dto'
 import { getApiVerifyBodySchema } from '../common/utils'
 import { BooleanQueryValidationPipe, JoiValidationPipe, SDParserPipe } from '../common/pipes'
 import { SsiTypesParserPipe } from '../common/pipes/ssi-types-parser.pipe'
@@ -43,7 +43,7 @@ const cache: Schema_caching = {
 }
 
 @ApiTags(credentialType)
-@Controller({ path: '2210vp/service-offering' })
+@Controller({ path: '/api/2210vp/service-offering' })
 export class ServiceOfferingV2210vpController {
   constructor(
     private readonly httpService: HttpService,
@@ -170,7 +170,6 @@ export class ServiceOfferingV2210vpController {
     serviceOfferingSelfDescription: TypedVerifiablePresentation,
     verifyParticipant: boolean
   ): Promise<ValidationResultDto> {
-    // TODO Use actual validate functions instead of a remote call
     const serviceOffering = SsiTypesParserPipe.getTypedVerifiableCredentialWithTypeAndIssuer(serviceOfferingSelfDescription, 'ServiceOffering')
     if (!serviceOffering) {
       throw new Error("Couldn't find a valid ServiceOffering")

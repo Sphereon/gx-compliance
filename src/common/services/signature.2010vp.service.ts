@@ -77,8 +77,9 @@ export class Signature2210vpService {
 
   async createComplianceCredential(selfDescription: any): Promise<{ complianceCredential: VerifiableCredentialDto<ComplianceCredentialDto> }> {
     const sd_jws = selfDescription.proof.jws
-    delete selfDescription.proof
-    const normalizedSD: string = await this.normalize(selfDescription)
+    const document = {...selfDescription}
+    delete document.proof
+    const normalizedSD: string = await this.normalize(document)
     const hash: string = this.sha256(normalizedSD + sd_jws)
     const jws = await this.sign(hash)
 

@@ -13,7 +13,6 @@ export class ServiceOfferingContentValidation2210vpService {
     const results = []
     if (credentialSubject.dataProtectionRegime) results.push(this.checkDataProtectionRegime(credentialSubject.dataProtectionRegime))
     if (credentialSubject.dataExport) results.push(this.checkDataExport(credentialSubject.dataExport))
-    //TODO(ksadjad): do we need the following two?
     results.push(await this.CSR06_CheckDid(this.parseJSONLD(credentialSubject, 'did:web')))
     results.push(await this.CSR04_Checkhttp(this.parseJSONLD(credentialSubject, 'https://')))
     return this.mergeResults(...results)
@@ -22,16 +21,23 @@ export class ServiceOfferingContentValidation2210vpService {
   async validate(serviceOfferingVP: TypedVerifiablePresentation, providedByResult?: ValidationResultDto): Promise<ValidationResult> {
     const results = []
     results.push(await this.checkVcprovider(serviceOfferingVP))
-    //todo(ksadjad): here we should throw exception if we don't see any vc of this type
-    results.push(await this.checkKeyChainProvider(serviceOfferingVP.getTypedVerifiableCredentials('LegalPerson')![0], serviceOfferingVP.getTypedVerifiableCredentials('ServiceOffering')))
-    const data = serviceOfferingVP.getTypedVerifiableCredentials('ServiceOffering')[0]
-    results.push(await this.validateServiceOfferingCredentialSubject(data.transformedCredentialSubject))
-    if (!serviceOfferingVP.getTypedVerifiableCredentials('ServiceOffering').length) {
+    const legalPersons = serviceOfferingVP.getTypedVerifiableCredentials('LegalPerson')
+    const serviceOfferings = serviceOfferingVP.getTypedVerifiableCredentials('ServiceOffering')
+    if (!legalPersons || !legalPersons.length) {
       results.push({
         conforms: false,
-        results: ['Provider does not have a Compliance Credential']
+        results: ['No participant sd VerifiableCredential provided.']
       })
     }
+    if (!serviceOfferings || !serviceOfferings.length) {
+      results.push({
+        conforms: false,
+        results: ['No service-offering sd VerifiableCredential provided.']
+      })
+    }
+    results.push(await this.checkKeyChainProvider(legalPersons[0], serviceOfferings[0]))
+    const data = serviceOfferings[0]
+    results.push(await this.validateServiceOfferingCredentialSubject(data.transformedCredentialSubject))
     const mergedResults: ValidationResult = this.mergeResults(...results)
     if (!providedByResult || !providedByResult.conforms) {
       mergedResults.conforms = false
@@ -56,8 +62,8 @@ export class ServiceOfferingContentValidation2210vpService {
   async checkKeyChainProvider(Participant_SDCredential: any, Service_offering_SDCredential: any): Promise<ValidationResult> {
     //Only key comparison for now
     const result = { conforms: true, results: [] }
-    const key_Participant = await this.proofService.getPublicKeys(Participant_SDCredential)
-    const key_Service = await this.proofService.getPublicKeys(Service_offering_SDCredential)
+    const key_Participant = await this.proofService.getPublicKeys(Participant_SDCredential.rawVerifiableCredential.proof)
+    const key_Service = await this.proofService.getPublicKeys(Service_offering_SDCredential.rawVerifiableCredential.proof)
     if (!key_Participant.publicKeyJwk || !key_Service.publicKeyJwk) {
       result.conforms = false
       result.results.push('KeychainCheck: Key cannot be retrieved')

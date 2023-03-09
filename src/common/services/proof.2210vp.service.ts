@@ -7,7 +7,6 @@ import { METHOD_IDS } from '../constants'
 import { DIDDocument, Resolver } from 'did-resolver'
 import web from 'web-did-resolver'
 import { IProof } from '../@types/SSI.types'
-import { CERT_CHAIN } from './suits/mockData'
 import { Signature2210vpService, Verification } from './signature.2010vp.service'
 import { VerifiablePresentationDto } from '../dto/presentation-meta.dto'
 
@@ -78,9 +77,10 @@ export class Proof2210vpService {
   }
 
   private async checkSignature(selfDescription, isValidityCheck: boolean, jws: string, proof, jwk: any): Promise<boolean> {
-    delete selfDescription.proof
+    const document = {...selfDescription}
+    delete document.proof
 
-    const normalizedSD: string = await this.signatureService.normalize(selfDescription)
+    const normalizedSD: string = await this.signatureService.normalize(document)
     const hashInput: string = isValidityCheck ? normalizedSD + jws : normalizedSD
     const hash: string = this.signatureService.sha256(hashInput)
 

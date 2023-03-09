@@ -22,8 +22,7 @@ const commonSDExamples = {
 }
 
 @ApiTags(credentialType)
-//TODO: fix the path at the high level instead of this
-@Controller({ path: '2210vp' })
+@Controller({ path: '/api/2210vp' })
 export class Common2010VPController {
   constructor(
     private readonly selfDescriptionService: SelfDescription2210vpService,

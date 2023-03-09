@@ -23,11 +23,11 @@ import { ParticipantContentValidationV2210vpService } from './services/content-v
 import { ParticipantSelfDescriptionV2210vpDto } from './dto/participant-sd-v2210vp.dto'
 import { HttpService } from '@nestjs/axios'
 import { ParticipantController } from './participant.controller'
-import {ParticipantSelfDescriptionDto, VerifyParticipantDto} from "./dto";
+import { ParticipantSelfDescriptionDto, VerifyParticipantDto } from './dto'
 
 const credentialType = CredentialTypes.participant
 @ApiTags(credentialType)
-@Controller({ path: '2210vp/participant' })
+@Controller({ path: '/api/2210vp/participant' })
 export class Participant2210vpController {
   constructor(
     private readonly selfDescriptionService: SelfDescription2210vpService,

@@ -113,7 +113,6 @@ export class SsiTypesParserPipe
     }
   }
 
-  //todo implement logic for other intents
   private static discoverIntent(typedVerifiableCredentials: TypedVerifiableCredential[]): IntentType {
     let hasEcosystemServiceOfferingCompliance = false
     let hasEcosystemParticipantCompliance = false

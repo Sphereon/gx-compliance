@@ -30,7 +30,7 @@ export class Signature2210vpService {
         e: jwk.e,
         x5u: jwk.x5u
       }
-      const algorithm = jwk.alg || 'RS256'
+      const algorithm = jwk.alg || 'PS256'
       const rsaPublicKey = await jose.importJWK(cleanJwk, algorithm)
 
       const result = await jose.compactVerify(jws, rsaPublicKey)
@@ -67,7 +67,7 @@ export class Signature2210vpService {
   }
 
   async sign(hash: string): Promise<string> {
-    const alg = 'RS256'
+    const alg = 'PS256'
     const rsaPrivateKey = await jose.importPKCS8(process.env.privateKey, alg)
 
     const jws = await new jose.CompactSign(new TextEncoder().encode(hash)).setProtectedHeader({ alg, b64: false, crit: ['b64'] }).sign(rsaPrivateKey)

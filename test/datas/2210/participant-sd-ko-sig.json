@@ -1,0 +1,42 @@
+{
+    "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://registry.lab.gaia-x.eu/api/trusted-shape-registry/v1/shapes/"
+    ],
+    "type": [
+        "VerifiableCredential",
+        "LegalPerson"
+    ],
+    "id": "did:web:abc-federation.gaia-x.community",
+    "issuer": "did:web:abc-federation.gaia-x.community",
+    "issuanceDate": "2023-02-28T16:03:29.980Z",
+    "credentialSubject": {
+        "id": "did:web:abc-federation.gaia-x.community",
+        "gx-participant:name": "Gaia-X AISBL",
+        "gx-participant:legalName": "Gaia-X European Addssociation for Data and Cloud AISBL",
+        "gx-participant:registrationNumber": {
+            "gx-participant:registrationNumberType": "local",
+            "gx-participant:registrationNumberNumber": "0762747721"
+        },
+        "gx-participant:headquarterAddress": {
+            "gx-participant:addressCountryCode": "BE",
+            "gx-participant:addressCode": "BE-BRU",
+            "gx-participant:streetAddress": "Avenue des Arts 6-9",
+            "gx-participant:postalCode": "1210"
+        },
+        "gx-participant:legalAddress": {
+            "gx-participant:addressCountryCode": "BE",
+            "gx-participant:addressCode": "BE-BRU",
+            "gx-participant:streetAddress": "Avenue des Arts 6-9",
+            "gx-participant:postalCode": "1210"
+        },
+        "gx-participant:termsAndConditions": "70c1d713215f95191a11d38fe2341faed27d19e083917bc8732ca4fea4976700"
+    },
+    "proof": {
+        "type": "JsonWebSignature2020",
+        "created": "2023-02-28T16:03:30.734Z",
+        "proofPurpose": "assertionMethod",
+        "verificationMethod": "did:web:abc-federation.gaia-x.community",
+        "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..iKlZGL4YOwqvrkWfXwz_e6C00NA0vzraJntAA-UhPO3nn7mRwJ_Q_5IC8B1rPNPDikiTHCeKds96fSM9RTsQAT4TA48Rnh_8AqFp4xDhZnR5mhWy29eOO3Et4RycCObe-n0m7niHa27BG13XuHvj1DhwctuUWIxl9t5Smi59AXWw_J7T-M2PdeUPySeG5zZOBs-wh9fVHoKAPJ0DOEIOqKtL3xN1Fpc7pGd1rZAA5nufA9QyrgOrWp25MIcIuqXlBLQFkl1weO_j9KS3s9QiSZNCVKUpmGif09kQluCemHhMecUbKq5Au7EN7r7AumathLoOuahPA90NoOFpQe2Beg"
+    }
+  }

@@ -6,25 +6,22 @@ services:
       context: ./
       target: development-build-stage
       dockerfile: Dockerfile
-    image: maasmai/gx-compliance:v1.0.4
     command: npm run start:dev
     container_name: gx-compliance-server
+    # if you're using a locally deployed registry, use port 3001
     ports:
       - 3000:3000
-    restart: 'unless-stopped'
-    environment:
-      BASE_URL: http://localhost:3000
-  dev_server:
-    image: node:16.14
-    command: npm run start:dev
-    container_name: gx-compliance-server-dev
-    ports:
-      - "3000:3000"
     volumes:
-      - $PWD:/usr/src/app
-    environment:
-      BASE_URL: http://localhost:3000
-    working_dir: /usr/src/app
-    restart: unless-stopped
-    tty: true
-    stdin_open: true
+      - /usr/src/app/node_modules
+    restart: 'unless-stopped'
+
+volumes:
+  data:
+    driver: local
+
+# if you're using a locally deployed registry, uncoment the section below
+#networks:
+#  default:
+#    name: gx-registry_default
+#    external: true
+

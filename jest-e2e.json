@@ -5,5 +5,6 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
-  }
+  },
+  "setupFiles": ["dotenv/config", "./src/tests/fixtures/env-e2e.ts"]
 }

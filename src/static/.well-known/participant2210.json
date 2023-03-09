@@ -1,0 +1,67 @@
+{
+    "selfDescriptionCredential": {
+        "@context": [
+            "https://www.w3.org/2018/credentials/v1",
+            "https://registry.lab.gaia-x.eu/api/trusted-schemas-registry/v2/schemas"
+        ],
+        "type": [
+            "VerifiableCredential",
+            "LegalPerson"
+        ],
+        "id": "did:web:abc-federation.gaia-x.community",
+        "issuer": "did:web:abc-federation.gaia-x.community",
+        "issuanceDate": "2023-02-09T10:37:07.803Z",
+        "credentialSubject": {
+            "id": "did:web:compliance.gaia-x.eu",
+            "gx-participant:name": "Gaia-X AISBL",
+            "gx-participant:legalName": "Gaia-X European Association for Data and Cloud AISBL",
+            "gx-participant:registrationNumber": {
+                "gx-participant:registrationNumberType": "local",
+                "gx-participant:registrationNumberNumber": "0762747721"
+            },
+            "gx-participant:headquarterAddress": {
+                "gx-participant:addressCountryCode": "BE",
+                "gx-participant:addressCode": "BE-BRU",
+                "gx-participant:streetAddress": "Avenue des Arts 6-9",
+                "gx-participant:postalCode": "1210"
+            },
+            "gx-participant:legalAddress": {
+                "gx-participant:addressCountryCode": "BE",
+                "gx-participant:addressCode": "BE-BRU",
+                "gx-participant:streetAddress": "Avenue des Arts 6-9",
+                "gx-participant:postalCode": "1210"
+            },
+            "gx-participant:termsAndConditions": "70c1d713215f95191a11d38fe2341faed27d19e083917bc8732ca4fea4976700"
+        },
+        "proof": {
+            "type": "JsonWebSignature2020",
+            "created": "2023-02-09T10:37:08.579Z",
+            "proofPurpose": "assertionMethod",
+            "verificationMethod": "did:web:abc-federation.gaia-x.community",
+            "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..naBaWYZF-pUw_Epkt8dMckHmQlDlNn-3RpTRu2glT9McVNYfWIDljcuvFceETH19-X6iLB7UIAjJ5qVXJ5WR9TGZS1-tRWv0NDK1fAIfshCVKAMQAk6uQW4NmWpeQBtIv0vWIjxhU8Gxz7ojdXuSoM1RVsCgnKHfm0vgp_1FdMSfu22M_l6H5DdZSrGCy8RHJOvRlgNRK4C73qBBY1o0XBmhGXwlr568Q72jxda6TNpcyXyH9IB-0v3BIxq9aovlF1UscBudr2pLtIyUBbET8S435Jp_E6LDS-BKiDKpX6rrsn6Q7Gs44jDT8-O3nAObAW5_rSAxLcpjYak-VEdZYQ"
+        }
+    },
+    "complianceCredential": {
+        "@context": [
+          "https://www.w3.org/2018/credentials/v1"
+        ],
+        "type": [
+          "VerifiableCredential",
+          "ParticipantCredential"
+        ],
+        "id": "https://catalogue.gaia-x.eu/credentials/ParticipantCredential/1675939040567",
+        "issuer": "did:web:compliance.lab.gaia-x.eu",
+        "issuanceDate": "2023-02-09T10:37:20.567Z",
+        "credentialSubject": {
+          "id": "did:web:compliance.gaia-x.eu",
+          "hash": "c81622d132c18c2673d8690e07fe597b609018e995d19d7930722408a8104c37"
+        },
+        "proof": {
+          "type": "JsonWebSignature2020",
+          "created": "2023-02-09T10:37:20.567Z",
+          "proofPurpose": "assertionMethod",
+          "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..rqNqOoyItYj06yiLFEcQw1W80qjA4rgfoY49YLiZEi5-XUHBPzqcXKcsrUjmSWn3DbAQcEHjZMf0enfQnB5HTIFjuH9KgO_OHr7LbqF_unRxd1O7aJ7-jKR-Wx9YdpJife-vLg3K52SkInGkzprVGMYSuVm-jGv9xAMPvxa-fXG5SSk1tQkK0Q1kLBJ0QF1eBq4bpDPyfup6U0HN4RkNgEK13I1r_PIc0304f4L0iVfOP8NlM3Wx9Hrd1WThVuPOV5BNTPjuGaWE3xy5N2SUkunY12Q0XSAVvPoUawjJDn84EJEhW3AeTCvwVs_qGKG6EYlqOdYiUQdy_mZXQyhktQ",
+          "verificationMethod": "did:web:compliance.lab.gaia-x.eu"
+        }
+      }
+}

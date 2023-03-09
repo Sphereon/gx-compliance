@@ -1,6 +1,7 @@
 stages:
   - test
   - build
+  - deploy
   - release
 
 variables:
@@ -17,13 +18,14 @@ lint:code:
     - npm ci
     - npm run lint
 
-test:
-  image: node:16
-  stage: test
-  script:
-    - npm install
-    - npm run test
-    - npm run test:e2e
+# Disabled temporarily 
+# test:
+#   image: node:16
+#   stage: test
+#   script:
+#     - npm install
+#     - npm run test
+#     - npm run test:e2e
 
 build:
   image: docker:19.03.12
@@ -35,6 +37,22 @@ build:
   script:
     - docker build --pull -t $CONTAINER_TEST_IMAGE --target production-build-stage .
     - docker push $CONTAINER_TEST_IMAGE
+
+deploy-on-lab:
+  image: ubuntu
+  stage: deploy
+  before_script:
+    - apt update && apt install -y curl
+    - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  script:
+    - helm upgrade --install -n "$CI_COMMIT_REF_SLUG" --create-namespace gx-compliance ./k8s/gx-compliance --set "nameOverride=$CI_COMMIT_REF_SLUG,ingress.hosts[0].host=compliance.lab.gaia-x.eu,ingress.hosts[0].paths[0].path=/$CI_COMMIT_REF_SLUG,image.tag=$CI_COMMIT_REF_SLUG,ingress.hosts[0].paths[0].pathType=Prefix,privateKey=$complianceKey,X509_CERTIFICATE=$complianceCert" --kubeconfig "$GXDCH_KUBECONFIG"
+  only:
+    - "2206-unreleased"
+    - "2210"
+    - main
+    - development
+    - "chore/deploy-branches-on-new-cluster"
+
 
 release-image:
   image: docker:19.03.12

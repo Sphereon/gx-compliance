@@ -90,9 +90,9 @@ export class Proof2210vpService {
 
   private async publicKeyMatchesCertificate(publicKeyJwk: any, certificatePem: string): Promise<boolean> {
     try {
-      const pk = await jose.importJWK(publicKeyJwk, 'RS256')
+      const pk = await jose.importJWK(publicKeyJwk, 'PS256')
       const spki = await jose.exportSPKI(pk as jose.KeyLike)
-      const x509 = await jose.importX509(certificatePem, 'RS256')
+      const x509 = await jose.importX509(certificatePem, 'PS256')
       const spkiX509 = await jose.exportSPKI(x509 as jose.KeyLike)
 
       return spki === spkiX509

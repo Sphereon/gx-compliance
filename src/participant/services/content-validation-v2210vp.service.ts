@@ -68,14 +68,10 @@ export class ParticipantContentValidationV2210vpService {
     //fixme(ksadjad): fix this
     const { legalAddress, headquartersAddress } = leiData[0].attributes.entity
 
-    const checkValidLegalLeiCountry = this.checkValidLeiCountry(
-      selfDescription.legalAddress['country-name'],
-      selfDescription.legalAddress?.['country-name'],
-      'legalAddress'
-    )
+    const checkValidLegalLeiCountry = this.checkValidLeiCountry(selfDescription.legalAddress["country-name"], selfDescription.legalAddress?.['country-name'], 'legalAddress')
     const checkValidHeadquarterLeiCountry = this.checkValidLeiCountry(
-      selfDescription.headquarterAddress?.['country-name'],
-      selfDescription.headquarterAddress?.['country-name'],
+        selfDescription.headquarterAddress?.["country-name"],
+      selfDescription.headquarterAddress?.["country-name"],
       'headquarterAddress'
     )
 
@@ -221,9 +217,10 @@ export class ParticipantContentValidationV2210vpService {
       arrayDids.map(async element => {
         try {
           await this.httpService.get(element.replace('did:web:', 'https://')).toPromise()
+
         } catch (e) {
           try {
-            await this.httpService.get(element.replace('did:web:', 'https://') + '/.well-known/did.json').toPromise()
+            await this.httpService.get(element.replace('did:web:', 'https://')+'/.well-known/did.json').toPromise()
           } catch (e) {
             invalidUrls.push(element)
           }

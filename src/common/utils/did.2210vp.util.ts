@@ -20,7 +20,7 @@ export function getDidWebVerificationMethodIdentifier(): string {
 }
 
 export async function createDidDocument() {
-  const spki = await jose.importX509(readFileSync(X509_CERTIFICATE_CHAIN_FILE_PATH).toString(), 'PS256')
+  const spki = await jose.importX509(readFileSync(X509_CERTIFICATE_CHAIN_FILE_PATH).toString(), 'RS256')
   const x509VerificationMethodIdentifier = `${getDidWeb()}#${X509_VERIFICATION_METHOD_NAME}`
   const x5u = `${getBaseUrl()}/.well-known/x509CertificateChain.pem`
 
@@ -34,7 +34,7 @@ export async function createDidDocument() {
         controller: getDidWeb(),
         publicKeyJwk: {
           ...(await jose.exportJWK(spki)),
-          // alg: 'PS256',
+          // alg: 'RS256',
           x5u
         }
       }

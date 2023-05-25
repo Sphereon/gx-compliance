@@ -1,16 +1,25 @@
 import { HttpModule } from '@nestjs/axios'
 import { Module } from '@nestjs/common'
-import { SignatureService, ShaclService, SelfDescriptionService, RegistryService, ProofService } from './services'
+import { SignatureService, ShaclService, RegistryService, ProofService } from './services'
 import { CommonController } from './common.controller'
-import { SoapService } from './services'
-import {Common2010VPController} from "./common-2210vp.controller";
-import {Proof2210vpService} from "./services/proof.2210vp.service";
-import {SelfDescription2210vpService} from "./services/selfDescription.2210vp.service";
-import {Signature2210vpService} from "./services/signature.2010vp.service";
+import { VerifiablePresentationValidationService } from './services/verifiable-presentation-validation.service'
+import { TrustFramework2210ValidationService } from './services/tf2210/trust-framework-2210-validation.service'
+import { ParticipantContentValidationService } from '../participant/services/content-validation.service'
+import { ServiceOfferingContentValidationService } from '../service-offering/services/content-validation.service'
+
 @Module({
   imports: [HttpModule],
-  controllers: [CommonController, Common2010VPController],
-  providers: [ProofService, Proof2210vpService, ShaclService, SelfDescriptionService, SelfDescription2210vpService, SignatureService, Signature2210vpService, RegistryService, SoapService],
-  exports: [ProofService, Proof2210vpService, ShaclService, SelfDescriptionService, SelfDescription2210vpService, SignatureService, Signature2210vpService, RegistryService, SoapService]
+  controllers: [CommonController],
+  providers: [
+    ShaclService,
+    SignatureService,
+    ParticipantContentValidationService,
+    ProofService,
+    RegistryService,
+    ServiceOfferingContentValidationService,
+    TrustFramework2210ValidationService,
+    VerifiablePresentationValidationService
+  ],
+  exports: [ProofService, RegistryService, ShaclService, SignatureService]
 })
 export class CommonModule {}

@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing'
 import { SignatureService } from './signature.service'
 import { AppModule } from '../../app.module'
-import participantSd from '../../tests/fixtures/participant-sd.json'
-import participantMinimalSd from '../../tests/fixtures/participant-sd.json'
+import participantSd from '../../tests/fixtures/participant-vp.json'
+import participantMinimalSd from '../../tests/fixtures/participant-vp.json'
 import serviceOfferingSd from '../../tests/fixtures/service-offering-sd.json'
 import * as jose from 'jose'
 
@@ -68,11 +68,8 @@ describe.skip('SignatureService', () => {
         .reduce((r, k) => ((r[k] = o[k]), r), {})
 
     beforeAll(async () => {
-      delete participantSd.selfDescriptionCredential.proof
-      delete participantMinimalSd.selfDescriptionCredential.proof
-
-      const participantSdCopy = JSON.parse(JSON.stringify(participantSd.selfDescriptionCredential))
-      const participantMinimalSdCopy = JSON.parse(JSON.stringify(participantMinimalSd.selfDescriptionCredential))
+      const participantSdCopy = JSON.parse(JSON.stringify(participantSd))
+      const participantMinimalSdCopy = JSON.parse(JSON.stringify(participantMinimalSd))
       const serviceOfferingSdCopy = JSON.parse(JSON.stringify(serviceOfferingSd.selfDescriptionCredential))
 
       participantSdCopy['@context'] = { credentialSubject: '@nest' }

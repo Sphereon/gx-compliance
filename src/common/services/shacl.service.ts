@@ -1,38 +1,24 @@
-import { HttpService } from '@nestjs/axios'
-import { ConflictException, Injectable, NotFoundException, Logger } from '@nestjs/common'
+import { ConflictException, Injectable, Logger } from '@nestjs/common'
 import { Readable } from 'stream'
 import DatasetExt from 'rdf-ext/lib/Dataset'
 import Parser from '@rdfjs/parser-n3'
-import ParserJsonLD from '@rdfjs/parser-jsonld'
 import rdf from 'rdf-ext'
-import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../constants'
 import SHACLValidator from 'rdf-validate-shacl'
-import { SelfDescriptionTypes } from '../enums'
-import {
-  CredentialSubjectDto,
-  Schema_caching,
-  ValidationResult,
-  VerifiableCredentialDto,
-} from '../dto'
-import { NotFoundError } from 'rxjs'
+import { Schema_caching, ValidationResult } from '../dto'
+import jsonld from 'jsonld'
+import { RegistryService } from './registry.service'
+import { getAtomicType } from '../utils/getAtomicType'
 
-const expectedContexts = {
-  [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE,
-  [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
-}
 const cache: Schema_caching = {
-  LegalPerson: {},
-  ServiceOfferingExperimental: {}
+  trustframework: {}
 }
 
 @Injectable()
 export class ShaclService {
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly registryService: RegistryService) {}
+
   private readonly logger = new Logger(ShaclService.name)
-  static readonly SHAPE_PATHS = {
-    PARTICIPANT: 'participant',
-    SERVICE_OFFERING: 'serviceoffering'
-  }
+
   async validate(shapes: DatasetExt, data: DatasetExt): Promise<ValidationResult> {
     const validator = new SHACLValidator(shapes, { factory: rdf as any })
     const report = await validator.validate(data)
@@ -66,41 +52,13 @@ export class ShaclService {
     }
   }
 
-  async loadFromJsonLD(raw: string): Promise<DatasetExt> {
+  async loadShaclFromUrl(type: string): Promise<DatasetExt> {
     try {
-      const parser = new ParserJsonLD({ factory: rdf })
-      return this.transformToStream(raw, parser)
-    } catch (error) {
-      console.error(error)
-      throw new ConflictException('Cannot load from provided JsonLD.')
-    }
-  }
-
-  async loadShaclFromUrl(type:string): Promise<DatasetExt> {
-    try {
-      const url = process.env.REGISTRY_URL || "https://registry.lab.gaia-x.eu"
-      const response= await (await this.httpService.get(`${url}/api/trusted-shape-registry/v1/shapes/${type}`).toPromise()).data   
-      return this.isJsonString(response.data) ? this.loadFromJsonLD(response.data) : this.loadFromTurtle(response.data)
+      const response = await this.registryService.getShape(type)
+      return this.isJsonString(response) ? this.loadFromJSONLDWithQuads(response) : this.loadFromTurtle(response)
     } catch (error) {
       this.logger.error(`${error}, Url used to fetch shapes: ${process.env.REGISTRY_URL}/api/trusted-shape-registry/v1/shapes/${type}`)
       throw new ConflictException(error)
-      
-    }
-  }
-
-  async loadFromUrl(url: string): Promise<DatasetExt> {
-    try {
-      const response = await this.httpService
-        .get(url, {
-          // avoid JSON parsing and get plain json string as data
-          transformResponse: r => r
-        })
-        .toPromise()
-      
-      return this.isJsonString(response.data) ? this.loadFromJsonLD(response.data) : this.loadFromTurtle(response.data)
-    } catch (error) {
-      console.error(error)
-      throw new ConflictException("Cannot load TTL file for url ", url)
     }
   }
 
@@ -122,57 +80,74 @@ export class ShaclService {
     return true
   }
 
-  
-  public async getShaclShape(link: string): Promise<DatasetExt> {
-    return await this.loadShaclFromUrl(link)
+  public async getShaclShape(shapeName: string): Promise<DatasetExt> {
+    return await this.loadShaclFromUrl(shapeName)
   }
 
-  public async ShapeVerification(
-    rawCredentialSubject: string,
-    type: string,
-  ): Promise<ValidationResult> {
+  public async verifyShape(verifiablePresentation: any, type: string): Promise<ValidationResult> {
+    if (!(await this.shouldCredentialBeValidated(verifiablePresentation))) {
+      throw new ConflictException('VerifiableCrdential contains a shape that is not defined in registry shapes')
+    }
     try {
-      const rawPrepared = {
-        ...JSON.parse(rawCredentialSubject),
-        ...expectedContexts[type]
-      }
-      const selfDescriptionDataset: DatasetExt = await this.loadFromJsonLD(JSON.stringify(rawPrepared))
-      if (this.Cache_check(type) == true) {
-        const shape: ValidationResult = await this.validate(cache[type].shape, selfDescriptionDataset)
-        return shape
+      const selfDescriptionDataset: DatasetExt = await this.loadFromJSONLDWithQuads(verifiablePresentation)
+      if (this.isCached(type)) {
+        return await this.validate(cache[type].shape, selfDescriptionDataset)
       } else {
         try {
-          const schema = await this.getShaclShape(this.getShapePath(type))
+          const schema = await this.getShaclShape(type)
           cache[type].shape = schema
-          const shape: ValidationResult = await this.validate(schema, selfDescriptionDataset)
-          return shape
-        }
-        catch (e) {
+          return await this.validate(schema, selfDescriptionDataset)
+        } catch (e) {
+          console.log(e)
           return {
-            conforms:false,
-            results:[e]
+            conforms: false,
+            results: [e]
           }
         }
       }
     } catch (e) {
+      console.log(e)
       throw e
     }
   }
 
-  private Cache_check(type: string): boolean {
+  private isCached(type: string): boolean {
     let cached = false
-    if (cache[type].shape) {
+    if (cache[type] && cache[type].shape) {
       cached = true
     }
     return cached
   }
 
-  public getShapePath(type: string): string | undefined {
-    const shapePathType = {
-      [SelfDescriptionTypes.PARTICIPANT]: 'PARTICIPANT',
-      [SelfDescriptionTypes.SERVICE_OFFERING]: 'SERVICE_OFFERING'
+  async loadFromJSONLDWithQuads(data: object) {
+    let quads
+    try {
+      quads = await jsonld.toRDF(data, { format: 'application/n-quads' })
+    } catch (Error) {
+      console.error('Unable to parse from JSONLD', Error)
     }
+    const parser = new Parser({ factory: rdf as any })
 
-    return ShaclService.SHAPE_PATHS[shapePathType[type]] || undefined
+    const stream = new Readable()
+    stream.push(quads)
+    stream.push(null)
+
+    return await rdf.dataset().import(parser.import(stream))
+  }
+
+  private async shouldCredentialBeValidated(verifiablePresentation: any) {
+    const validTypes = await this.registryService.getImplementedTrustFrameworkShapes()
+    const credentialType = this.getVPTypes(verifiablePresentation)
+    return credentialType
+      .map(type => validTypes.indexOf(type) > -1)
+      .reduce((previousValue, currentValue) => {
+        return previousValue && currentValue
+      })
+  }
+
+  private getVPTypes(verifiablePresentation: any): string[] {
+    return verifiablePresentation.verifiableCredential.map(vc => {
+      return getAtomicType(vc)
+    })
   }
 }

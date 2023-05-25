@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { CredentialSubjectDto } from '../../common/dto/credential-meta.dto'
-import { TermsAndConditionsDto } from '../../common/dto/terms-and-conditions.dto'
+import { CredentialSubjectDto, TermsAndConditionsDto } from '../../common/dto'
 
 export class ServiceOfferingSelfDescriptionDto extends CredentialSubjectDto {
   @ApiProperty({

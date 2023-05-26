@@ -1,10 +1,11 @@
 import { ComplianceCredentialDto, CredentialSubjectDto, VerifiableCredentialDto, VerifiablePresentationDto } from '../dto'
 import crypto, { createHash } from 'crypto'
-import { getDidWeb } from '../utils'
+import { getDidWeb, getDidWebVerificationMethodIdentifier } from '../utils'
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common'
 import * as jose from 'jose'
 import * as jsonld from 'jsonld'
 import { RegistryService } from './registry.service'
+import {DocumentLoader} from "./DocumentLoader";
 
 export interface Verification {
   protectedHeader: jose.CompactJWSHeaderParameters | undefined
@@ -41,7 +42,9 @@ export class SignatureService {
       issuer: getDidWeb(),
       issuanceDate: date.toISOString(),
       expirationDate: new Date(date.setDate(date.getDate() + lifeExpectancy)).toISOString(),
-      credentialSubject: VCs
+      credentialSubject: {
+        id: getDidWeb()
+      }
     }
 
     const VCHash = this.sha256(await this.normalize(complianceCredential))
@@ -51,7 +54,7 @@ export class SignatureService {
       created: new Date().toISOString(),
       proofPurpose: 'assertionMethod',
       jws,
-      verificationMethod: getDidWeb()
+      verificationMethod: getDidWebVerificationMethodIdentifier()
     }
     return complianceCredential
   }
@@ -80,7 +83,8 @@ export class SignatureService {
     try {
       canonized = await jsonld.canonize(doc, {
         algorithm: 'URDNA2015',
-        format: 'application/n-quads'
+        format: 'application/n-quads',
+        documentLoader: new DocumentLoader().getLoader()
       })
     } catch (error) {
       console.log(error)

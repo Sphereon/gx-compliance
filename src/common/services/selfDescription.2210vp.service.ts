@@ -12,16 +12,17 @@ import {
   VerifiableCredentialDto,
   VerifiableSelfDescriptionDto
 } from '../dto'
-import { validationResultWithoutContent } from '../@types'
-import { SelfDescriptionTypes } from '../enums'
-import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../constants'
+// import { validationResultWithoutContent } from '../@types'
+// import { SelfDescriptionTypes } from '../enums'
+// import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../constants'
 import { VerifiablePresentationDto } from '../dto/presentation-meta.dto'
 import { ParticipantSelfDescriptionDto } from '../../participant/dto'
 import { ServiceOfferingSelfDescriptionDto } from '../../service-offering/dto'
 import { IntentType, IVerifiableCredential, TypedVerifiableCredential, TypedVerifiablePresentation } from '../@types/SSI.types'
-import { SDParserPipe } from '../pipes'
-import { getDidWeb } from '../utils/did.2210vp.util'
+// import { SDParserPipe } from '../pipes'
+// import { getDidWeb } from '../utils/did.2210vp.util'
 import { SsiTypesParserPipe } from '../pipes/ssi-types-parser.pipe'
+import { getDidWeb } from '../utils'
 
 @Injectable()
 export class SelfDescription2210vpService {
@@ -37,7 +38,7 @@ export class SelfDescription2210vpService {
     private readonly proofService: Proof2210vpService
   ) {}
 
-  public async validate(typedVerifiablePresentation: TypedVerifiablePresentation): Promise<validationResultWithoutContent> {
+  public async validate(typedVerifiablePresentation: TypedVerifiablePresentation): Promise<void /*validationResultWithoutContent*/> {
     let isValidSignature = await this.proofService.validateVP(
       typedVerifiablePresentation.originalVerifiablePresentation as VerifiablePresentationDto,
       false,
@@ -81,8 +82,8 @@ export class SelfDescription2210vpService {
       )
 
       const expectedContexts = {
-        [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE,
-        [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
+        // [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE,
+        // [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
       }
       //fixme: @nklomp because this should be always present at this point?
       const legalPersonShapeValidation = await this.checkCredentialShape(legalPersonVC, expectedContexts[legalPersonVC.type])
@@ -107,16 +108,16 @@ export class SelfDescription2210vpService {
           }
         : legalPersonShapeValidation
       const conforms: boolean = shapeResult.conforms && isValidSignature // && content.conforms
-      return {
+      return null /*{
         conforms,
         shape: shapeResult,
-        // content,
+        content,
         isValidSignature: isValidSignature
-      }
+      }*/
     }
   }
 
-  public async validateVP(signedSelfDescription: VerifiablePresentationDto): Promise<validationResultWithoutContent> {
+  public async validateVP(signedSelfDescription: VerifiablePresentationDto): Promise<void /*validationResultWithoutContent*/> {
     const serviceOfferingVC = signedSelfDescription.verifiableCredential.filter(vc => vc.type.includes('ServiceOffering'))[0]
     const participantVC = signedSelfDescription.verifiableCredential.filter(vc => vc.type.includes('ParticipantCredential'))[0]
     /**
@@ -126,8 +127,8 @@ export class SelfDescription2210vpService {
     const shapePath: string = this.getShapePath(type)
     if (!shapePath) throw new BadRequestException('Provided Type does not exist for Self Descriptions')
     const expectedContexts = {
-      [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE,
-      [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
+      // [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE,
+      // [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
     }
 
     if (!(type in expectedContexts)) throw new ConflictException('Provided Type is not supported')
@@ -139,15 +140,15 @@ export class SelfDescription2210vpService {
       throw new BadRequestException('ServiceOffering VP is not valid')
     }
     if (participantVC.credentialSubject.id === serviceOfferingVC.issuer) {
-      return {
+      /*return {
         shape: undefined,
         conforms: true
-      }
+      }*/
     } else {
-      return {
+      /*return {
         shape: undefined,
         conforms: false
-      }
+      }*/
     }
   }
 
@@ -155,9 +156,9 @@ export class SelfDescription2210vpService {
   public async validateSelfDescription(
     participantSelfDescription: TypedVerifiablePresentation,
     sdType: string
-  ): Promise<validationResultWithoutContent> {
+  ): Promise<void /*validationResultWithoutContent*/> {
     // const type = sdType === 'Participant' || sdType === 'LegalPerson' ? 'LegalPerson' : 'ServiceOffering'
-    const _SDParserPipe = new SDParserPipe('LegalPerson')
+    // const _SDParserPipe = new SDParserPipe('LegalPerson')
     //fixme: we're getting the number 0 on the list, but it should consider the issuer for getting the right value? or is it the case that this credential should be singular in this list?
     const participantTypedVC = participantSelfDescription.getTypedVerifiableCredentials('LegalPerson')[0]
     const verifiableSelfDescription: VerifiableSelfDescriptionDto<CredentialSubjectDto> = {
@@ -173,12 +174,12 @@ export class SelfDescription2210vpService {
       selfDescriptionCredential: { ...participantTypedVC.rawVerifiableCredential } as VerifiableCredentialDto<any>
     }
 
-    const { selfDescriptionCredential: selfDescription } = _SDParserPipe.transform(verifiableSelfDescription)
+    const { selfDescriptionCredential: selfDescription } = { selfDescriptionCredential: null } //_SDParserPipe.transform(verifiableSelfDescription)
     try {
       const type: string = selfDescription.type.find(t => t !== 'VerifiableCredential') // selfDescription.type
       const shape: ValidationResult = await this.checkCredentialShape(
         participantTypedVC,
-        type === 'LegalPerson' ? EXPECTED_PARTICIPANT_CONTEXT_TYPE : EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
+        type === 'LegalPerson' //? EXPECTED_PARTICIPANT_CONTEXT_TYPE : EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
       )
 
       // const content: ValidationResult = await this.validateContent(selfDescription, type)
@@ -191,7 +192,7 @@ export class SelfDescription2210vpService {
 
       if (!conforms) throw new ConflictException(result)
 
-      return result
+      return result as unknown as void
     } catch (error) {
       if (error.status === 409) {
         throw new ConflictException({
@@ -207,7 +208,7 @@ export class SelfDescription2210vpService {
 
   public async getShaclShape(shapePath: string): Promise<DatasetExt> {
     //fixme: since gaia-x registry is down, I'm changing this fallback url
-    return await this.shaclService.loadFromUrl(`${process.env.REGISTRY_URL || 'http://20.76.5.229'}${shapePath}`)
+    return await this.shaclService.loadShaclFromUrl(`${process.env.REGISTRY_URL || 'http://20.76.5.229'}${shapePath}`)
   }
 
   public async storeSelfDescription(
@@ -249,8 +250,8 @@ export class SelfDescription2210vpService {
 
   private getShapePath(type: string): string | undefined {
     const shapePathType = {
-      [SelfDescriptionTypes.PARTICIPANT]: 'PARTICIPANT',
-      [SelfDescriptionTypes.SERVICE_OFFERING]: 'SERVICE_OFFERING'
+      // [SelfDescriptionTypes.PARTICIPANT]: 'PARTICIPANT',
+      // [SelfDescriptionTypes.SERVICE_OFFERING]: 'SERVICE_OFFERING'
     }
 
     return SelfDescription2210vpService.SHAPE_PATHS[shapePathType[type]] || undefined
@@ -297,7 +298,7 @@ export class SelfDescription2210vpService {
       ...rawCredentialSubject, // TODO: refactor to object, check if raw is still needed
       ...context
     }
-    const selfDescriptionDataset: DatasetExt = await this.shaclService.loadFromJsonLD(JSON.stringify(rawPrepared))
+    const selfDescriptionDataset: DatasetExt = await this.shaclService.loadFromJSONLDWithQuads(rawPrepared)
     return await this.shaclService.validate(await this.getShaclShape(shapePath), selfDescriptionDataset)
   }
 }

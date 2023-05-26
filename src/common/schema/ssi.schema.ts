@@ -1,5 +1,6 @@
 import Joi from 'joi'
-import { DID_WEB_PATTERN } from '../constants'
+
+export const DID_WEB_PATTERN = /^did:web:([a-zA-Z0-9%?#._-]+:?)*[a-zA-Z0-9%?#._-]+/
 
 const proofSchema = {
   type: Joi.string().required(),

@@ -4,3 +4,4 @@ export function clone(objectToClone) {
 
 export * from './did.util'
 export * from './public-key.utils'
+export * from './self-description.util'

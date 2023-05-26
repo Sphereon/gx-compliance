@@ -2,8 +2,8 @@ import { ApiBody, ApiExtraModels, ApiOperation, ApiQuery, ApiTags } from '@nestj
 import { Body, Controller, HttpStatus, Post, HttpCode, ConflictException, BadRequestException, Query } from '@nestjs/common'
 import SphereonServiceOfferingVP from '../../test/datas/2010VP/sphereon-service-offering.json'
 import { HttpService } from '@nestjs/axios'
-import { SelfDescriptionService, ShaclService } from '../common/services'
-import { ApiVerifyResponse } from '../common/decorators'
+import { ShaclService } from '../common/services'
+// import { ApiVerifyResponse } from '../common/decorators'
 import {
   CredentialSubjectDto,
   Schema_caching,
@@ -13,36 +13,32 @@ import {
   VerifiableCredentialDto,
   VerifiableSelfDescriptionDto
 } from '../common/dto'
-import { ServiceOfferingSelfDescriptionDto, VerifyServiceOfferingDto } from './dto'
-import { getApiVerifyBodySchema } from '../common/utils'
-import { BooleanQueryValidationPipe, JoiValidationPipe, SDParserPipe } from '../common/pipes'
+import { ServiceOfferingSelfDescriptionDto } from './dto'
 import { SsiTypesParserPipe } from '../common/pipes/ssi-types-parser.pipe'
-import { validationResultWithoutContent } from '../common/@types'
+// import { validationResultWithoutContent } from '../common/@types'
 import { VerifiablePresentationDto } from '../common/dto/presentation-meta.dto'
 import { vcSchema } from '../common/schema/ssi.schema'
-import { CredentialTypes, SelfDescriptionTypes } from '../common/enums'
+// import { CredentialTypes, SelfDescriptionTypes } from '../common/enums'
 import DatasetExt from 'rdf-ext/lib/Dataset'
-import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../common/constants'
 import { SelfDescription2210vpService } from '../common/services/selfDescription.2210vp.service'
 import { ServiceOfferingContentValidation2210vpService } from './services/content-validation.2210vp.service'
 import { Proof2210vpService } from '../common/services/proof.2210vp.service'
 import { TypedVerifiableCredential, TypedVerifiablePresentation } from '../common/@types/SSI.types'
-import { ServiceOfferingController } from './service-offering.controller'
 import { ServiceOfferingContentValidationService } from './services/content-validation.service'
 
-const credentialType = CredentialTypes.service_offering
+// const credentialType = CredentialTypes.service_offering
 
 const expectedContexts = {
-  [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE,
-  [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
+  // [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE,
+  // [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE
 }
 
-const cache: Schema_caching = {
+/*const cache: Schema_caching = {
   LegalPerson: {},
   ServiceOfferingExperimental: {}
-}
+}*/
 
-@ApiTags(credentialType)
+// @ApiTags(credentialType)
 @Controller({ path: '/api/2210vp/service-offering' })
 export class ServiceOfferingV2210vpController {
   constructor(
@@ -51,11 +47,11 @@ export class ServiceOfferingV2210vpController {
     private readonly serviceOfferingContentValidation2210vpService: ServiceOfferingContentValidation2210vpService,
     private readonly shaclService: ShaclService,
     private readonly proof2210vpService: Proof2210vpService,
-    private readonly selfDescriptionService: SelfDescriptionService,
+    // private readonly selfDescriptionService: SelfDescriptionService,
     private readonly serviceOfferingContentValidationService: ServiceOfferingContentValidationService
   ) {}
 
-  @ApiVerifyResponse(credentialType)
+  // @ApiVerifyResponse(credentialType)
   @Post('verify/raw')
   @ApiOperation({ summary: 'Validate a Service Offering Self Description' })
   @ApiExtraModels(VerifiableSelfDescriptionDto, VerifiableCredentialDto, ServiceOfferingSelfDescriptionDto)
@@ -70,39 +66,40 @@ export class ServiceOfferingV2210vpController {
     type: Boolean,
     required: false
   })
-  @ApiBody(
+  /*@ApiBody(
     getApiVerifyBodySchema('ServiceOfferingExperimental', {
       service: { summary: 'Service Offering Experimental SD Example', value: SphereonServiceOfferingVP }
     })
-  )
+  )*/
   @HttpCode(HttpStatus.OK)
   async verifyServiceOfferingVP(
-    @Body() rawData: VerifiablePresentationDto | VerifiableSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>,
-    @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean,
-    @Query('verifyParticipant', new BooleanQueryValidationPipe()) verifyParticipant: boolean
+    @Body() rawData: VerifiablePresentationDto | VerifiableSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>
+    // @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean,
+    // @Query('verifyParticipant', new BooleanQueryValidationPipe()) verifyParticipant: boolean
   ): Promise<ValidationResultDto> {
     if (!rawData['type'] || !(rawData['type'] as string[]).includes('VerifiablePresentation')) {
-      const sdParser = new SDParserPipe(SelfDescriptionTypes.SERVICE_OFFERING)
-      const transformed: SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto> = sdParser.transform(
+      // const sdParser = new SDParserPipe(SelfDescriptionTypes.SERVICE_OFFERING)
+      const transformed: SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto> = null /*sdParser.transform(
         rawData as VerifiableSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>
-      ) as SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>
-      return await new ServiceOfferingController(this.selfDescriptionService, this.serviceOfferingContentValidationService).verifyServiceOfferingRaw(
+      ) as SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>*/
+      /*return await new ServiceOfferingController(this.selfDescriptionService, this.serviceOfferingContentValidationService).verifyServiceOfferingRaw(
         transformed,
         storeSD,
         verifyParticipant
-      )
+      )*/
+      return null
     }
     const typedVerifiablePresentation = new SsiTypesParserPipe().transform(rawData as VerifiablePresentationDto) as TypedVerifiablePresentation
-    return await this.verifyAndStoreSignedServiceOfferingVP(typedVerifiablePresentation, storeSD, verifyParticipant)
+    return null //await this.verifyAndStoreSignedServiceOfferingVP(typedVerifiablePresentation, storeSD, verifyParticipant)
   }
 
-  @ApiVerifyResponse(credentialType)
+  // @ApiVerifyResponse(credentialType)
   @Post('verify')
   @ApiOperation({ summary: 'Validate a ServiceOffering Self Description VP via its URL' })
   @ApiExtraModels(VerifiablePresentationDto)
-  @ApiBody({
+  /*@ApiBody({
     type: VerifyServiceOfferingDto
-  })
+  })*/
   @ApiQuery({
     name: 'store',
     type: Boolean,
@@ -116,9 +113,9 @@ export class ServiceOfferingV2210vpController {
   })
   @HttpCode(HttpStatus.OK)
   async verifyServiceOfferingUrl(
-    @Body() verifyServiceOffering,
-    @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean,
-    @Query('verifyParticipant', new BooleanQueryValidationPipe()) verifyParticipant: boolean
+    @Body() verifyServiceOffering
+    // @Query('store', new BooleanQueryValidationPipe()) storeSD: boolean,
+    // @Query('verifyParticipant', new BooleanQueryValidationPipe()) verifyParticipant: boolean
   ): Promise<ValidationResultDto> {
     const { url } = verifyServiceOffering
     let typesVerifiablePresentation: TypedVerifiablePresentation
@@ -127,14 +124,15 @@ export class ServiceOfferingV2210vpController {
       const { data: rawData } = response
       const dataJson = JSON.parse(rawData)
       if (!dataJson['type'] || !(rawData['type'] as string[]).includes('VerifiablePresentation')) {
-        const sdParser = new SDParserPipe(SelfDescriptionTypes.SERVICE_OFFERING)
-        const transformed: SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto> = sdParser.transform(
+        // const sdParser = new SDParserPipe(SelfDescriptionTypes.SERVICE_OFFERING)
+        const transformed: SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto> = null
+        /*sdParser.transform(
           dataJson
-        ) as SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>
-        return await new ServiceOfferingController(
+        ) as SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>*/
+        /*await new ServiceOfferingController(
           this.selfDescriptionService,
           this.serviceOfferingContentValidationService
-        ).verifyServiceOfferingRaw(transformed, storeSD, verifyParticipant)
+        ).verifyServiceOfferingRaw(transformed, storeSD, verifyParticipant)*/
       }
       typesVerifiablePresentation = new SsiTypesParserPipe().transform(dataJson) as TypedVerifiablePresentation
     } catch (e) {
@@ -145,21 +143,22 @@ export class ServiceOfferingV2210vpController {
       })
     }
 
-    return await this.verifyAndStoreSignedServiceOfferingVP(typesVerifiablePresentation, storeSD)
+    // return await this.verifyAndStoreSignedServiceOfferingVP(typesVerifiablePresentation, storeSD)
+    return null
   }
 
-  @ApiVerifyResponse(credentialType)
+  // @ApiVerifyResponse(credentialType)
   @Post('validate/vc')
   @ApiOperation({ summary: 'Validate a Service Offering VerifiableCredential' })
   @ApiExtraModels(VerifiableCredentialDto)
-  @ApiBody(
+  /*@ApiBody(
     getApiVerifyBodySchema('ServiceOfferingExperimental', {
       service: { summary: 'Service Offering VC Example', value: SphereonServiceOfferingVP.verifiableCredential[2] }
     })
-  )
+  )*/
   @HttpCode(HttpStatus.OK)
   async validateServiceOfferingVC(
-    @Body(new JoiValidationPipe(vcSchema), new SsiTypesParserPipe())
+    // @Body(new JoiValidationPipe(vcSchema), new SsiTypesParserPipe())
     typedVerifiableCredential: TypedVerifiableCredential
   ): Promise<ValidationResultDto> {
     const validationResult: ValidationResultDto = await this.validateSignedServiceOfferingVC(typedVerifiableCredential)
@@ -214,31 +213,31 @@ export class ServiceOfferingV2210vpController {
       }
     )
 
-    if (!validationResult.conforms)
+    if (true /*!validationResult.conforms*/)
       throw new ConflictException({
         statusCode: HttpStatus.CONFLICT,
         message: {
-          ...validationResult,
+          // ...validationResult,
           content
         },
         error: 'Conflict'
       })
 
     return {
-      ...validationResult,
+      // ...validationResult,
       content
     } as ValidationResultDto
   }
 
   private async validateSignedServiceOfferingVC(typedServiceOfferingVC: TypedVerifiableCredential): Promise<ValidationResultDto> {
-    const validationResult: validationResultWithoutContent = await this.selfDescription2210vpService.validateVC(
+    /*const validationResult: validationResultWithoutContent = await this.selfDescription2210vpService.validateVC(
       typedServiceOfferingVC.rawVerifiableCredential
-    )
+    )*/
     const content = await this.serviceOfferingContentValidation2210vpService.validateServiceOfferingCredentialSubject(
       typedServiceOfferingVC.rawVerifiableCredential
     )
 
-    if (!validationResult.conforms)
+    /*if (!validationResult.conforms)
       throw new ConflictException({
         statusCode: HttpStatus.CONFLICT,
         message: {
@@ -251,7 +250,8 @@ export class ServiceOfferingV2210vpController {
     return {
       ...validationResult,
       content
-    }
+    }*/
+    return null
   }
 
   private async verifyAndStoreSignedServiceOfferingVP(
@@ -279,21 +279,22 @@ export class ServiceOfferingV2210vpController {
         ...JSON.parse(rawCredentialSubject),
         ...expectedContexts[type]
       }
-      const selfDescriptionDataset: DatasetExt = await this.shaclService.loadFromJsonLD(JSON.stringify(rawPrepared))
+      const selfDescriptionDataset: DatasetExt = await this.shaclService.loadFromJSONLDWithQuads(rawPrepared)
       if (this.Cache_check(type) == true) {
-        const shape: ValidationResult = await this.shaclService.validate(cache[type].shape, selfDescriptionDataset)
-        return shape
+        // const shape: ValidationResult = await this.shaclService.validate(cache[type].shape, selfDescriptionDataset)
+        // return shape
+        return null
       } else {
         const shapePath = await new Promise<string>((resolve, reject) => {
           if (!(type in expectedContexts)) reject(new ConflictException('Provided Type is not supported'))
-          if (!this.shaclService.getShapePath(type)) {
+          if (!this.shaclService.getShaclShape(type)) {
             reject(new BadRequestException('Provided Type does not exist for Self Descriptions'))
           } else {
-            resolve(this.shaclService.getShapePath(type))
+            // resolve(this.shaclService.getShaclShape(type))
           }
         })
         const schema = await this.getShaclShape(shapePath)
-        cache[type].shape = schema
+        // cache[type].shape = schema
         const shape: ValidationResult = await this.shaclService.validate(schema, selfDescriptionDataset)
         return shape
       }
@@ -304,14 +305,14 @@ export class ServiceOfferingV2210vpController {
 
   public async getShaclShape(shapePath: string): Promise<DatasetExt> {
     //fixme: since gaia-x registry is down, I'm changing this fallback url
-    return await this.shaclService.loadFromUrl(`${process.env.REGISTRY_URL || 'http://20.76.5.229'}${shapePath}`)
+    return await this.shaclService.loadShaclFromUrl(`${process.env.REGISTRY_URL || 'http://20.76.5.229'}${shapePath}`)
   }
 
   private Cache_check(type: string): boolean {
-    let cached = false
-    if (cache[type].shape) {
+    // let cached = false
+    /*if (cache[type].shape) {
       cached = true
-    }
-    return cached
+    }*/
+    return false
   }
 }

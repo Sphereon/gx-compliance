@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common'
 import { VerifiableCredentialDto } from '../dto'
-import { SelfDescriptionTypes } from '../enums'
-import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../constants'
+// import { SelfDescriptionTypes } from '../enums'
+// import { EXPECTED_PARTICIPANT_CONTEXT_TYPE, EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE } from '../constants'
 import { VerifiablePresentationDto } from '../dto/presentation-meta.dto'
 import {
   IntentType,
@@ -34,17 +34,17 @@ export class SsiTypesParserPipe
   }
 
   public getAddressValues(address: any): Address2210vpDto {
-    const countryName = this.getValueFromShacl(address['vcard:country-name'], 'country-name', SelfDescriptionTypes.PARTICIPANT)
-    const gps = this.getValueFromShacl(address['vcard:gps'], 'gps', SelfDescriptionTypes.PARTICIPANT)
-    const streetAddress = this.getValueFromShacl(address['vcard:street-address'], 'street-address', SelfDescriptionTypes.PARTICIPANT)
-    const postalCode = this.getValueFromShacl(address['vcard:postal-code'], 'postal-code', SelfDescriptionTypes.PARTICIPANT)
-    const locality = this.getValueFromShacl(address['vcard:locality'], 'locality', SelfDescriptionTypes.PARTICIPANT)
+    const countryName = this.getValueFromShacl(address['vcard:country-name'], 'country-name', 'SelfDescriptionTypes.PARTICIPANT')
+    const gps = this.getValueFromShacl(address['vcard:gps'], 'gps', 'SelfDescriptionTypes.PARTICIPANT')
+    const streetAddress = this.getValueFromShacl(address['vcard:street-address'], 'street-address', 'SelfDescriptionTypes.PARTICIPANT')
+    const postalCode = this.getValueFromShacl(address['vcard:postal-code'], 'postal-code', 'SelfDescriptionTypes.PARTICIPANT')
+    const locality = this.getValueFromShacl(address['vcard:locality'], 'locality', 'SelfDescriptionTypes.PARTICIPANT')
 
     return { 'country-name': countryName, gps, 'street-address': streetAddress, 'postal-code': postalCode, locality }
   }
 
   private getValueFromShacl(shacl: any, key: string, type: string): any {
-    if (type === SelfDescriptionTypes.PARTICIPANT && this.addressFields.includes(key)) {
+    if (type === 'SelfDescriptionTypes.PARTICIPANT' && this.addressFields.includes(key)) {
       return this.getAddressValues(shacl)
     }
 
@@ -53,8 +53,8 @@ export class SsiTypesParserPipe
 
   private static replacePlaceholderInKey(key: string, type: string): string {
     const sdTypes = {
-      [SelfDescriptionTypes.SERVICE_OFFERING]: EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE['@type'],
-      [SelfDescriptionTypes.PARTICIPANT]: EXPECTED_PARTICIPANT_CONTEXT_TYPE['@type']
+      ['SelfDescriptionTypes.SERVICE_OFFERING']: "EXPECTED_SERVICE_OFFERING_CONTEXT_TYPE['@type']",
+      ['SelfDescriptionTypes.PARTICIPANT']: "EXPECTED_PARTICIPANT_CONTEXT_TYPE['@type']"
     }
     let sdType = sdTypes[type]
     sdType = key.startsWith(sdType) ? sdType : 'gax-trust-framework:'

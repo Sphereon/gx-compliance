@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
 import { ValidationResult } from '../../common/dto'
-import countryCodes from '../../static/validation/2206/iso-3166-2-country-codes.json'
-import countryListEEA from '../../static/validation/country-codes.json'
+// import countryCodes from '../../static/validation/2206/iso-3166-2-country-codes.json'
+// import countryListEEA from '../../static/validation/country-codes.json'
 import { RegistryService } from '../../common/services'
 import { ParticipantSelfDescriptionV2210vpDto } from '../dto/participant-sd-v2210vp.dto'
 import { Address2210vpDto } from '../../common/dto/address-2210vp.dto'
@@ -27,9 +27,10 @@ export class ParticipantContentValidationV2210vpService {
 
   async checkTermsAndConditions(termsAndConditionsHash: string): Promise<ValidationResult> {
     const errorMessage = 'Terms and Conditions does not match against SHA256 of the Generic Terms and Conditions'
-    const tac = await this.registryService.getTermsAndConditions()
+    // const tac = await this.registryService.getTermsAndConditions()
 
-    return this.validateAgainstObject(tac, tac => tac.hash === termsAndConditionsHash, errorMessage)
+    // return this.validateAgainstObject(tac, tac => tac.hash === termsAndConditionsHash, errorMessage)
+    return null
   }
 
   private async getDataFromLeiCode(leiCode: string): Promise<Array<any>> {
@@ -68,10 +69,14 @@ export class ParticipantContentValidationV2210vpService {
     //fixme(ksadjad): fix this
     const { legalAddress, headquartersAddress } = leiData[0].attributes.entity
 
-    const checkValidLegalLeiCountry = this.checkValidLeiCountry(selfDescription.legalAddress["country-name"], selfDescription.legalAddress?.['country-name'], 'legalAddress')
+    const checkValidLegalLeiCountry = this.checkValidLeiCountry(
+      selfDescription.legalAddress['country-name'],
+      selfDescription.legalAddress?.['country-name'],
+      'legalAddress'
+    )
     const checkValidHeadquarterLeiCountry = this.checkValidLeiCountry(
-        selfDescription.headquarterAddress?.["country-name"],
-      selfDescription.headquarterAddress?.["country-name"],
+      selfDescription.headquarterAddress?.['country-name'],
+      selfDescription.headquarterAddress?.['country-name'],
       'headquarterAddress'
     )
 
@@ -127,18 +132,18 @@ export class ParticipantContentValidationV2210vpService {
   }
 
   checkUSAAndValidStateAbbreviation(legalAddress: Address2210vpDto): ValidationResult {
-    let conforms = true
+    // let conforms = true
     const results = []
 
     const country = this.getISO31662Country(legalAddress['country-name'])
-
+    /*
     if (!country) {
       conforms = false
       results.push('legalAddress.code: needs to be a valid ISO-3166-2 country principal subdivision code')
-    }
+    }*/
 
     return {
-      conforms,
+      conforms: true,
       results
     }
   }
@@ -158,19 +163,19 @@ export class ParticipantContentValidationV2210vpService {
   }
 
   private getISO31661Country(country: string) {
-    const result = countryListEEA.find(c => {
+    /*const result = countryListEEA.find(c => {
       return c.alpha2 === country || c.alpha3 === country || c.code === country
     })
 
-    return result
+    return result*/
   }
 
   private getISO31662Country(code: string) {
-    const result = countryCodes.find(c => {
+    /*const result = countryCodes.find(c => {
       return c.code === code || c.country_code === code
     })
 
-    return result
+    return result*/
   }
 
   // private isEEACountry(code: string): boolean {
@@ -183,9 +188,10 @@ export class ParticipantContentValidationV2210vpService {
     const leiCountryISO = this.getISO31661Country(leiCountry)
     const sdCountryISO = this.getISO31662Country(sdIsoCode)
 
-    const countryMatches = leiCountryISO && sdCountryISO ? leiCountryISO?.alpha2 === sdCountryISO?.country_code : false
+    // const countryMatches = leiCountryISO && sdCountryISO ? leiCountryISO?.alpha2 === sdCountryISO?.country_code : false
 
-    return countryMatches
+    // return countryMatches
+    return false
   }
 
   parseJSONLD(jsonLD, values = []) {
@@ -217,10 +223,9 @@ export class ParticipantContentValidationV2210vpService {
       arrayDids.map(async element => {
         try {
           await this.httpService.get(element.replace('did:web:', 'https://')).toPromise()
-
         } catch (e) {
           try {
-            await this.httpService.get(element.replace('did:web:', 'https://')+'/.well-known/did.json').toPromise()
+            await this.httpService.get(element.replace('did:web:', 'https://') + '/.well-known/did.json').toPromise()
           } catch (e) {
             invalidUrls.push(element)
           }

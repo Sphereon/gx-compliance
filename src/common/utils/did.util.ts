@@ -2,18 +2,24 @@ import { readFileSync, writeFileSync } from 'fs'
 import * as jose from 'jose'
 import { join } from 'path'
 
-export const X509_VERIFICATION_METHOD_NAME = 'X509-JWK2020'
+export const X509_VERIFICATION_METHOD_NAME = 'JWK2020-RSA'
 export const DID_DOC_FILE_PATH_WK = join(__dirname, '../../static/.well-known/did.json')
 export const DID_DOC_FILE_PATH = join(__dirname, '../../static/did.json')
 export const X509_CERTIFICATE_CHAIN_FILE_PATH = join(__dirname, '../../static/.well-known/x509CertificateChain.pem')
 
 export function getDidWeb() {
+  process.env.BASE_URL = 'https://78b7-2001-1c04-2b10-ee00-7bb-e5a9-24c7-7e84.ngrok-free.app'
   return `did:web:${process.env.BASE_URL.replace(/http[s]?:\/\//, '')
     .replace(':', '%3A') // encode port ':' as '%3A' in did:web
     .replace(/\//g, ':')}`
 }
+
+export function getDidWebVerificationMethodIdentifier() {
+  return `${getDidWeb()}#${X509_VERIFICATION_METHOD_NAME}`
+}
+
 export function getCertChainUri() {
-  return `${process.env.BASE_URL}/.well-known/x509CertificateChain.pem`
+  return `${process.env.BASE_URL}/.well-known/fullchain.pem`
 }
 
 export function webResolver(did: string) {

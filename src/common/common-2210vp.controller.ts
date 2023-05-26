@@ -6,22 +6,22 @@ import { ParticipantSelfDescriptionDto } from '../participant/dto'
 import { ServiceOfferingSelfDescriptionDto } from '../service-offering/dto'
 import { VerifiableCredentialDto } from './dto'
 import ComplianceRequests from '../tests/fixtures/2010VP/common-compliance-objects.json'
-import { JoiValidationPipe } from './pipes'
+// import { JoiValidationPipe } from './pipes'
 import { VerifiablePresentationSchema } from './schema/ssi.schema'
-import { CredentialTypes } from './enums'
+// import { CredentialTypes } from './enums'
 import { VerifiablePresentationDto } from './dto/presentation-meta.dto'
 import { IVerifiableCredential, TypedVerifiablePresentation } from './@types/SSI.types'
 import { Signature2210vpService } from './services/signature.2010vp.service'
 import { SsiTypesParserPipe } from './pipes/ssi-types-parser.pipe'
 
-const credentialType = CredentialTypes.common
+// const credentialType = CredentialTypes.common
 
 const commonSDExamples = {
   participant: { summary: 'Participant SD Example', value: ComplianceRequests.selfDescriptionGaiax },
   service: { summary: 'Service Offering Experimental SD Example', value: ComplianceRequests.serviceOfferingGaiax }
 }
 
-@ApiTags(credentialType)
+// @ApiTags(credentialType)
 @Controller({ path: '/api/2210vp' })
 export class Common2010VPController {
   constructor(
@@ -47,7 +47,7 @@ export class Common2010VPController {
     examples: commonSDExamples
   })
   @ApiOperation({ summary: 'Gets a selfDescribed VP and returns a Compliance VC in response' })
-  @UsePipes(new JoiValidationPipe(VerifiablePresentationSchema), new SsiTypesParserPipe())
+  @UsePipes(/*new JoiValidationPipe(VerifiablePresentationSchema), */new SsiTypesParserPipe())
   @Post('compliance')
   async createComplianceCredential(@Body() typedVerifiablePresentation: TypedVerifiablePresentation): Promise<IVerifiableCredential> {
     const sd = JSON.parse(JSON.stringify(typedVerifiablePresentation.originalVerifiablePresentation))

@@ -6,11 +6,18 @@ import { VerifiablePresentationValidationService } from './services/verifiable-p
 import { TrustFramework2210ValidationService } from './services/tf2210/trust-framework-2210-validation.service'
 import { ParticipantContentValidationService } from '../participant/services/content-validation.service'
 import { ServiceOfferingContentValidationService } from '../service-offering/services/content-validation.service'
+import { EcoCommonController } from './eco-common.controller'
+import { EcoShaclService } from './services/eco-shacl.service'
+import { EcoVerifiablePresentationValidationService } from './services/eco-verifiable-presentation-validation.service'
+import { EcoSignatureService } from './services/eco-signature.service'
 
 @Module({
   imports: [HttpModule],
-  controllers: [CommonController],
+  controllers: [CommonController, EcoCommonController],
   providers: [
+    EcoShaclService,
+    EcoSignatureService,
+    EcoVerifiablePresentationValidationService,
     ShaclService,
     SignatureService,
     ParticipantContentValidationService,

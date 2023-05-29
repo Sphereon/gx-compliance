@@ -82,7 +82,7 @@ export class ProofService {
 
   private async publicKeyMatchesCertificate(publicKeyJwk: any, certificatePem: string): Promise<boolean> {
     try {
-      const pk = await jose.importJWK(publicKeyJwk)
+      const pk = await jose.importJWK(publicKeyJwk, 'PS256')
       const spki = await jose.exportSPKI(pk as jose.KeyLike)
 
       const x509 = await jose.importX509(certificatePem, 'PS256')
@@ -90,6 +90,7 @@ export class ProofService {
 
       return spki === spkiX509
     } catch (error) {
+      console.log(error)
       throw new ConflictException('Could not confirm X509 public key with certificate chain.')
     }
   }

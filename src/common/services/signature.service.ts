@@ -5,7 +5,7 @@ import { BadRequestException, ConflictException, Injectable } from '@nestjs/comm
 import * as jose from 'jose'
 import * as jsonld from 'jsonld'
 import { RegistryService } from './registry.service'
-import {DocumentLoader} from "./DocumentLoader";
+import { DocumentLoader } from './DocumentLoader'
 
 export interface Verification {
   protectedHeader: jose.CompactJWSHeaderParameters | undefined
@@ -24,7 +24,7 @@ export class SignatureService {
       const hash: string = this.sha256(JSON.stringify(vc)) // TODO to be replaced with rfc8785 canonization
       return {
         type: 'gx:compliance',
-        id: vc.credentialSubject.id,
+        id: Array.isArray(vc.credentialSubject)? vc.credentialSubject[0].id: vc.credentialSubject.id,
         integrity: `sha256-${hash}`
       }
     })
@@ -42,9 +42,7 @@ export class SignatureService {
       issuer: getDidWeb(),
       issuanceDate: date.toISOString(),
       expirationDate: new Date(date.setDate(date.getDate() + lifeExpectancy)).toISOString(),
-      credentialSubject: {
-        id: getDidWeb()
-      }
+      credentialSubject: VCs
     }
 
     const VCHash = this.sha256(await this.normalize(complianceCredential))

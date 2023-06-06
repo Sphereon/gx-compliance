@@ -8,7 +8,6 @@ export const DID_DOC_FILE_PATH = join(__dirname, '../../static/did.json')
 export const X509_CERTIFICATE_CHAIN_FILE_PATH = join(__dirname, '../../static/.well-known/x509CertificateChain.pem')
 
 export function getDidWeb() {
-  process.env.BASE_URL = 'https://164e-2001-1c04-2b10-ee00-e375-2d7a-ffc3-9904.ngrok-free.app'
   return `did:web:${process.env.BASE_URL.replace(/http[s]?:\/\//, '')
     .replace(':', '%3A') // encode port ':' as '%3A' in did:web
     .replace(/\//g, ':')}`

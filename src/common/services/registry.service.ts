@@ -29,7 +29,12 @@ export class RegistryService {
   }
 
   async getImplementedTrustFrameworkShapes(): Promise<string[]> {
-    return (await firstValueFrom(this.httpService.get(`${this.registryUrl}/api/trusted-shape-registry/v1/shapes/implemented`))).data
+    try {
+      return (await firstValueFrom(this.httpService.get(`${this.registryUrl}/api/trusted-shape-registry/v1/shapes/implemented`))).data
+    } catch (e) {
+      console.error(`registry server with ${this.registryUrl}/api/trusted-shape-registry/v1/shapes/implemented is not available`)
+      return []
+    }
   }
 
   async getShape(shape: string): Promise<any> {

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { mergeResults, VerifiablePresentation } from '../verifiable-presentation-validation.service'
-import { ValidationResult } from '../../dto'
+import {ValidationResult, VerifiableCredentialDto} from '../../dto'
 import { ParticipantContentValidationService } from '../../../participant/services/content-validation.service'
 import { ServiceOfferingContentValidationService } from '../../../service-offering/services/content-validation.service'
 import { ParticipantSelfDescriptionDto } from '../../../participant/dto'
@@ -15,7 +15,7 @@ export class TrustFramework2210ValidationService {
     //Empty constructor
   }
 
-  async validate(vp: VerifiablePresentation): Promise<ValidationResult> {
+  async validateVP(vp: VerifiablePresentation): Promise<ValidationResult> {
     const validationResults: ValidationResult[] = []
     for (const vc of vp.verifiableCredential) {
       const atomicType = getAtomicType(vc)
@@ -24,5 +24,12 @@ export class TrustFramework2210ValidationService {
       }
     }
     return mergeResults(...validationResults)
+  }
+
+  async validateVC(vc: VerifiableCredentialDto<any>): Promise<ValidationResult> {
+    const atomicType = getAtomicType(vc)
+    if (atomicType === 'LegalParticipant') {
+      return await this.participantValidationService.validate(<ParticipantSelfDescriptionDto>(<unknown>vc.credentialSubject))
+    }
   }
 }

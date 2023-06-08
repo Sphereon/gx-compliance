@@ -53,6 +53,6 @@ export class VerifiablePresentationValidationService {
   }
 
   public async validateBusinessRules(vp: VerifiablePresentation): Promise<ValidationResult> {
-    return await this.trustFramework2210ValidationService.validate(vp)
+    return await this.trustFramework2210ValidationService.validateVP(vp)
   }
 }

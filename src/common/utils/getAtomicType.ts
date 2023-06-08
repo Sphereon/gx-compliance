@@ -1,6 +1,8 @@
 import { VerifiableCredentialDto } from '../dto'
 import { ParticipantSelfDescriptionDto } from '../../participant/dto'
 import { ServiceOfferingSelfDescriptionDto } from '../../service-offering/dto'
+import {VerifiablePresentation} from "../services/verifiable-presentation-validation.service";
+import {IVerifiableCredential} from "../@types/SSI.types";
 
 export function getEcoAtomicType(vc: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>): string {
   if (vc.type && Array.isArray(vc.type) && vc.type.filter(t => t !== 'VerifiableCredential').length > 0) {
@@ -46,4 +48,20 @@ function getAtomicTypeFromArray(types: string[]) {
 
 function getAtomicTypeFromString(type: string) {
   return type.substring(type.lastIndexOf(':') + 1)
+}
+
+export function isVerifiablePresentation(verifiableData: VerifiablePresentation | VerifiableCredentialDto<any>): boolean {
+  return (
+    'type' in verifiableData &&
+    ((Array.isArray(verifiableData.type) && verifiableData.type.includes('VerifiablePresentation')) ||
+      (!Array.isArray(verifiableData.type) && verifiableData.type === 'VerifiablePresentation'))
+  )
+}
+
+export function isVerifiableCredential(verifiableData: VerifiablePresentation | VerifiableCredentialDto<any>): boolean {
+  return (
+    'type' in verifiableData &&
+    ((Array.isArray(verifiableData.type) && verifiableData.type.includes('VerifiableCredential')) ||
+      (!Array.isArray(verifiableData.type) && verifiableData.type === 'VerifiableCredential'))
+  )
 }

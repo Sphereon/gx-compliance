@@ -4,10 +4,11 @@ import DatasetExt from 'rdf-ext/lib/Dataset'
 import Parser from '@rdfjs/parser-n3'
 import rdf from 'rdf-ext'
 import SHACLValidator from 'rdf-validate-shacl'
-import { Schema_caching, ValidationResult } from '../dto'
+import { Schema_caching, ValidationResult, VerifiableCredentialDto } from '../dto'
 import jsonld from 'jsonld'
 import { RegistryService } from './registry.service'
-import { getEcoAtomicType } from '../utils/getAtomicType'
+import { getEcoAtomicType, isVerifiablePresentation } from '../utils/getAtomicType'
+import { VerifiablePresentation } from './verifiable-presentation-validation.service'
 
 const cache: Schema_caching = {
   trustframework: {}
@@ -85,8 +86,14 @@ export class EcoShaclService {
   }
 
   public async verifyShape(verifiablePresentation: any, type: string): Promise<ValidationResult> {
-    if (!(await this.shouldCredentialBeValidated(verifiablePresentation))) {
+    const verificationAction: VcVerificationAction = await this.shouldCredentialBeValidated(verifiablePresentation)
+    if (verificationAction === VcVerificationAction.SHAPE_INVALID) {
       throw new ConflictException('VerifiableCrdential contains a shape that is not defined in registry shapes')
+    } else if (verificationAction === VcVerificationAction.REGISTRY_NOT_AVAILABLE) {
+      return {
+        conforms: true,
+        results: ['Gaia-X Registry is not available at the moment']
+      }
     }
     try {
       const selfDescriptionDataset: DatasetExt = await this.loadFromJSONLDWithQuads(verifiablePresentation)
@@ -141,20 +148,35 @@ export class EcoShaclService {
     return await rdf.dataset().import(parser.import(stream))
   }
 
-  private async shouldCredentialBeValidated(verifiablePresentation: any) {
+  private async shouldCredentialBeValidated(verifiableData: VerifiablePresentation | VerifiableCredentialDto<any>): Promise<VcVerificationAction> {
     const validTypes = await this.registryService.getImplementedTrustFrameworkShapes()
+    if (validTypes.length === 0) {
+      return VcVerificationAction.REGISTRY_NOT_AVAILABLE
+    }
     validTypes.push('compliance')
-    const credentialType = this.getVPTypes(verifiablePresentation)
-    return credentialType
+    const credentialType = this.getVerifiableDataTypes(verifiableData)
+    const typeExists = credentialType
       .map(type => validTypes.indexOf(type) > -1)
       .reduce((previousValue, currentValue) => {
         return previousValue && currentValue
       })
+    return typeExists ? VcVerificationAction.SHAPE_VALID : VcVerificationAction.SHAPE_INVALID
   }
 
-  private getVPTypes(verifiablePresentation: any): string[] {
-    return verifiablePresentation.verifiableCredential.map(vc => {
-      return getEcoAtomicType(vc)
-    })
+  private getVerifiableDataTypes(verifiableData: VerifiablePresentation | VerifiableCredentialDto<any>): string[] {
+    if (isVerifiablePresentation(verifiableData)) {
+      return (verifiableData as VerifiablePresentation).verifiableCredential.map(vc => {
+        return getEcoAtomicType(vc)
+      })
+    } else if (isVerifiablePresentation(verifiableData)) {
+      return [getEcoAtomicType(verifiableData as VerifiableCredentialDto<any>)]
+    }
+    return []
   }
+}
+
+export enum VcVerificationAction {
+  SHAPE_INVALID,
+  REGISTRY_NOT_AVAILABLE,
+  SHAPE_VALID
 }

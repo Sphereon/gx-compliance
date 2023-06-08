@@ -3,6 +3,7 @@ import { ProofService } from './proof.service'
 import { ValidationResult, VerifiableCredentialDto, VerifiablePresentationDto } from '../dto'
 import { EcoShaclService } from './eco-shacl.service'
 import { TrustFramework2210ValidationService } from './tf2210/trust-framework-2210-validation.service'
+import { isVerifiableCredential, isVerifiablePresentation } from '../utils/getAtomicType'
 
 export type VerifiablePresentation = VerifiablePresentationDto<VerifiableCredentialDto<any>>
 
@@ -44,15 +45,39 @@ export class EcoVerifiablePresentationValidationService {
 
   public async validateSignatureOfVCs(vp: VerifiablePresentation) {
     for (const vc of vp.verifiableCredential) {
-      await this.proofService.validate(vc)
+      await this.validateSignatureOfVC(vc)
     }
   }
 
+  public async validateVerifiableCredential(vc: VerifiableCredentialDto<any>): Promise<ValidationResult> {
+    await this.proofService.validate(vc)
+    const validationResult = await this.validateVCStructure(vc)
+    if (!validationResult.conforms) {
+      return validationResult
+    }
+    const businessRulesValidationResult = await this.validateBusinessRules(vc)
+    if (!businessRulesValidationResult.conforms) {
+      return businessRulesValidationResult
+    }
+    return mergeResults(validationResult, businessRulesValidationResult)
+  }
+
+  public async validateSignatureOfVC(vc: VerifiableCredentialDto<any>) {
+    await this.proofService.validate(vc)
+  }
   public async validateVPAndVCsStructure(vp: VerifiablePresentation): Promise<ValidationResult> {
     return await this.shaclService.verifyShape(vp, trustframework)
   }
 
-  public async validateBusinessRules(vp: VerifiablePresentation): Promise<ValidationResult> {
-    return await this.trustFramework2210ValidationService.validate(vp)
+  public async validateVCStructure(vc: VerifiableCredentialDto<any>): Promise<ValidationResult> {
+    return await this.shaclService.verifyShape(vc, trustframework)
+  }
+
+  public async validateBusinessRules(verifiableData: VerifiablePresentation | VerifiableCredentialDto<any>): Promise<ValidationResult> {
+    if (isVerifiablePresentation(verifiableData)) {
+      return await this.trustFramework2210ValidationService.validateVP(verifiableData as VerifiablePresentation)
+    } else if (isVerifiableCredential(verifiableData)) {
+      return await this.trustFramework2210ValidationService.validateVC(verifiableData as VerifiableCredentialDto<any>)
+    }
   }
 }

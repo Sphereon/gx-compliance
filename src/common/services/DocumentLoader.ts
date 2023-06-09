@@ -7,6 +7,7 @@ import * as fs from 'fs'
 export class DocumentLoader {
   getLoader() {
     return extendContextLoader(async (url: string) => {
+      // due to instability of registry.gaia-x.eu, we're caching this turtle file
       if (url === 'https://registry.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/trustframework') {
         return fs.readFileSync('src/contexts/trustframework.ttl')
       }

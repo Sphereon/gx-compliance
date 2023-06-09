@@ -30,6 +30,12 @@ export class TrustFramework2210ValidationService {
     const atomicType = getAtomicType(vc)
     if (atomicType === 'LegalParticipant') {
       return await this.participantValidationService.validate(<ParticipantSelfDescriptionDto>(<unknown>vc.credentialSubject))
+    } else if (atomicType === 'ServiceOffering') {
+      // gaia-x hasn't a validation for this type yet
+      return {
+        conforms: true,
+        results: []
+      }
     }
   }
 }

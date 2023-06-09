@@ -102,8 +102,9 @@ export class ProofService {
     } catch (error) {
       throw new ConflictException(`Could not load document for given did:web: "${did}"`)
     }
-    if (!didDocument?.verificationMethod || didDocument?.verificationMethod?.constructor !== Array)
+    if (!didDocument?.verificationMethod || didDocument?.verificationMethod?.constructor !== Array) {
       throw new ConflictException(`Could not load verificationMethods in did document at ${didDocument?.verificationMethod}`)
+    }
 
     return didDocument || undefined
   }

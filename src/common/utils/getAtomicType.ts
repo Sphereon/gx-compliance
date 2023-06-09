@@ -1,8 +1,7 @@
 import { VerifiableCredentialDto } from '../dto'
 import { ParticipantSelfDescriptionDto } from '../../participant/dto'
 import { ServiceOfferingSelfDescriptionDto } from '../../service-offering/dto'
-import {VerifiablePresentation} from "../services/verifiable-presentation-validation.service";
-import {IVerifiableCredential} from "../@types/SSI.types";
+import { VerifiablePresentation } from '../services/verifiable-presentation-validation.service'
 
 export function getEcoAtomicType(vc: VerifiableCredentialDto<ParticipantSelfDescriptionDto | ServiceOfferingSelfDescriptionDto>): string {
   if (vc.type && Array.isArray(vc.type) && vc.type.filter(t => t !== 'VerifiableCredential').length > 0) {

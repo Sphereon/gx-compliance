@@ -7,7 +7,7 @@ import SHACLValidator from 'rdf-validate-shacl'
 import { Schema_caching, ValidationResult, VerifiableCredentialDto } from '../dto'
 import jsonld from 'jsonld'
 import { RegistryService } from './registry.service'
-import { getEcoAtomicType, isVerifiablePresentation } from '../utils/getAtomicType'
+import { getEcoAtomicType, isVerifiableCredential, isVerifiablePresentation } from '../utils/getAtomicType'
 import { VerifiablePresentation } from './verifiable-presentation-validation.service'
 
 const cache: Schema_caching = {
@@ -168,7 +168,7 @@ export class EcoShaclService {
       return (verifiableData as VerifiablePresentation).verifiableCredential.map(vc => {
         return getEcoAtomicType(vc)
       })
-    } else if (isVerifiablePresentation(verifiableData)) {
+    } else if (isVerifiableCredential(verifiableData)) {
       return [getEcoAtomicType(verifiableData as VerifiableCredentialDto<any>)]
     }
     return []

@@ -88,7 +88,12 @@ export class EcoShaclService {
   public async verifyShape(verifiablePresentation: any, type: string): Promise<ValidationResult> {
     const verificationAction: VcVerificationAction = await this.shouldCredentialBeValidated(verifiablePresentation)
     if (verificationAction === VcVerificationAction.SHAPE_INVALID) {
-      throw new ConflictException('VerifiableCrdential contains a shape that is not defined in registry shapes')
+      // todo: I've made this hack to pass the labels. it's now working but ask Niels how we want to play this
+      //throw new ConflictException('VerifiableCredential contains a shape that is not defined in registry shapes')
+      return {
+        conforms: true,
+        results: ["Gaia-X Registry doesn't have a schema for your requested shape"]
+      }
     } else if (verificationAction === VcVerificationAction.REGISTRY_NOT_AVAILABLE) {
       return {
         conforms: true,

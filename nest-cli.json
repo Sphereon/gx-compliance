@@ -13,6 +13,10 @@
         "include": "static/**/*.json",
         "watchAssets": true,
         "outDir": "dist/src/"
+      },{
+        "include": "static/*.json",
+        "watchAssets": true,
+        "outDir": "dist/src/"
       },
       {
         "include": "static/**/*.md",

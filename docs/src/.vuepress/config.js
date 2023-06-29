@@ -35,7 +35,7 @@ module.exports = {
     nav: [
       {
         text: 'Guide',
-        link: '/guide/',
+        link: '/guide/'
       },
       {
         text: 'GitLab',
@@ -47,21 +47,14 @@ module.exports = {
         {
           title: 'Guide',
           collapsable: false,
-          children: [
-            '',
-            'gaia-x-trust-framework',
-            'gaia-x-lab'
-          ]
+          children: ['', 'gaia-x-trust-framework', 'gaia-x-lab']
         }
-      ],
+      ]
     }
   },
 
   /**
    * Apply plugins，ref：https://v1.vuepress.vuejs.org/zh/plugin/
    */
-  plugins: [
-    '@vuepress/plugin-back-to-top',
-    '@vuepress/plugin-medium-zoom',
-  ]
+  plugins: ['@vuepress/plugin-back-to-top', '@vuepress/plugin-medium-zoom']
 }

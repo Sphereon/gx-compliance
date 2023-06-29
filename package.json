@@ -1,13 +1,13 @@
 {
   "name": "gx-compliance",
-  "version": "2.0.0",
+  "version": "1.2.8",
   "description": "Prototype for a compliance service as defined in https://gaia-x.gitlab.io/policy-rules-committee/trust-framework/",
   "author": "Gaia-X Lab",
   "private": true,
   "license": "EPL-2.0",
   "repository": {
     "type": "git",
-    "url": "https://gitlab.com/gaia-x/lab/compliance/gx-compliance.git"
+    "url": "git@gitlab.com:gaia-x/lab/compliance/gx-compliance.git"
   },
   "bugs": {
     "url": "https://gitlab.com/gaia-x/lab/compliance/gx-compliance/-/issues"
@@ -16,9 +16,8 @@
     "postinstall": "npx cross-env NODE_ENV=production && exit 0; husky install",
     "prebuild": "rimraf dist",
     "clean": "rimraf dist/",
-    "copy-docs": "cp -r docs/src/.vuepress/dist/* dist/src/static/",
     "copy-files": "cp -r src/static/.well-known dist/src/static",
-    "build": "nest build && npm run clean && nest build && tsc && npm install --prefix ./docs/ && npm run build --prefix ./docs/ && npm run copy-files && npm run copy-docs",
+    "build": "nest build && npm run clean && nest build && tsc && npm run copy-files",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "npm run copy-files && nest start --watch",
@@ -29,7 +28,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./jest-e2e.json"
+    "prepare": "husky install"
   },
   "dependencies": {
     "@nestjs/axios": "^0.0.7",
@@ -45,13 +44,16 @@
     "@types/rdf-ext": "^1.3.11",
     "cross-env": "7.0.3",
     "did-resolver": "^4.0.0",
+    "husky": "^7.0.4",
     "joi": "^17.6.0",
     "jose": "^4.9.3",
     "jsonld": "^5.2.0",
-    "jsonld-signatures": "^11.1.0",
+    "jsonld-signatures": "^11.2.1",
+    "jsonpath": "^1.1.1",
     "media-typer": "^1.1.0",
+    "npx": "^10.2.2",
     "rdf-ext": "^1.3.5",
-    "rdf-validate-shacl": "^0.4.4",
+    "rdf-validate-shacl": "^0.4.5",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.5.6",
     "strong-soap": "^3.4.0",
@@ -64,6 +66,10 @@
     "@nestjs/cli": "^8.2.8",
     "@nestjs/schematics": "^8.0.11",
     "@nestjs/testing": "^8.4.7",
+    "@saithodev/semantic-release-backmerge": "^3.1.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/gitlab": "^12.0.1",
     "@types/express": "^4.17.14",
     "@types/jest": "27.4.1",
     "@types/joi": "^17.2.3",
@@ -77,11 +83,11 @@
     "eslint": "^8.23.1",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "husky": "^7.0.4",
     "jest": "^27.5.1",
-    "nock": "^13.3.0",
+    "nock": "^13.3.1",
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
+    "semantic-release": "^21.0.0",
     "shx": "^0.3.4",
     "source-map-support": "^0.5.20",
     "supertest": "^6.2.4",
@@ -90,22 +96,5 @@
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^3.10.1",
     "typescript": "^4.8.3"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
   }
 }

@@ -1,11 +1,12 @@
-import { ComplianceCredentialDto } from '../dto/compliance-credential.dto'
-import { createHash } from 'crypto'
-import { getDidWeb } from '../utils/did.util'
-import { Injectable, BadRequestException, ConflictException } from '@nestjs/common'
-import { VerifiableCredentialDto } from '../dto/credential-meta.dto'
+import { ComplianceCredentialDto, CredentialSubjectDto, VerifiableCredentialDto, VerifiablePresentationDto } from '../dto'
+import crypto, { createHash } from 'crypto'
+import { getDidWeb, getDidWebVerificationMethodIdentifier } from '../utils'
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common'
 import * as jose from 'jose'
 import * as jsonld from 'jsonld'
-import { SelfDescriptionTypes } from '../enums'
+import { RegistryService } from './registry.service'
+import { DocumentLoader } from './DocumentLoader'
+
 export interface Verification {
   protectedHeader: jose.CompactJWSHeaderParameters | undefined
   content: string | undefined
@@ -13,6 +14,49 @@ export interface Verification {
 
 @Injectable()
 export class SignatureService {
+  constructor(private registryService: RegistryService) {}
+
+  async createComplianceCredential(
+    selfDescription: VerifiablePresentationDto<VerifiableCredentialDto<CredentialSubjectDto>>,
+    vcid?: string
+  ): Promise<VerifiableCredentialDto<ComplianceCredentialDto>> {
+    const VCs = selfDescription.verifiableCredential.map(vc => {
+      const hash: string = this.sha256(JSON.stringify(vc)) // TODO to be replaced with rfc8785 canonization
+      return {
+        type: 'gx:compliance',
+        id: Array.isArray(vc.credentialSubject)? vc.credentialSubject[0].id: vc.credentialSubject.id,
+        integrity: `sha256-${hash}`
+      }
+    })
+
+    const date = new Date()
+    const lifeExpectancy = +process.env.lifeExpectancy || 90
+    const id = vcid ? vcid : `${process.env.BASE_URL}/credential-offers/${crypto.randomUUID()}`
+    const complianceCredential: any = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        `${await this.registryService.getBaseUrl()}/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#`
+      ],
+      type: ['VerifiableCredential'],
+      id,
+      issuer: getDidWeb(),
+      issuanceDate: date.toISOString(),
+      expirationDate: new Date(date.setDate(date.getDate() + lifeExpectancy)).toISOString(),
+      credentialSubject: VCs
+    }
+
+    const VCHash = this.sha256(await this.normalize(complianceCredential))
+    const jws = await this.sign(VCHash)
+    complianceCredential.proof = {
+      type: 'JsonWebSignature2020',
+      created: new Date().toISOString(),
+      proofPurpose: 'assertionMethod',
+      jws,
+      verificationMethod: getDidWebVerificationMethodIdentifier()
+    }
+    return complianceCredential
+  }
+
   async verify(jws: any, jwk: any): Promise<Verification> {
     try {
       const cleanJwk = {
@@ -33,18 +77,22 @@ export class SignatureService {
   }
 
   async normalize(doc: object): Promise<string> {
+    let canonized: string
     try {
-      const canonized: string = await jsonld.canonize(doc, {
+      canonized = await jsonld.canonize(doc, {
         algorithm: 'URDNA2015',
         format: 'application/n-quads',
-        
+        documentLoader: new DocumentLoader().getLoader()
       })
-      if (canonized === '') throw new Error()
-
-      return canonized
     } catch (error) {
-      throw new BadRequestException('Provided input is not a valid Self Description.')
+      console.log(error)
+      throw new BadRequestException('Provided input is not a valid Self Description.', error.message)
     }
+    if ('' === canonized) {
+      throw new BadRequestException('Provided input is not a valid Self Description.', 'Canonized SD is empty')
+    }
+
+    return canonized
   }
 
   sha256(input: string): string {
@@ -57,43 +105,27 @@ export class SignatureService {
 
   async sign(hash: string): Promise<string> {
     const alg = 'PS256'
-    const rsaPrivateKey = await jose.importPKCS8(process.env.privateKey, alg)
-
-    const jws = await new jose.CompactSign(new TextEncoder().encode(hash)).setProtectedHeader({ alg, b64: false, crit: ['b64'] }).sign(rsaPrivateKey)
-
-    return jws
-  }
-
-  async createComplianceCredential(selfDescription: any): Promise<{ complianceCredential: VerifiableCredentialDto<ComplianceCredentialDto> }> {
-    const sd_jws = selfDescription.proof.jws
-    delete selfDescription.proof
-    const normalizedSD: string = await this.normalize(selfDescription)
-    const hash: string = this.sha256(normalizedSD + sd_jws)
-    const jws = await this.sign(hash)
-
-    const type: string = selfDescription.type.find(t => t !== 'VerifiableCredential')
-    const complianceCredentialType: string =
-      SelfDescriptionTypes.PARTICIPANT === type ? SelfDescriptionTypes.PARTICIPANT_CREDENTIAL : SelfDescriptionTypes.SERVICE_OFFERING_CREDENTIAL
-
-    const complianceCredential: VerifiableCredentialDto<ComplianceCredentialDto> = {
-      '@context': ['https://www.w3.org/2018/credentials/v1'],
-      type: ['VerifiableCredential', complianceCredentialType],
-      id: `https://catalogue.gaia-x.eu/credentials/${complianceCredentialType}/${new Date().getTime()}`,
-      issuer: getDidWeb(),
-      issuanceDate: new Date().toISOString(),
-      credentialSubject: {
-        id: selfDescription.credentialSubject.id,
-        hash
-      },
-      proof: {
-        type: 'JsonWebSignature2020',
-        created: new Date().toISOString(),
-        proofPurpose: 'assertionMethod',
-        jws,
-        verificationMethod: getDidWeb()
-      }
+    let jws
+    if (process.env.privateKey.startsWith('-----BEGIN RSA PRIVATE KEY-----')) {
+      const rsaPrivateKey = crypto.createPrivateKey(process.env.privateKey)
+      jws = await new jose.CompactSign(new TextEncoder().encode(hash))
+        .setProtectedHeader({
+          alg,
+          b64: false,
+          crit: ['b64']
+        })
+        .sign(rsaPrivateKey)
+    } else {
+      const rsaPrivateKey = await jose.importPKCS8(process.env.privateKey, alg)
+      jws = await new jose.CompactSign(new TextEncoder().encode(hash))
+        .setProtectedHeader({
+          alg,
+          b64: false,
+          crit: ['b64']
+        })
+        .sign(rsaPrivateKey)
     }
 
-    return { complianceCredential }
+    return jws
   }
 }

@@ -71,7 +71,7 @@ tolerations: []
 affinity: {}
 
 urls:
-  registry: https://registry.lab.gaia-x.eu/development
+  registry:
   storage: https://example-storage.lab.gaia-x.eu
 storageApiKey: "Nothing"
 privateKey: ZW1wdHk=

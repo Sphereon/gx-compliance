@@ -1,0 +1,53 @@
+{
+  "id": "urn:uuid:0646c9c1-1aeb-47a8-ae50-964f4f4a2c49",
+  "type": [
+    "VerifiablePresentation"
+  ],
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "verifiableCredential": [
+    {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+      ],
+      "type": [
+        "VerifiableCredential"
+      ],
+      "id": "urn:uuid:554db947-e001-431c-ae55-22a781e1f928",
+      "issuer": "did:web:164e-2001-1c04-2b10-ee00-e375-2d7a-ffc3-9904.ngrok-free.app",
+      "issuanceDate": "2023-05-29T18:03:00.887Z",
+      "credentialSubject": {
+        "id": "did:web:164e-2001-1c04-2b10-ee00-e375-2d7a-ffc3-9904.ngrok-free.app",
+        "type": "gx:LegalParticipant",
+        "gx:legalName": "Gaia-X European Association for Data and Cloud AISBL",
+        "gx:legalRegistrationNumber": {
+          "gx:vatID": "BE0762747721"
+        },
+        "gx:headquarterAddress": {
+          "gx:countrySubdivisionCode": "BE-BRU"
+        },
+        "gx:legalAddress": {
+          "gx:countrySubdivisionCode": "BE-BRU"
+        },
+        "gx-terms-and-conditions:gaiaxTermsAndConditions": "70c1d713215f95191a11d38fe2341faed27d19e083917bc8732ca4fea4976700"
+      },
+      "proof": {
+        "type": "JsonWebSignature2020",
+        "created": "2023-05-29T16:05:10Z",
+        "verificationMethod": "did:web:164e-2001-1c04-2b10-ee00-e375-2d7a-ffc3-9904.ngrok-free.app#JWK2020-RSA",
+        "proofPurpose": "assertionMethod",
+        "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..fqGrFQqR2LrwQ3j2IC5QPZAHsTNIcfDDe8AjgGOzvY5yOKCj4VDE0rSpb70dQIwoGKJEDEQFUQnEXXlKDZSD79EmSDdJJTpTJJ4xlAS8kXHc6jEgq0gYKkKY7eTUQUhuHrCGFEJ-I-KTJLut3czcdzsRsBITqDbazrEoFOvgKv_C6XzOYIMWxxcczRtGFkKm8c-lIHayABnfHV9ES6PsfwNBuGC5HcsCY0lUZ9h4PMMYC60p-sspCxKLzpILfpcGLV-D73JGrvLycdW7zYNW_M5IQ0gOhaebw_oNSfSdaX08QZ9fAQhXLg3QzX4qIvLzsQVVmn1XFbXdiye574x89w"
+      }
+    }
+  ],
+  "holder": "did:web:164e-2001-1c04-2b10-ee00-e375-2d7a-ffc3-9904.ngrok-free.app",
+  "proof": {
+    "type": "JsonWebSignature2020",
+    "created": "2023-05-29T16:11:18Z",
+    "verificationMethod": "did:web:164e-2001-1c04-2b10-ee00-e375-2d7a-ffc3-9904.ngrok-free.app#JWK2020-RSA",
+    "proofPurpose": "assertionMethod",
+    "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..ajIrnlKpK8e6OK6Sdno5FO1Ui0tO8Kv2vE8n-fmTuWr4EXoz-kclg8PgWOtps660hYdoFNk9CyXgbyzZKZop6rRtT176N8FbyMXj7ZhrVVNmw1laNAzof3R09_DHDBpS-6IERIAd1UnOXu3srny8162OFUcy0sJZ6qmOQvkDhmOB9R1dtj7nZ_IOI2Ty2D2BDLGysmOuiWBWigq1E9LvEY2bRNVvqpn6zFXMyf8C6IosojmfeZtNQPrGTQyrnfVH5FGfRszYxZObM4VK-mJhqffB8fy4YZQ_i8_YEqGCtlLvnjGHO8Eq4tnhLRnMVzj_F8L7iKCQ9UZ6TUaGWpzDdA"
+  }
+}

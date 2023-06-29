@@ -1,0 +1,25 @@
+{
+	"branches": ["main"],
+	"plugins": [
+		"@semantic-release/npm",
+		"@semantic-release/commit-analyzer",
+		"@semantic-release/release-notes-generator",
+		"@semantic-release/gitlab",
+        [
+              "@semantic-release/changelog",
+              {
+                "changelogFile": "CHANGELOG.md"
+              }
+            ],
+		["@semantic-release/git", {
+			"assets": ["package.json", "package-lock.json", "CHANGELOG.md"],
+			"message": "chore(release): ${nextRelease.version} \n\n${nextRelease.notes}"
+		}],
+		[
+			"@saithodev/semantic-release-backmerge",
+			{
+				"backmergeBranches": ["development"]
+			}
+		]
+	]
+}

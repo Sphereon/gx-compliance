@@ -1,6 +1,13 @@
-import { VerifiableCredentialDto } from '../../common/dto'
+import { VerifiableCredentialDto } from '../dto'
 import { BadRequestException, ConflictException } from '@nestjs/common'
 import { IVerifiableCredential, ServiceOfferingType } from '../@types/SSI.types'
+
+export enum SelfDescriptionTypes {
+  PARTICIPANT = 'LegalPerson',
+  PARTICIPANT_CREDENTIAL = 'ParticipantCredential',
+  SERVICE_OFFERING = 'ServiceOfferingExperimental',
+  SERVICE_OFFERING_CREDENTIAL = 'ServiceOfferingCredentialExperimental'
+}
 
 export function getTypeFromSelfDescription(verifiableCredential: VerifiableCredentialDto<any> | IVerifiableCredential): string {
   const sdTypes = verifiableCredential.type
@@ -23,7 +30,7 @@ export function getTypeFromSelfDescription(verifiableCredential: VerifiableCrede
     throw new Error(`Expecting ServiceOffering type in credentialSubject.type. Received: ${subjectType}`)
   }
   //todo: we might wanna limit this to prevent unknown types. Why not simply throw the exception once we reacht this point?
-  const type = verifiableCredential.type.find(t => t !== 'VerifiableCredential')
+  const type = '' //verifiableCredential.type.find(t => t !== 'VerifiableCredential')
   if (!type) {
     throw new ConflictException('Provided type for VerifiableCredential is not supported')
   }

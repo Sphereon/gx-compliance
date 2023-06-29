@@ -1,16 +1,7 @@
-export function hasExpectedValues(object: any, expected: any): boolean {
-  if (typeof object !== 'object') return false
-  let hasValues = true
-  for (const key in expected) {
-    if (typeof expected[key] === 'object') hasValues = hasExpectedValues(object[key], expected[key])
-    else hasValues = object[key] === expected[key]
-
-    if (hasValues === false) break
-  }
-
-  return hasValues
+export function clone(objectToClone) {
+  return JSON.parse(JSON.stringify(objectToClone))
 }
 
-export * from './api-verify-raw-body-schema.util'
 export * from './did.util'
+export * from './public-key.utils'
 export * from './self-description.util'

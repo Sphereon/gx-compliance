@@ -46,11 +46,16 @@ spec:
               path: {{ (first (first .Values.ingress.hosts).paths).path }}
               port: {{ .Values.service.port }}
           env:
+            {{- if .Values.urls.registry }}
             - name: REGISTRY_URL
               value: {{ .Values.urls.registry}}
+            {{- else }}
+            - name: REGISTRY_URL
+              value: http://{{ include "gx-compliance.fullname" . | replace "compliance" "registry"}}:3000{{ (first (first .Values.ingress.hosts).paths).path }}
+            {{- end }}
             - name: BASE_URL
               {{- with (first .Values.ingress.hosts) }}
-              value: "https://{{ .host }}/{{ (first .paths).path}}"
+              value: "https://{{ .host }}{{ (first .paths).path}}"
               {{- end}}
             - name: SD_STORAGE_BASE_URL
               value: {{ .Values.urls.storage}}
@@ -68,6 +73,8 @@ spec:
                   name: {{ include "gx-compliance.fullname" . }}-secrets
             - name: APP_PATH
               value: "{{ (first (first .Values.ingress.hosts).paths).path }}"
+            - name: TLS
+              value: "true"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

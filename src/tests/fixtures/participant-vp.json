@@ -1,0 +1,40 @@
+{
+  "@context": "https://www.w3.org/2018/credentials/v1",
+  "type": "VerifiablePresentation",
+  "verifiableCredential": [
+    {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+      ],
+      "type": [
+        "VerifiableCredential"
+      ],
+      "id": "https://gaia-x.eu/.well-known/participant.json",
+      "issuer": "https://gaia-x.eu/.well-known/participant.json",
+      "issuanceDate": "2023-05-22T07:22:18.932Z",
+      "credentialSubject": {
+        "id": "https://gaia-x.eu/.well-known/participant.json",
+        "type": "gx:LegalParticipant",
+        "gx:legalName": "Gaia-X European Association for Data and Cloud AISBL",
+        "gx:legalRegistrationNumber": {
+          "gx:vatID": "BE0762747721"
+        },
+        "gx:headquarterAddress": {
+          "gx:countrySubdivisionCode": "BE-BRU"
+        },
+        "gx:legalAddress": {
+          "gx:countrySubdivisionCode": "BE-BRU"
+        },
+        "gx-terms-and-conditions:gaiaxTermsAndConditions": "70c1d713215f95191a11d38fe2341faed27d19e083917bc8732ca4fea4976700"
+      },
+      "proof": {
+        "type": "JsonWebSignature2020",
+        "created": "2023-05-22T07:22:19.617Z",
+        "proofPurpose": "assertionMethod",
+        "verificationMethod": "did:web:raw.githubusercontent.com:egavard:payload-sign:master",
+        "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..VZyQh8qIo2q0s1vnEJPrt1x6Cw_P_xaC0BgMcvwkEBBoj-M_mCYO1Jwzz-p5DXTxae8pl9TRhQOIKPNaeG6a9tpZeTOkhiQOFvXEWhHrRcE0BoztOCGnt1HpRb-Sh-rNbW1j7DoLQW6J92ZeyP3YQkxaNTOYdYGe4ardq_kFTi53y3TfwizsXqEZfLbEqmc1ESqPOz_2ekMKZe6mOH35qJQN30aWDB40HrqAKSSOdOHK2QtoIjGnvd4VG65_xPoY1nF91O9pgxEGLTxKIEuPgIv3wziMBB3Fa-Zr0N5YIkhIepVNVXMdcF7-7qObXk-2E7XO8xyyxCIs3OK7QgOy8g"
+      }
+    }
+  ]
+}

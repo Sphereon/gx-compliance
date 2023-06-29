@@ -1,9 +1,10 @@
 import { HttpService } from '@nestjs/axios'
 import { Injectable, Logger } from '@nestjs/common'
+import { firstValueFrom } from 'rxjs'
 
 @Injectable()
 export class RegistryService {
-  readonly registryUrl = process.env.REGISTRY_URL || 'https://registry.gaia-x.eu'
+  readonly registryUrl = process.env.REGISTRY_URL || 'https://registry.gaia-x.eu/development'
   private readonly logger = new Logger(RegistryService.name)
 
   constructor(private readonly httpService: HttpService) {}
@@ -22,18 +23,30 @@ export class RegistryService {
 
       return response.status === 200
     } catch (error) {
+      console.error(error)
       this.logger.error(error)
     }
   }
 
-  async getTermsAndConditions(): Promise<{ version: string; hash: string; text: string }> {
+  async getImplementedTrustFrameworkShapes(): Promise<string[]> {
     try {
-      const response = await this.httpService.get(`${this.registryUrl}/api/termsAndConditions`).toPromise()
+      return (await firstValueFrom(this.httpService.get(`${this.registryUrl}/api/trusted-shape-registry/v1/shapes/implemented`))).data
+    } catch (e) {
+      console.error(`registry server with ${this.registryUrl}/api/trusted-shape-registry/v1/shapes/implemented is not available`)
+      return []
+    }
+  }
 
-      return response.data
-    } catch (error) {
-      console.log(error)
-      this.logger.error(error)
+  async getShape(shape: string): Promise<any> {
+    return (await firstValueFrom(this.httpService.get(`${this.registryUrl}/api/trusted-shape-registry/v1/shapes/${shape}`))).data
+  }
+
+  async getBaseUrl(): Promise<string> {
+    try {
+      return (await firstValueFrom(this.httpService.get(`${this.registryUrl}/base-url`, { timeout: 600 }))).data
+    } catch (AxiosError) {
+      console.error('unable to retrieve registry base url', AxiosError.message)
+      return process.env.REGISTRY_URL
     }
   }
 }

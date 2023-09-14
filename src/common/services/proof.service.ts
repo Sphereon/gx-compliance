@@ -100,7 +100,7 @@ export class ProofService {
     try {
       didDocument = await this.getDidWebDocument(did)
     } catch (error) {
-      throw new ConflictException(`Could not load document for given did:web: "${did}"`)
+      throw new ConflictException(`Could not load document for given did:web: "${did}", reason:\n${error}`)
     }
     if (!didDocument?.verificationMethod || didDocument?.verificationMethod?.constructor !== Array) {
       throw new ConflictException(`Could not load verificationMethods in did document at ${didDocument?.verificationMethod}`)
@@ -120,6 +120,17 @@ export class ProofService {
 
   private async getDidWebDocument(did: string): Promise<DIDDocument> {
     const doc = await resolver.resolve(did)
+    if (!doc.didDocument) {
+      const metaData = doc.didResolutionMetadata as Record<string, any>
+      let errorMsg = `Could not resolve ${did}`
+      if (metaData.error !== undefined) {
+        errorMsg += `, error: ${metaData.error}`
+      }
+      if (metaData.message !== undefined) {
+        errorMsg += `, message:\n ${metaData.message}`
+      }
+      throw new Error(errorMsg)
+    }
 
     return doc.didDocument
   }

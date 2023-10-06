@@ -1,0 +1,1 @@
+Place `dev-only-https-private-key.pem` and `dev-only-https-public-certificate.pem` into this folder to enable local https with `LOCAL_HTTPS='true'`.

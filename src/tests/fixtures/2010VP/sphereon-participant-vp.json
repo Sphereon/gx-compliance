@@ -1,0 +1,145 @@
+{
+  "id": "urn:uuid:c046b82f-5a54-4e43-b544-06e20f38dbb5",
+  "type": [
+    "VerifiablePresentation"
+  ],
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "verifiableCredential": [
+    {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1"
+      ],
+      "issuer": "did:web:873c-87-213-241-251.eu.ngrok.io",
+      "id": "urn:uuid:bc45f0a0-7a1d-4ed1-b63c-45ba6bacf169",
+      "credentialSubject": {
+        "@context": {
+          "cc": "http://creativecommons.org/ns#",
+          "schema": "http://schema.org/",
+          "cred": "https://www.w3.org/2018/credentials#",
+          "void": "http://rdfs.org/ns/void#",
+          "owl": "http://www.w3.org/2002/07/owl#",
+          "xsd": "http://www.w3.org/2001/XMLSchema#",
+          "gax-validation": "http://w3id.org/gaia-x/validation#",
+          "skos": "http://www.w3.org/2004/02/skos/core#",
+          "voaf": "http://purl.org/vocommons/voaf#",
+          "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+          "vcard": "http://www.w3.org/2006/vcard/ns#",
+          "gax-core": "http://w3id.org/gaia-x/core#",
+          "dct": "http://purl.org/dc/terms/",
+          "sh": "http://www.w3.org/ns/shacl#",
+          "gax-trust-framework": "http://w3id.org/gaia-x/gax-trust-framework#",
+          "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          "ids": "https://w3id.org/idsa/core/",
+          "dcat": "http://www.w3.org/ns/dcat#",
+          "vann": "http://purl.org/vocab/vann/",
+          "foaf": "http://xmlns.com/foaf/0.1/",
+          "did": "https://www.w3.org/TR/did-core/#"
+        },
+        "id": "did:web:873c-87-213-241-251.eu.ngrok.io",
+        "@type": "gax-trust-framework:LegalPerson",
+        "gax-trust-framework:legalName": {
+          "@value": "Sphereon BV",
+          "@type": "xsd:string"
+        },
+        "gax-trust-framework:legalForm": "LLC",
+        "gax-trust-framework:registrationNumber": {
+          "@value": "3232323",
+          "@type": "xsd:string"
+        },
+        "gax-trust-framework:legalAddress": {
+          "@type": "vcard:Address",
+          "vcard:country-name": {
+            "@value": "NL",
+            "@type": "xsd:string"
+          },
+          "vcard:gps": {
+            "@value": "52.1352365,5.0280565",
+            "@type": "xsd:string"
+          },
+          "vcard:street-address": {
+            "@value": "Bisonspoor",
+            "@type": "xsd:string"
+          },
+          "vcard:postal-code": {
+            "@value": "3605LB",
+            "@type": "xsd:string"
+          },
+          "vcard:locality": {
+            "@value": "Maarssen",
+            "@type": "xsd:string"
+          }
+        },
+        "gax-trust-framework:headquarterAddress": {
+          "@type": "vcard:Address",
+          "vcard:country-name": {
+            "@value": "NL",
+            "@type": "xsd:string"
+          },
+          "vcard:gps": {
+            "@value": "52.1352365,5.0280565",
+            "@type": "xsd:string"
+          },
+          "vcard:street-address": {
+            "@value": "Bisonspoor",
+            "@type": "xsd:string"
+          },
+          "vcard:postal-code": {
+            "@value": "3605LB",
+            "@type": "xsd:string"
+          },
+          "vcard:locality": {
+            "@value": "Maarssen",
+            "@type": "xsd:string"
+          }
+        }
+      },
+      "type": [
+        "VerifiableCredential"
+      ],
+      "issuanceDate": "2023-02-16T11:43:15.393Z",
+      "proof": {
+        "type": "JsonWebSignature2020",
+        "created": "2023-02-16T12:19:22Z",
+        "verificationMethod": "did:web:873c-87-213-241-251.eu.ngrok.io#JWK2020-RSA",
+        "proofPurpose": "assertionMethod",
+        "jws": "eyJhbGciOiJSUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..WLjceJUPoYNmWS6z1E-FllprcDzIIngsEd0XRS1IVRRoAHssqJlmiHtJFUmEI_BxxfXR_VzPSzXF9Dxc6ICJ0ZObTzRMxBw9vGCPP8CfjOVjck77JGsonYLqj_CnluyDWHIs6mUyNRuz5Vh2g27535MEs_yO7dlRYU11mS9pApM7QtASdBYfW5eq5_GDN5qdHI1yiWoKx40-kB1rfXZJmdTsWf_AR0eQAki-v592OZSXeyRqHHUEsraM88Cx5l4qv4nmLhHkL144vSxVMAGXzm3BZ4LI2MJXJl9anPYZLkt7JfUn-h6yfc-JUb0-fB1WtR8fq1pd6yYRHhlH7qEhZQ"
+      }
+    },
+    {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://sphereon-opensource.github.io/vc-contexts/fma/gaia-x.jsonld"
+      ],
+      "type": [
+        "VerifiableCredential",
+        "ParticipantCredential"
+      ],
+      "id": "https://catalogue.gaia-x.eu/credentials/ParticipantCredential/1676549969321",
+      "issuer": "did:web:873c-87-213-241-251.eu.ngrok.io",
+      "issuanceDate": "2023-02-16T12:19:29.321Z",
+      "credentialSubject": {
+        "id": "did:web:873c-87-213-241-251.eu.ngrok.io",
+        "hash": "0f0cb0a5fdef71c3667f5e457b99aa0b5ccc608425c823727aa6d1bf4ddbe44e"
+      },
+      "proof": {
+        "type": "JsonWebSignature2020",
+        "created": "2023-02-16T12:19:29.763Z",
+        "proofPurpose": "assertionMethod",
+        "jws": "eyJhbGciOiJSUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..ZgC2WmnmPvb_g8eMy4C3QUdCBMOHbNB-FAGJGBOrIciBAYU5teWhOwe5lX5lCHoSZrTbZSWKYlFtVtl6_L4ivDAW66odgi_bIZDyVdVZpdGzwjZAvRuU2co4ZoMV8f7pZ_XX_rqgHCvgkvJX37_tpsv3lFi6HIVk6Xs5G2XPuCtyTmxNPeBn5hjXuNrZ1hlW_jFRp-kX8NITsgoQLmYG7wJ5FVrLrd2oD4Vnw8rkcJ4CVf2CfLfrz8NbOXHbCsJuj4GF4B0d2dxjebNkoxYs_LUIzE6uxZ8xekqSklTjhHq5y77Ka-0wh0Zo3Yd9GmSTTKSLhErEugVhqdvCBf9FFQ",
+        "verificationMethod": "did:web:873c-87-213-241-251.eu.ngrok.io#JWK2020-RSA"
+      }
+    }
+  ],
+  "holder": "did:web:873c-87-213-241-251.eu.ngrok.io",
+  "proof": {
+    "type": "JsonWebSignature2020",
+    "created": "2023-02-16T12:21:11Z",
+    "verificationMethod": "did:web:873c-87-213-241-251.eu.ngrok.io#JWK2020-RSA",
+    "proofPurpose": "authentication",
+    "challenge": "2023-02-16",
+    "domain": "http://localhost:3003",
+    "jws": "eyJhbGciOiJSUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..OIJhWb382qgWirrwH5yj-O_jwpmFBMsRvT9_DTy3o29MBJaAhAkvK-0wXDtipfHo28Xvz8ldJRsPNhZGFNNk-CBeX0frPpROYyGHBaS_8xQFyUWkN1DIbxjkCyC5qQGgeZpzhQIYxODXAgZm0id4Q0c19hdOu-Y58x-aPnmjhQmkgBbnpxXXudPkDEroB_HOD-QY_fBs0emXOVLf7GUZ78bWaiPlR4YoRdaLum2scuzsZOWb_hNUT-ehbihi26BgRiRb-R3IQjdHZAedVlkSk-3H-boFz3TJ63WP_8srsNYy0WL3VN58HPRlIDyJBNjI86UhxsUN2t1RKlURXb9bUw"
+  }
+}

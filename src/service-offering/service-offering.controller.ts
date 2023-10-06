@@ -1,22 +1,33 @@
-import { ApiBody, ApiExtraModels, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
-import { Body, Controller, HttpStatus, Post, HttpCode, ConflictException, BadRequestException, Query } from '@nestjs/common'
+import { ApiBody, ApiExtraModels, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger'
+import {
+  Body,
+  Controller,
+  HttpStatus,
+  Post,
+  HttpCode,
+  ConflictException,
+  BadRequestException,
+  Query,
+  InternalServerErrorException,
+  Get,
+  Param
+} from '@nestjs/common'
 import { SelfDescriptionService } from '../common/services'
 import { SignedSelfDescriptionDto, ValidationResultDto, VerifiableCredentialDto, VerifiableSelfDescriptionDto } from '../common/dto'
 import { VerifyServiceOfferingDto, ServiceOfferingSelfDescriptionDto } from './dto'
 import { ApiVerifyResponse } from '../common/decorators'
 import { getApiVerifyBodySchema } from '../common/utils/api-verify-raw-body-schema.util'
 import { SignedSelfDescriptionSchema, VerifySdSchema } from '../common/schema/selfDescription.schema'
-import ServiceOfferingExperimentalSD from '../tests/fixtures/service-offering-sd.json'
+import ServiceOfferingExperimentalSD from '../../test/datas/2210/service-offering-ok-sd.json'
 import { CredentialTypes } from '../common/enums'
 import { UrlSDParserPipe, SDParserPipe, JoiValidationPipe, BooleanQueryValidationPipe } from '../common/pipes'
 import { SelfDescriptionTypes } from '../common/enums'
 import { HttpService } from '@nestjs/axios'
-import { validationResultWithoutContent } from '../common/@types'
 import { ServiceOfferingContentValidationService } from './services/content-validation.service'
 
 const credentialType = CredentialTypes.service_offering
 @ApiTags(credentialType)
-@Controller({ path: 'service-offering' })
+@Controller({ path: '/api/service-offering' })
 export class ServiceOfferingController {
   constructor(
     private readonly selfDescriptionService: SelfDescriptionService,
@@ -89,60 +100,38 @@ export class ServiceOfferingController {
     return validationResult
   }
 
+  @Get('/:functionName')
+  @ApiOperation({ summary: 'Test a compliance rule', description: 'For more details on using this API route please see: https://gitlab.com/gaia-x/lab/compliance/gx-compliance/-/tree/dev#api-endpoint-with-dynamic-routes' })
+  async callFunction(@Param('functionName') functionName: string, @Body() body: any) {
+    return this.serviceOfferingContentValidationService[functionName](body);
+  }
+
   private async verifySignedServiceOfferingSD(
     serviceOfferingSelfDescription: SignedSelfDescriptionDto<ServiceOfferingSelfDescriptionDto>,
     verifyParticipant = true
   ): Promise<ValidationResultDto> {
-    // TODO Use actual validate functions instead of a remote call
-    if (verifyParticipant) {
-      try {
-        const httpService = new HttpService()
-        await httpService
-          .post('https://compliance.gaia-x.eu/v2206/api/participant/verify', {
-            url: serviceOfferingSelfDescription.selfDescriptionCredential.credentialSubject.providedBy
-          })
-          .toPromise()
-      } catch (error) {
-        console.error({ error })
-        if (error.response.status == 409) {
-          throw new ConflictException({
-            statusCode: HttpStatus.CONFLICT,
-            message: {
-              ...error.response.data.message
-            },
-            error: 'Conflict'
-          })
-        }
-
-        throw new BadRequestException('The provided url does not point to a valid Participant SD')
+    try {
+      const validationResult: ValidationResultDto = await this.selfDescriptionService.verify(serviceOfferingSelfDescription)
+      if (!validationResult.conforms) {
+        throw new ConflictException({
+          statusCode: HttpStatus.CONFLICT,
+          message: {
+            ...validationResult
+          },
+          error: 'Conflict'
+        })
       }
-    }
-
-    const validationResult: validationResultWithoutContent = await this.selfDescriptionService.validate(serviceOfferingSelfDescription)
-
-    const content = await this.serviceOfferingContentValidationService.validate(
-      serviceOfferingSelfDescription.selfDescriptionCredential.credentialSubject,
-      {
-        conforms: true,
-        shape: { conforms: true, results: [] },
-        content: { conforms: true, results: [] },
-        isValidSignature: true
+      return validationResult
+    } catch (error) {
+      if (error.status == 409) {
+        throw new ConflictException({
+          statusCode: HttpStatus.CONFLICT,
+          message: error.response.message,
+          error: 'Conflict'
+        })
+      } else {
+        throw new InternalServerErrorException()
       }
-    )
-
-    if (!validationResult.conforms)
-      throw new ConflictException({
-        statusCode: HttpStatus.CONFLICT,
-        message: {
-          ...validationResult,
-          content
-        },
-        error: 'Conflict'
-      })
-
-    return {
-      ...validationResult,
-      content
     }
   }
 

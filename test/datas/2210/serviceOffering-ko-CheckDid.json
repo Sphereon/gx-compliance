@@ -1,0 +1,73 @@
+{
+  "selfDescriptionCredential": {
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1",
+      "https://registry.gaia-x.eu/v2206/api/shape"
+    ],
+    "type": [
+      "VerifiableCredential",
+      "ServiceOfferingExperimental"
+    ],
+    "id": "https://compliance.gaia-x.eu/.well-known/serviceComplianceService.json",
+    "issuer": "did:web:delta-dao.com",
+    "issuanceDate": "2022-09-25T23:23:23.235Z",
+    "credentialSubject": {
+      "id": "https://compliance.gaia-x.eu/.well-known/serviceComplianceService.json",
+      "gx-service-offering:providedBy": "https://compliance.gaia-x.eu/.well-known/participant.json",
+      "gx-service-offering:title": "Gaia-X Lab Compliance Service",
+      "gx-service-offering:description": "The Compliance Service will validate the shape and content of Self Descriptions. Required fields and consistency rules are defined in the Gaia-X Trust Framework.",
+      "gx-service-offering:descriptionMarkDown": "The Compliance Service will validate the shape and content of Self Descriptions.",
+      "gx-service-offering:webAddress": "https://compliance.gaia-x.eu/",
+      "gx-terms-and-conditions:serviceTermsAndConditions": [
+        {
+          "gx-terms-and-conditions:value": "https://compliance.gaia-x.eu/terms",
+          "gx-terms-and-conditions:hash": "myrandomhash"
+        }
+      ],
+      "gx-service-offering:dataProtectionRegime": [
+        "GDPR2016"
+      ],
+      "gx-service-offering:dataExport": [
+        {
+          "gx-service-offering:requestType": "email",
+          "gx-service-offering:accessType": "digital",
+          "gx-service-offering:formatType": "mime/png"
+        }
+      ],
+      "gx-service-offering:dependsOn": [
+        "https://compliance.gaia-x.eu/.well-known/serviceManagedPostgreSQLOVH.json",
+        "https://compliance.gaia-x.eu/.well-known/serviceManagedK8sOVH.json"
+      ]
+    },
+    "proof": {
+      "type": "JsonWebSignature2020",
+      "created": "2022-09-25T22:36:50.274Z",
+      "proofPurpose": "assertionMethod",
+      "verificationMethod": "did:web:comp77liance.gaia-x.eu",
+      "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Chbzpl0-4S3sobkKXyBjfx6pm74xLHInOmruHUmO--3HpMcrfKldeJQPYLrUWsEJ1HIjMUqxE6QymZRxXfuRlAJKy2nwyM3S5sFX9YJ8bepBcf6q-nWGTDX-jh8wuyX3lwrG94aJnTBByKPLCovSiZ9BURR3cwiSHczBlM7iP90ee5roHOtI-eoqSBYrYaynTaK5eQaWfT-2OdXYgqVPSRJAK2KD5AqEM8KU7x6nnP6-shgSNBIEC1fAOTfAEUYkcrK8Tn4BTaH02HnO3B90S1MWyAWwBzrnmS915CFY4BiHsp9Tz7pt016c8HB8HE7gqoXndk7DUhzgNE2mRbHuLg"
+    }
+  },
+    "complianceCredential": {
+        "@context": [
+            "https://www.w3.org/2018/credentials/v1"
+        ],
+        "type": [
+            "VerifiableCredential",
+            "ServiceOfferingCredentialExperimental"
+        ],
+        "id": "https://catalogue.gaia-x.eu/credentials/ServiceOfferingCredentialExperimental/1675240083258",
+        "issuer": "did:web:comp77liance.gaia-x.eu",
+        "issuanceDate": "2023-02-01T08:28:03.259Z",
+        "credentialSubject": {
+            "id": "https://compliance.gaia-x.eu/.well-known/serviceComplianceService.json",
+            "hash": "c66a69bc04e076da5053c764c341e93d7d9611466549addd2450b61d71ce1826"
+        },
+        "proof": {
+            "type": "JsonWebSignature2020",
+            "created": "2023-02-01T08:28:03.259Z",
+            "proofPurpose": "assertionMethod",
+            "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Hw78DoF1NP_uJiRobEsfbjU-MoMekmdQA9ojEO8Z7dT3p0_BeT_UW_WDzeYXUaeLzuHAR8SZ3-Smc6DiP8vkTgAaC9dowclpTg6KJu-ZF5cc_CTJGhmldoqthZvDSntVxmcdmdQg2hCgN78d_pvKhZj3CPW6urId-VKrrFC34HbAJPgePJkbbLWVNEuz0JP8VWgXVbAllsznTiInQT-GlG9YGsyLYVW35Jy-sTJ-EOmntxTACKNRSXKnWxFpZXOsbfk62YGr0rCKnYqG9PGGnByHFPww93VqOpYCowK5yZ5tMeE-rORuGeOC4_oOyBFCAVje88UbNCZJgk1GcoGYWg",
+            "verificationMethod": "did:web:compliance.gaia-x.eu"
+        }
+}
+}

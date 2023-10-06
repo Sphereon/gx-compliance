@@ -9,6 +9,8 @@ import * as jose from 'jose'
 import { METHOD_IDS } from '../constants'
 import { Resolver, DIDDocument } from 'did-resolver'
 import web from 'web-did-resolver'
+const webResolver = web.getResolver()
+const resolver = new Resolver(webResolver)
 
 @Injectable()
 export class ProofService {
@@ -26,9 +28,7 @@ export class ProofService {
     const { x5u, publicKeyJwk } = await this.getPublicKeys(selfDescriptionCredential)
 
     const certificatesRaw: string = await this.loadCertificatesRaw(x5u)
-
-    //TODO: disabled for self signed certificates
-    const isValidChain = true //await this.registryService.isValidCertificateChain(certificatesRaw)
+    const isValidChain: boolean = await this.registryService.isValidCertificateChain(certificatesRaw)
 
     if (!isValidChain) throw new ConflictException(`X509 certificate chain could not be resolved against registry trust anchors.`)
 
@@ -43,7 +43,7 @@ export class ProofService {
     return true
   }
 
-  private async getPublicKeys(selfDescriptionCredential) {
+  public async getPublicKeys(selfDescriptionCredential) {
     const { verificationMethod, id } = await this.loadDDO(selfDescriptionCredential.proof.verificationMethod)
 
     const jwk = verificationMethod.find(method => METHOD_IDS.includes(method.id) || method.id.startsWith(id))
@@ -95,7 +95,7 @@ export class ProofService {
     }
   }
 
-  private async loadCertificatesRaw(url: string): Promise<string> {
+  public async loadCertificatesRaw(url: string): Promise<string> {
     try {
       const response = await this.httpService.get(url).toPromise()
       return response.data.replace(/\n/gm, '') || undefined
@@ -105,8 +105,6 @@ export class ProofService {
   }
 
   private async getDidWebDocument(did: string): Promise<DIDDocument> {
-    const webResolver = web.getResolver()
-    const resolver = new Resolver(webResolver)
     const doc = await resolver.resolve(did)
 
     return doc.didDocument

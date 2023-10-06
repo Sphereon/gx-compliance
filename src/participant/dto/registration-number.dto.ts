@@ -7,10 +7,12 @@ export class RegistrationNumberDto {
     description: 'The type of the registrationNumber that is submitted',
     enum: ['EORI', 'EUID', 'leiCode', 'local', 'vatID']
   })
+
   public type: RegistrationNumberTypes
 
   @ApiProperty({
     description: 'The registrationNumber itself'
   })
+  
   public number: string
 }

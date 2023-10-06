@@ -9,7 +9,7 @@ import { CommonModule } from './common.module'
 
 export const OPEN_API_DOC_PATH = path.resolve(process.cwd(), 'openapi.json')
 
-export const SWAGGER_UI_PATH = 'v2206/docs'
+export const SWAGGER_UI_PATH = 'docs'
 
 const options = {
   tagsSorter: 'alpha',
@@ -19,7 +19,7 @@ const options = {
 
 const versions = [
   {
-    number: '2206',
+    number: 'latest',
     latest: true,
     includedModules: [CommonModule, ParticipantModule, ServiceOfferingModule]
   }
@@ -32,13 +32,14 @@ export function setupSwagger(app: INestApplication) {
     const document = SwaggerModule.createDocument(app, config, { ignoreGlobalPrefix: false, include: version.includedModules })
 
     const versionPath = `v${version.number.split('.')[0]}`
+    const appPath = process.env['APP_PATH'] ? process.env['APP_PATH'] : ''
 
     writeFileSync(version.latest ? OPEN_API_DOC_PATH : OPEN_API_DOC_PATH.replace('.json', `-${versionPath}.json`), JSON.stringify(document), {
       encoding: 'utf8'
     })
 
-    SwaggerModule.setup(`${SWAGGER_UI_PATH}/${versionPath}`, app, document, options)
+    SwaggerModule.setup(`${appPath}/${SWAGGER_UI_PATH}/${versionPath}`, app, document, options)
 
-    if (version.latest) SwaggerModule.setup(SWAGGER_UI_PATH, app, document, options)
+    if (version.latest) SwaggerModule.setup(`${appPath}/${SWAGGER_UI_PATH}`, app, document, options)
   }
 }

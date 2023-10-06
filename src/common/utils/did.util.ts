@@ -3,12 +3,16 @@ import * as jose from 'jose'
 import { join } from 'path'
 
 export const X509_VERIFICATION_METHOD_NAME = 'X509-JWK2020'
-export const DID_DOC_FILE_PATH = join(__dirname, '../../static/.well-known/did.json')
-export const X509_CERTIFICATE_CHAIN_URI = `${process.env.BASE_URL}/.well-known/x509CertificateChain.pem`
+export const DID_DOC_FILE_PATH = join(__dirname, '../../static/did.json')
 export const X509_CERTIFICATE_CHAIN_FILE_PATH = join(__dirname, '../../static/.well-known/x509CertificateChain.pem')
 
 export function getDidWeb() {
-  return `did:web:${process.env.BASE_URL.replace(/http[s]?:\/\//, '').replace('/', ':')}`
+  return `did:web:${process.env.BASE_URL.replace(/http[s]?:\/\//, '')
+    .replace(':', '%3A') // encode port ':' as '%3A' in did:web
+    .replace(/\//g, ':')}`
+}
+export function getCertChainUri() {
+  return `${process.env.BASE_URL}/.well-known/x509CertificateChain.pem`
 }
 
 export async function createDidDocument() {
@@ -25,7 +29,7 @@ export async function createDidDocument() {
         publicKeyJwk: {
           ...(await jose.exportJWK(spki)),
           alg: 'PS256',
-          x5u: X509_CERTIFICATE_CHAIN_URI
+          x5u: getCertChainUri()
         }
       }
     ],

@@ -6,6 +6,7 @@ import { AddressDto } from '../../common/dto'
 import { RegistrationNumberDto, RegistrationNumberTypes } from '../dto/registration-number.dto'
 import { CommonModule } from '../../common/common.module'
 
+
 describe('ParticipantContentValidationService', () => {
   let participantContentValidationService: ParticipantContentValidationService
 
@@ -27,10 +28,10 @@ describe('ParticipantContentValidationService', () => {
     participantContentValidationService = moduleRef.get<ParticipantContentValidationService>(ParticipantContentValidationService)
   })
 
-  describe.skip(`Content validation`, () => {
+  describe(`Content validation`, () => {
     describe(`Check termsAndConditions`, () => {
       it.skip('returns true for SD with valid hash of termsAndConditions', async () => {
-        const termsAndConditionsHash = '70c1d713215f95191a11d38fe2341faed27d19e083917bc8732ca4fea4976700'
+        const termsAndConditionsHash = '1c5367540d27366fb0a02c3bcaf04da905f663daf0fd4e06f6475fe1a0faaf35'
 
         const checkTerms = await participantContentValidationService.checkTermsAndConditions(termsAndConditionsHash)
 
@@ -87,7 +88,7 @@ describe('ParticipantContentValidationService', () => {
       const invalidRegistrationNumber = 'INVALID_NUMBER'
 
       //TODO: enable with valid EORI
-      it.skip('returns true for SD with valid registrationNumber of type eori', async () => {
+      it('returns true for SD with valid registrationNumber of type eori', async () => {
         const checkEORIRegistrationNumber = await participantContentValidationService.checkRegistrationNumber(
           registrationNumbers.EORI,
           participantSDMock2206
@@ -96,7 +97,7 @@ describe('ParticipantContentValidationService', () => {
         expect(checkEORIRegistrationNumber).toEqual(expectedValidResult)
       })
 
-      it.skip('returns false for SD with invalid registrationNumber of type eori', async () => {
+      it('returns false for SD with invalid registrationNumber of type eori', async () => {
         const checkEORIRegistrationNumber = await participantContentValidationService.checkRegistrationNumber(
           { ...registrationNumbers.EORI, number: invalidRegistrationNumber },
           participantSDMock2206
@@ -106,7 +107,7 @@ describe('ParticipantContentValidationService', () => {
       })
 
       //TODO: enable once API works as expected
-      it.skip('returns true for SD with valid registrationNumber of type vatID', async () => {
+      it('returns true for SD with valid registrationNumber of type vatID', async () => {
         const checkVatIDRegistrationNumber = await participantContentValidationService.checkRegistrationNumber(
           registrationNumbers.vatID,
           participantSDMock2206
@@ -115,7 +116,7 @@ describe('ParticipantContentValidationService', () => {
         expect(checkVatIDRegistrationNumber).toEqual(expectedValidResult)
       })
 
-      it.skip('returns false for SD with invalid registrationNumber of type vatID', async () => {
+      it('returns false for SD with invalid registrationNumber of type vatID', async () => {
         const checkVatIDRegistrationNumber = await participantContentValidationService.checkRegistrationNumber(
           { ...registrationNumbers.vatID, number: invalidRegistrationNumber },
           participantSDMock2206
@@ -142,7 +143,7 @@ describe('ParticipantContentValidationService', () => {
         expect(checkLeiCodeRegistrationNumber).toEqual(expectedErrorResult)
       })
 
-      it.skip('returns true for SD with valid registrationNumber of type local', async () => {
+      it('returns true for SD with valid registrationNumber of type local', async () => {
         const checkLeiCodeRegistrationNumber = await participantContentValidationService.checkRegistrationNumber(
           registrationNumbers.local,
           participantSDMock2206
@@ -151,7 +152,7 @@ describe('ParticipantContentValidationService', () => {
         expect(checkLeiCodeRegistrationNumber).toEqual(expectedValidResult)
       })
 
-      it.skip('returns false for SD with invalid registrationNumber of type local', async () => {
+      it('returns false for SD with invalid registrationNumber of type local', async () => {
         const checkLeiCodeRegistrationNumber = await participantContentValidationService.checkRegistrationNumber(
           { ...registrationNumbers.local, number: invalidRegistrationNumber },
           participantSDMock2206
@@ -160,7 +161,7 @@ describe('ParticipantContentValidationService', () => {
         expect(checkLeiCodeRegistrationNumber).toEqual(expectedErrorResult)
       })
 
-      it.skip('returns true for SD with multiple valid registrationNumbers', async () => {
+      it('returns true for SD with multiple valid registrationNumbers', async () => {
         const numbers: RegistrationNumberDto[] = Object.values(registrationNumbers)
           //TODO: add types back once working (see TODOs above)
           .filter(number => !['EORI', 'vatID'].includes(number.type))
@@ -261,5 +262,118 @@ describe('ParticipantContentValidationService', () => {
         )
       })
     })
+    describe('CPR08_CheckDid', () => {
+      it('Should return valid result if all URLs are valid', async () => {
+        const validUrls = ['did:web:abc-federation.gaia-x.community', 'did:web:compliance.gaia-x.eu']
+        const mockCheckDidUrls = jest.fn().mockResolvedValue([])
+        const instance = { checkDidUrls: mockCheckDidUrls }
+    
+        const result = await participantContentValidationService.CPR08_CheckDid(validUrls)
+    
+        expect(result).toEqual({ conforms: true, results: [] })
+       // expect(mockCheckDidUrls).toHaveBeenCalledWith(validUrls)
+      })
+    
+      it('Should return invalid result if there are invalid URLs', async () => {
+        const invalidUrls = ['did:web:abc-federation.gaia-x.comm56468unity', 'did:web:abc-federation.gaia-x.community']
+        const result = await participantContentValidationService.CPR08_CheckDid(invalidUrls)
+    
+        expect(result).toEqual({ conforms: false, results: ['did:web:abc-federation.gaia-x.comm56468unity'] })
+      })
+    })
+
+    describe('checkDidUrls', () => {
+      it('Should return empty array if all URLs are valid', async () => {
+        const validUrls = ['did:web:abc-federation.gaia-x.community', 'did:web:compliance.gaia-x.eu']
+        const mockHttpService = { get: jest.fn().mockResolvedValue({}) }
+        //const instance = { httpService: mockHttpService }
+    
+        const result = await participantContentValidationService.checkDidUrls(validUrls)
+    
+        expect(result).toEqual([])
+      })
+    
+      it('Should return array of invalid URLs if there are invalid URLs', async () => {
+        const invalidUrls = ['did:web:abc-federation.gaia-x.community', 'did:web:abc-federation.gaia-x.c85ommunity']
+    
+        const result = await participantContentValidationService.checkDidUrls(invalidUrls)
+    
+        expect(result).toEqual(['did:web:abc-federation.gaia-x.c85ommunity'])
+      })
+    }) 
+    
+    describe('parseDid', () => {
+      it('Should return empty array if no DID is present in JSON-LD', () => {
+        const jsonLD = { foo: 'bar' }
+    
+        const result = participantContentValidationService.parseDid(jsonLD)
+    
+        expect(result).toEqual([])
+      })
+    
+      it('Should return array of unique DIDs present in JSON-LD', () => {
+        const jsonLD = {
+          "@context": "https://w3id.org/did/v1",
+          "id": "did:web:peer.africastalking.com",
+          "publicKey": [
+            {
+              "id": "did:web:peer.africastalking.com#keys-1",
+              "type": "Ed25519VerificationKey2018",
+              "controller": "did:web:peer.africastalking.com",
+              "publicKeyBase58": "H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV"
+            }
+          ],
+          "authentication": [
+            "did:web:peer.africastalking.com#keys-1"
+          ]
+        }
+    
+        const result = participantContentValidationService.parseDid(jsonLD)
+    
+        expect(result).toEqual(['did:web:peer.africastalking.com', 'did:web:peer.africastalking.com#keys-1'])
+      })
+    })
+
+    describe('parseJSONLD', () => {
+      it('should extract values from a JSON-LD object', () => {
+        const jsonLD = {
+          "@context": "https://www.w3.org/ns/did/v1",
+          "id": "did:web:identity.foundation",
+          "publicKey": [{
+            "id": "did:web:identity.foundation#keys-1",
+            "type": "Ed25519VerificationKey2018",
+            "controller": "did:web:identity.foundation",
+            "publicKeyBase58": "H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV"
+          }],
+          "authentication": [{
+            "type": "Ed25519SignatureAuthentication2018",
+            "publicKey": "did:web:identity.foundation#keys-1",
+            "secret": {
+              "a": "7x899d8aac"
+            }
+          }],
+          "service": [{
+            "type": "IdentityHub",
+            "serviceEndpoint": "https://hub.identity.foundation"
+          }]
+        };
+        const values = participantContentValidationService.parseJSONLD(jsonLD);
+    
+        expect(values).toEqual([
+          "https://www.w3.org/ns/did/v1",
+          "did:web:identity.foundation",
+          "did:web:identity.foundation#keys-1",
+          "Ed25519VerificationKey2018",
+          "did:web:identity.foundation",
+          "H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV",
+          "Ed25519SignatureAuthentication2018",
+          "did:web:identity.foundation#keys-1",
+          "7x899d8aac",
+          "IdentityHub",
+          "https://hub.identity.foundation"
+        ]);
+      });
+    });
+
   })
 })

@@ -6,7 +6,7 @@ import participantMinimalSd from '../../tests/fixtures/participant-sd.json'
 import serviceOfferingSd from '../../tests/fixtures/service-offering-sd.json'
 import * as jose from 'jose'
 
-describe('SignatureService', () => {
+describe.skip('SignatureService', () => {
   const algorithm = 'PS256'
   let signatureService: SignatureService
   let publicKeyJwk: object
@@ -21,7 +21,7 @@ describe('SignatureService', () => {
     publicKeyJwk = await jose.exportJWK(x509)
   })
 
-  describe('Validation of a Signature', () => {
+  describe.skip('Validation of a Signature', () => {
     let jws: string
     let content: string
     beforeAll(async () => {

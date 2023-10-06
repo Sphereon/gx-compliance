@@ -1,1 +1,1 @@
-export type Versions = '2206'
+export type Versions = 'latest'

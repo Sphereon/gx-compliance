@@ -1,0 +1,48 @@
+{
+    "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://registry.lab.gaia-x.eu/api/trusted-schemas-registry/v2/schemas"
+    ],
+    "type": [
+        "VerifiableCredential",
+        "ServiceOfferingExperimental"
+    ],
+    "id": "did:web:abc-federation.gaia-x.community",
+    "issuer": "did:web:abc-federation.gaia-x.community",
+    "issuanceDate": "2023-02-10T08:53:29.795Z",
+    "credentialSubject": {
+        "id": "https://compliance.gaia-x.eu/.well-known/serviceComplianceService.json",
+        "gx-service-offering:providedBy": "http://compliance.gaia-x.eu/.well-known/participant.json",
+        "gx-service-offering:title": "Gaia-X Lab Compliance Service",
+        "gx-service-offering:description": "The Compliance Service will validate the shape and content of Self Descriptions. Required fields and consistency rules are defined in the Gaia-X Trust Framework.",
+        "gx-service-offering:descriptionMarkDown": "The Compliance Service will validate the shape and content of Self Descriptions.",
+        "gx-service-offering:webAddress": "https://compliance.gaia-x.eu/",
+        "gx-terms-and-conditions:serviceTermsAndConditions": [
+            {
+                "gx-terms-and-conditions:value": "https://compliance.gaia-x.eu/terms",
+                "gx-terms-and-conditions:hash": "myrandomhash"
+            }
+        ],
+        "gx-service-offering:dataProtectionRegime": [
+            "GDPR2016"
+        ],
+        "gx-service-offering:dataExport": [
+            {
+                "gx-service-offering:requestType": "email",
+                "gx-service-offering:accessType": "digital",
+                "gx-service-offering:formatType": "mime/png"
+            }
+        ],
+        "gx-service-offering:dependsOn": [
+            "https://compliance.gaia-x.eu/.well-known/serviceManagedPostgkkkkkkkkkkkkkkkkkkkkreSQLOVH.json",
+            "https://compliance.gaia-x.eu/.well-known/serviceManagedK8sOVH.json"
+        ]
+    },
+    "proof": {
+        "type": "JsonWebSignature2020",
+        "created": "2023-02-10T08:53:31.606Z",
+        "proofPurpose": "assertionMethod",
+        "verificationMethod": "did:web:abc-federation.gaia-x.community",
+        "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..fqSlnt8Bp-_u1dicNtP6CK8GCEVe4huZc98lDEM9IIM6WPmB3RUMwhty80YinXA_oVVQkuDXxUgHqP82bKgbiAAeKZHX9edWalAHxMtTAy76-UiCBVQMR_jCM9llvjr2c9l0iXIEgkqoRTgG11meluHxvPjOfNiOMyzPz3JQKeBCe03iPC8UHwmXt87hsJAK8N4LcWlLDxY0Bm8w6R9K4Ssmr83ySiCHAQnhKmnqNo2HaSBJqI1x8uQqsL9i_-nf_paGeTEVhr5QbmnByDgxJcPqgfnKq6h7xhWv-bW5ic1NOGhltttLk7k-775m1ZkbERHAaRWEYB5Jle2tBcgBQA"
+    }
+}

@@ -1,13 +1,11 @@
-import { ComplianceCredentialDto } from '../dto'
+import { ComplianceCredentialDto } from '../dto/compliance-credential.dto'
 import { createHash } from 'crypto'
-import { getDidWeb } from '../utils'
+import { getDidWeb } from '../utils/did.util'
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common'
-import { VerifiableCredentialDto } from '../dto'
+import { VerifiableCredentialDto } from '../dto/credential-meta.dto'
 import * as jose from 'jose'
 import * as jsonld from 'jsonld'
 import { SelfDescriptionTypes } from '../enums'
-import { DocumentLoader } from './DocumentLoader'
-
 export interface Verification {
   protectedHeader: jose.CompactJWSHeaderParameters | undefined
   content: string | undefined
@@ -39,10 +37,8 @@ export class SignatureService {
       const canonized: string = await jsonld.canonize(doc, {
         algorithm: 'URDNA2015',
         format: 'application/n-quads',
-        //TODO FMA-23
-        documentLoader: new DocumentLoader().getLoader()
+        
       })
-
       if (canonized === '') throw new Error()
 
       return canonized

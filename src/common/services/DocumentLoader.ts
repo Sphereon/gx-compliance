@@ -11,6 +11,9 @@ export class DocumentLoader {
       if (url === 'https://registry.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/trustframework') {
         return fs.readFileSync('src/contexts/trustframework.ttl')
       }
+      if (url === 'https://www.w3.org/2018/credentials/v1') {
+        return fs.readFileSync('src/contexts/credentials.ttl')
+      }
       const response = await fetch(url)
       if (response.status === 200) {
         const document = await response.json()

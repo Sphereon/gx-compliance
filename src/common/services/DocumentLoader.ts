@@ -12,7 +12,7 @@ export class DocumentLoader {
         return fs.readFileSync('src/contexts/trustframework.ttl')
       }
       if (url === 'https://www.w3.org/2018/credentials/v1') {
-        return fs.readFileSync('src/contexts/credentials.ttl')
+        return fs.readFileSync('src/contexts/credentials.jsonld')
       }
       const response = await fetch(url)
       if (response.status === 200) {
